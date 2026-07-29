@@ -1427,8 +1427,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.2rem] border border-slate-200/80 bg-white p-3 shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:p-4">
-                      <div className="mb-3 flex items-center justify-between px-1">
+                    <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/95 p-4 shadow-[0_22px_42px_rgba(15,23,42,0.09)] md:p-5">
+                      <div className="mb-4 flex items-center justify-between px-1">
                         <p className="text-[0.72rem] font-black uppercase tracking-[0.18em] text-slate-500">
                           Teclado numérico
                         </p>
@@ -1437,13 +1437,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 md:gap-3">
+                      <div className="grid grid-cols-3 gap-3 md:gap-4">
                         {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
                           <button
                             key={`cpf-tecla-${digito}`}
                             type="button"
                             onClick={() => adicionarDigitoCpf(digito)}
-                            className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-[1.35rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_16px_28px_rgba(15,23,42,0.2)] md:h-16 md:text-[1.5rem]"
+                            className="flex h-15 items-center justify-center rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1.4rem] font-black text-white shadow-[0_14px_24px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_30px_rgba(15,23,42,0.22)] md:h-16 md:text-[1.55rem]"
                           >
                             {digito}
                           </button>
@@ -1452,7 +1452,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         <button
                           type="button"
                           onClick={limparCpfDigitado}
-                          className="flex h-14 items-center justify-center rounded-[1rem] border border-rose-200 bg-[linear-gradient(180deg,#fff1f2_0%,#ffe4e6_100%)] px-2 text-[0.74rem] font-black uppercase tracking-[0.08em] text-rose-700 shadow-[0_10px_18px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-16 md:text-[0.82rem]"
+                          className="flex h-15 items-center justify-center rounded-[1.05rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.76rem] font-black uppercase tracking-[0.1em] text-rose-700 shadow-[0_12px_20px_rgba(244,63,94,0.09)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-16 md:text-[0.84rem]"
                         >
                           Limpar CPF
                         </button>
@@ -1460,7 +1460,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => adicionarDigitoCpf('0')}
-                          className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-[1.35rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_16px_28px_rgba(15,23,42,0.2)] md:h-16 md:text-[1.5rem]"
+                          className="flex h-15 items-center justify-center rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1.4rem] font-black text-white shadow-[0_14px_24px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_30px_rgba(15,23,42,0.22)] md:h-16 md:text-[1.55rem]"
                         >
                           0
                         </button>
@@ -1468,11 +1468,20 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         <button
                           type="button"
                           onClick={apagarUltimoDigitoCpf}
-                          className="flex h-14 items-center justify-center rounded-[1rem] border border-amber-200 bg-[linear-gradient(180deg,#fffbeb_0%,#fef3c7_100%)] px-2 text-[0.74rem] font-black uppercase tracking-[0.08em] text-amber-800 shadow-[0_10px_18px_rgba(245,158,11,0.08)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-16 md:text-[0.82rem]"
+                          className="flex h-15 items-center justify-center rounded-[1.05rem] border border-amber-200 bg-[linear-gradient(180deg,#fffdf2_0%,#fef0bf_100%)] px-2 text-[0.76rem] font-black uppercase tracking-[0.1em] text-amber-800 shadow-[0_12px_20px_rgba(245,158,11,0.09)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-16 md:text-[0.84rem]"
                         >
                           Apagar
                         </button>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => void buscarConsultas()}
+                        disabled={loading || normalizarCpf(cpf).length < 11}
+                        className="mt-4 flex h-15 w-full items-center justify-center rounded-[1.15rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[1rem] font-black uppercase tracking-[0.1em] text-white shadow-[0_20px_36px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_24px_42px_rgba(37,99,235,0.34)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-16 md:text-[1.02rem]"
+                      >
+                        {loading ? "Buscando..." : "Entrar"}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1483,7 +1492,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           {etapaTela === "consultas" && (
             <>
               <section className="w-full">
-                <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-5 text-white md:px-8 md:py-7">
+                <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-5 text-white shadow-[0_18px_36px_rgba(15,23,42,0.16)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-7">
                   <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
                     <div className="min-w-0 text-center md:text-left">
                       <p className="text-[0.82rem] font-bold uppercase tracking-[0.18em] text-blue-100/80">
@@ -1734,6 +1743,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
 
 
 
