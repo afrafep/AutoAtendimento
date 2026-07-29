@@ -675,7 +675,12 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   };
 
   const handleCpfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCpf(formatarCpf(event.target.value));
+    const cpfFormatado = formatarCpf(event.target.value);
+    setCpf(cpfFormatado);
+
+    if (normalizarCpf(cpfFormatado).length === 11) {
+      void buscarConsultas(cpfFormatado);
+    }
   };
 
   const handleCpfKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -706,7 +711,35 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const handleCpfPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault();
     const textoColado = event.clipboardData.getData("text");
-    setCpf(formatarCpf(textoColado));
+    const cpfFormatado = formatarCpf(textoColado);
+    setCpf(cpfFormatado);
+
+    if (normalizarCpf(cpfFormatado).length === 11) {
+      void buscarConsultas(cpfFormatado);
+    }
+  };
+
+  const adicionarDigitoCpf = (digito: string) => {
+    if (!/^\d$/.test(digito)) return;
+
+    const cpfAtual = normalizarCpf(cpf);
+    if (cpfAtual.length >= 11) return;
+
+    const cpfFormatado = formatarCpf(`${cpfAtual}${digito}`);
+    setCpf(cpfFormatado);
+
+    if (normalizarCpf(cpfFormatado).length === 11) {
+      void buscarConsultas(cpfFormatado);
+    }
+  };
+
+  const apagarUltimoDigitoCpf = () => {
+    const cpfAtual = normalizarCpf(cpf);
+    setCpf(formatarCpf(cpfAtual.slice(0, -1)));
+  };
+
+  const limparCpfDigitado = () => {
+    setCpf("");
   };
 
   const atualizarConsultaLocal = (
@@ -1145,8 +1178,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     await buscarConsultas();
   };
 
-  const buscarConsultas = async () => {
-    const cpfLimpo = normalizarCpf(cpf);
+  const buscarConsultas = async (cpfInformado?: string) => {
+    const cpfLimpo = normalizarCpf(cpfInformado ?? cpf);
 
     if (!validarCpf(cpfLimpo)) {
       await Swal.fire({
@@ -1394,21 +1427,52 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <button
-                        onClick={() => void buscarConsultas()}
-                        disabled={loading}
-                        className="flex h-16 items-center justify-center bg-[#00338d] px-5 text-[0.95rem] font-black text-white shadow-[0_16px_32px_rgba(0,51,141,0.24)] transition hover:bg-[#00286f] disabled:cursor-not-allowed disabled:bg-slate-400"
-                      >
-                        {loading ? "Buscando..." : "CONTINUAR"}
-                      </button>
+                    <div className="rounded-[1.2rem] border border-slate-200/80 bg-white p-3 shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:p-4">
+                      <div className="mb-3 flex items-center justify-between px-1">
+                        <p className="text-[0.72rem] font-black uppercase tracking-[0.18em] text-slate-500">
+                          Teclado numérico
+                        </p>
+                        <p className="text-[0.78rem] font-medium text-slate-400">
+                          Toque para digitar
+                        </p>
+                      </div>
 
-                      <button
-                        onClick={resetarTelaCpf}
-                        className="h-16 border border-slate-200 bg-white px-5 text-[0.88rem] font-bold text-slate-700 shadow-[0_10px_22px_rgba(15,23,42,0.05)] transition hover:border-[#00338d] hover:text-[#00338d]"
-                      >
-                        Limpar
-                      </button>
+                      <div className="grid grid-cols-3 gap-2 md:gap-3">
+                        {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
+                          <button
+                            key={`cpf-tecla-${digito}`}
+                            type="button"
+                            onClick={() => adicionarDigitoCpf(digito)}
+                            className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-[1.35rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_16px_28px_rgba(15,23,42,0.2)] md:h-16 md:text-[1.5rem]"
+                          >
+                            {digito}
+                          </button>
+                        ))}
+
+                        <button
+                          type="button"
+                          onClick={limparCpfDigitado}
+                          className="flex h-14 items-center justify-center rounded-[1rem] border border-rose-200 bg-[linear-gradient(180deg,#fff1f2_0%,#ffe4e6_100%)] px-2 text-[0.74rem] font-black uppercase tracking-[0.08em] text-rose-700 shadow-[0_10px_18px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-16 md:text-[0.82rem]"
+                        >
+                          Limpar CPF
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => adicionarDigitoCpf('0')}
+                          className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-[1.35rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_16px_28px_rgba(15,23,42,0.2)] md:h-16 md:text-[1.5rem]"
+                        >
+                          0
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={apagarUltimoDigitoCpf}
+                          className="flex h-14 items-center justify-center rounded-[1rem] border border-amber-200 bg-[linear-gradient(180deg,#fffbeb_0%,#fef3c7_100%)] px-2 text-[0.74rem] font-black uppercase tracking-[0.08em] text-amber-800 shadow-[0_10px_18px_rgba(245,158,11,0.08)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-16 md:text-[0.82rem]"
+                        >
+                          Apagar
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1670,6 +1734,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
