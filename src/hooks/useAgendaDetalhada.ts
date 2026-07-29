@@ -46,6 +46,9 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
   const [modalRemarcarAberto, setModalRemarcarAberto] = useState(false);
   const [eventoSelecionado, setEventoSelecionado] =
     useState<AgendaEvento | null>(null);
+  const profissionaisAutorizacaoCacheRef = useRef<
+    Record<string, Promise<any>>
+  >({});
   const [agenda, setAgenda] = useState<AgendaEvento[]>([]);
   const [loading, setLoading] = useState(true);
   const [observacoesEditadas, setObservacoesEditadas] = useState<
