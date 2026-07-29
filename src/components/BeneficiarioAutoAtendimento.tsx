@@ -464,7 +464,14 @@ const lerEstadoTelaPersistido = (): EstadoTelaPersistido | null => {
     return {
       cpf: typeof estado.cpf === "string" ? estado.cpf : "",
       pacienteNome: typeof estado.pacienteNome === "string" ? estado.pacienteNome : "",
-      consultas: Array.isArray(estado.consultas) ? estado.consultas : [],
+      consultas: Array.isArray(estado.consultas)
+        ? estado.consultas.map((consulta: any) => ({
+            ...consulta,
+            autorizado: normalizarBoolean(consulta?.autorizado),
+            tokenValidado: normalizarBoolean(consulta?.tokenValidado),
+            retorno: normalizarBoolean(consulta?.retorno),
+          }))
+        : [],
       etapaTela: estado.etapaTela === "consultas" ? "consultas" : "cpf",
     };
   } catch {
@@ -548,26 +555,28 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       ),
     );
   }, [consultas]);
-  const cardsConsultasFluxo = useMemo(() =>
-    cardsConsultas.map((cardConsulta, indice) => {
-      const consulta = cardConsulta.consultaBase;
-      const total = cardsConsultas.length;
-      const anteriorConcluido =
-        indice === 0 ||
-        cardsConsultas
-          .slice(0, indice)
-          .every((item) => Boolean(item.consultaBase.autorizado));
+  const cardsConsultasFluxo = useMemo(
+    () =>
+      cardsConsultas.map((cardConsulta, indice) => {
+        const consulta = cardConsulta.consultaBase;
+        const total = cardsConsultas.length;
+        const etapasAnterioresConcluidas =
+          indice === 0 ||
+          cardsConsultas.slice(0, indice).every((item) =>
+            Boolean(item.consultaBase.autorizado && item.consultaBase.tokenValidado),
+          );
 
-      return {
-        cardConsulta,
-        consulta,
-        indice,
-        total,
-        anteriorConcluido,
-        liberadoParaProximo: Boolean(consulta.autorizado),
-      };
-    }),
-  [cardsConsultas],
+        return {
+          cardConsulta,
+          consulta,
+          indice,
+          total,
+          etapaAtual: indice + 1,
+          etapasAnterioresConcluidas,
+          etapaConcluida: Boolean(consulta.autorizado && consulta.tokenValidado),
+        };
+      }),
+    [cardsConsultas],
   );
 
   const dataConsultasCabecalho = useMemo(
@@ -1539,98 +1548,94 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid gap-4">
+                    <div className="grid gap-3">
                       {cardsConsultasFluxo.map(({
                         cardConsulta,
                         consulta,
                         indice,
                         total,
-                        anteriorConcluido,
-                        liberadoParaProximo,
+                        etapaAtual,
+                        etapasAnterioresConcluidas,
+                        etapaConcluida,
                       }) => {
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
+                        const autorizado = normalizarBoolean(consulta.autorizado);
+                        const tokenValidado = normalizarBoolean(consulta.tokenValidado);
+                        const etapaFinalizada = autorizado && tokenValidado;
                         const faltouConsulta = statusAtual === "FALTOU";
-                        const compareceuConsulta = statusAtual === "COMPARECEU";
                         const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
-                        const tokenEnviado = consulta.autorizado && !consulta.tokenValidado;
-                        const autorizacaoConcluida = consulta.autorizado && consulta.tokenValidado;
-                        const bloqueadoPorOrdem = !anteriorConcluido;
-                        const podeSeguir =
-                          anteriorConcluido &&
-                          (podeAutorizar || tokenEnviado || autorizacaoConcluida);
-                        const etapaLabel = `${indice + 1} de ${total}`;
+                        const tokenEnviado = autorizado && !tokenValidado;
+                        const bloqueadoPorOrdem = !etapasAnterioresConcluidas;
+                        const etapaLiberada = etapasAnterioresConcluidas && !faltouConsulta;
+                        const podeSeguir = etapaLiberada && !etapaFinalizada && (podeAutorizar || tokenEnviado);
+                        const etapaLabel = `${etapaAtual} de ${total}`;
+                        const destaqueEtapaAtual = etapaLiberada && !etapaFinalizada;
 
                         const statusFluxo = faltouConsulta
-                          ? "Consulta não realizada"
-                          : autorizacaoConcluida
-                            ? "Autorizado e token confirmado"
+                          ? "Consulta nao realizada"
+                          : etapaFinalizada
+                            ? "Processo finalizado"
                             : tokenEnviado
-                              ? "Autorizado e token enviado"
+                              ? "Aguardando validacao do token"
                               : bloqueadoPorOrdem
-                                ? `Aguardando conclusão do ${indice} de ${total}`
-                                : compareceuConsulta
-                                  ? "Pronto para seguir"
-                                  : formatarStatus(consulta.statusAgendamento);
+                                ? `Aguardando conclusao do ${indice} de ${total}`
+                                : "Pronto para iniciar";
 
                         return (
                           <article
                             key={cardConsulta.chave}
-                            className={`rounded-[1.2rem] border p-4 shadow-[0_18px_36px_rgba(15,23,42,0.07)] transition ${
-                              autorizacaoConcluida
-                                ? "border-emerald-200 bg-[linear-gradient(180deg,#f7fff9_0%,#ecfdf3_100%)] opacity-85"
-                                : bloqueadoPorOrdem
-                                  ? "border-slate-200 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]"
-                                  : "border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] hover:-translate-y-0.5 hover:border-[#00338d]/20 hover:shadow-[0_24px_42px_rgba(15,23,42,0.1)]"
+                            className={`rounded-[1rem] border px-4 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.07)] transition ${
+                              etapaFinalizada
+                                ? "border-emerald-200 bg-[linear-gradient(180deg,#f7fff9_0%,#ecfdf3_100%)] opacity-80"
+                                : destaqueEtapaAtual
+                                  ? "border-[#00338d]/20 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_32px_rgba(0,51,141,0.1)]"
+                                  : bloqueadoPorOrdem
+                                    ? "border-slate-200 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]"
+                                    : "border-slate-200 bg-white"
                             }`}
                           >
-                            <div className="grid gap-4 md:grid-cols-[130px_minmax(0,1fr)_240px] md:items-center">
-                              <div className="grid gap-2 text-center">
-                                <p className="text-[0.76rem] font-black uppercase tracking-[0.16em] text-slate-500">
+                            <div className="grid gap-3 lg:grid-cols-[96px_minmax(0,1fr)_230px] lg:items-center">
+                              <div className="grid gap-1 text-center">
+                                <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-slate-500">
                                   {etapaLabel}
                                 </p>
-                                <p className="text-[2.35rem] font-black tracking-tight text-[#00338d]">
+                                <p className="text-[1.95rem] font-black tracking-tight text-[#00338d]">
                                   {cardConsulta.agrupadoUltrassom ? "Fluxo" : formatarHora(consulta.horaInicio)}
                                 </p>
-                                <p className="text-[0.78rem] font-bold uppercase tracking-[0.08em] text-slate-500">
+                                <p className="text-[0.74rem] font-bold uppercase tracking-[0.06em] text-slate-500">
                                   {cardConsulta.agrupadoUltrassom
-                                    ? "Horários do dia"
+                                    ? "Horarios do dia"
                                     : formatarData(consulta.dataInicio)}
                                 </p>
                               </div>
 
-                              <div className="grid gap-3">
+                              <div className="grid gap-2">
                                 <div
-                                  className={`rounded-[1rem] border px-4 py-4 text-center ${
-                                    autorizacaoConcluida
-                                      ? "border-emerald-100 bg-white/75"
-                                      : bloqueadoPorOrdem
-                                        ? "border-slate-200 bg-white/80"
-                                        : "border-slate-100 bg-slate-50"
+                                  className={`rounded-[0.95rem] border px-4 py-3 text-center ${
+                                    etapaFinalizada
+                                      ? "border-emerald-100 bg-white/80"
+                                      : destaqueEtapaAtual
+                                        ? "border-[#00338d]/10 bg-slate-50"
+                                        : "border-slate-100 bg-slate-50/80"
                                   }`}
                                 >
-                                  <p className="text-[0.98rem] font-bold uppercase tracking-[0.08em] text-slate-900">
+                                  <p className="text-[0.95rem] font-bold uppercase tracking-[0.07em] text-slate-900">
                                     {consulta.profissionalNome}
                                   </p>
-                                  <p className="mt-1 text-[0.95rem] text-slate-600">
+                                  <p className="mt-1 text-[0.92rem] text-slate-600">
                                     {consulta.especialidadeNome}
                                   </p>
                                 </div>
 
                                 {cardConsulta.agrupadoUltrassom ? (
-                                  <div
-                                    className={`rounded-[1rem] border px-4 py-3 ${
-                                      autorizacaoConcluida
-                                        ? "border-emerald-100 bg-white/75"
-                                        : "border-blue-100 bg-blue-50/60"
-                                    }`}
-                                  >
-                                    <div className="grid gap-2">
+                                  <div className="rounded-[0.95rem] border border-blue-100 bg-blue-50/60 px-4 py-3">
+                                    <div className="grid gap-1.5">
                                       {cardConsulta.consultasRelacionadas.map((item) => (
                                         <div
                                           key={item.idEvento}
-                                          className="border-b border-blue-100/80 pb-2 last:border-b-0 last:pb-0"
+                                          className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
                                         >
-                                          <p className="text-[0.92rem] text-slate-700">
+                                          <p className="text-[0.88rem] text-slate-700">
                                             <span className="font-black text-[#00338d]">
                                               {formatarHora(item.horaInicio)}
                                             </span>
@@ -1644,20 +1649,20 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 ) : null}
                               </div>
 
-                              <div className="grid gap-3">
-                                <div className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 text-center text-[0.76rem] font-black uppercase tracking-[0.1em] shadow-[0_12px_24px_rgba(15,23,42,0.12)] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : autorizacaoConcluida ? "border-emerald-200 bg-emerald-50 text-emerald-800" : tokenEnviado ? "border-cyan-200 bg-cyan-50 text-cyan-800" : bloqueadoPorOrdem ? "border-slate-200 bg-slate-100 text-slate-600" : compareceuConsulta ? "border-orange-200 bg-orange-50 text-orange-700" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
-                                  {!autorizacaoConcluida ? (
+                              <div className="grid gap-2">
+                                <div className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-3 text-center text-[0.72rem] font-black uppercase tracking-[0.08em] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : etapaFinalizada ? "border-emerald-200 bg-emerald-50 text-emerald-800" : tokenEnviado ? "border-cyan-200 bg-cyan-50 text-cyan-800" : bloqueadoPorOrdem ? "border-slate-200 bg-slate-100 text-slate-600" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
+                                  {!etapaFinalizada ? (
                                     <span
                                       aria-hidden="true"
-                                      className={`inline-flex h-2.5 w-2.5 rounded-full ${faltouConsulta ? "bg-red-500" : tokenEnviado ? "bg-cyan-500" : compareceuConsulta ? "bg-orange-500" : bloqueadoPorOrdem ? "bg-slate-400" : "bg-[#00338d]"}`}
+                                      className={`inline-flex h-2.5 w-2.5 rounded-full ${faltouConsulta ? "bg-red-500" : tokenEnviado ? "bg-cyan-500" : bloqueadoPorOrdem ? "bg-slate-400" : "bg-[#00338d]"}`}
                                     />
                                   ) : null}
-                                  {autorizacaoConcluida ? (
+                                  {etapaFinalizada ? (
                                     <span
                                       aria-hidden="true"
                                       className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
                                     >
-                                      ✓
+                                      ?
                                     </span>
                                   ) : null}
                                   {statusFluxo}
@@ -1666,17 +1671,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 {podeSeguir ? (
                                   <button
                                     onClick={() => abrirEtapaSenha(consulta)}
-                                    className="h-16 rounded-[1rem] border border-blue-200/40 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] px-5 text-[0.96rem] font-black uppercase tracking-[0.08em] text-white shadow-[0_18px_32px_rgba(0,51,141,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_38px_rgba(0,51,141,0.28)]"
+                                    className={`h-14 rounded-[0.95rem] border px-4 text-[0.9rem] font-black uppercase tracking-[0.06em] text-white transition ${tokenEnviado ? "border-cyan-200/40 bg-[linear-gradient(135deg,#0f766e_0%,#0891b2_58%,#38bdf8_100%)] shadow-[0_16px_28px_rgba(8,145,178,0.2)] hover:shadow-[0_18px_30px_rgba(8,145,178,0.26)]" : "border-blue-200/40 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] shadow-[0_16px_28px_rgba(0,51,141,0.2)] hover:shadow-[0_18px_30px_rgba(0,51,141,0.26)]"}`}
                                   >
-                                    {tokenEnviado ? "Continuar token" : "Seguir atendimento"}
+                                    {tokenEnviado ? "Continuar token" : "Iniciar atendimento"}
                                   </button>
                                 ) : (
-                                  <div className={`flex h-16 items-center justify-center rounded-[1rem] border px-4 text-center text-[0.88rem] font-black uppercase tracking-[0.06em] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-600" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
+                                  <div className={`flex h-14 items-center justify-center rounded-[0.95rem] border px-3 text-center text-[0.8rem] font-black uppercase tracking-[0.05em] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-600" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
                                     {faltouConsulta
                                       ? "Atendimento encerrado"
                                       : bloqueadoPorOrdem
-                                        ? `Liberado após ${indice} de ${total}`
-                                        : "Atendimento indisponível"}
+                                        ? `Libera apos concluir o ${indice} de ${total}`
+                                        : "Aguardando finalizacao"}
                                   </div>
                                 )}
                               </div>
