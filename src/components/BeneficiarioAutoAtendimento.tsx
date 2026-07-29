@@ -613,6 +613,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setEtapaTela("cpf");
     limparEstadoTelaPersistido();
   };
+  const atualizarTextoSenhaPainel = (idEvento: number, valor: string) => {
+    setSenhasPainelDigitadas((prev) => ({
+      ...prev,
+      [idEvento]: String(valor || "").toUpperCase(),
+    }));
+  };
+
 
   const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
     setConsultaSelecionadaId(consulta.idEvento);
