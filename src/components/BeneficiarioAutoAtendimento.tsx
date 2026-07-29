@@ -1572,13 +1572,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         const destaqueEtapaAtual = etapaLiberada && !etapaFinalizada;
 
                         const statusFluxo = faltouConsulta
-                          ? "Consulta nao realizada"
+                          ? "Consulta não realizada"
                           : etapaFinalizada
                             ? "Processo finalizado"
                             : tokenEnviado
-                              ? "Aguardando validacao do token"
+                              ? "Aguardando validação do token"
                               : bloqueadoPorOrdem
-                                ? `Aguardando conclusao do ${indice} de ${total}`
+                                ? `Aguardando conclusão do ${indice} de ${total}`
                                 : "Pronto para iniciar";
 
                         return (
@@ -1604,7 +1604,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 </p>
                                 <p className="text-[0.74rem] font-bold uppercase tracking-[0.06em] text-slate-500">
                                   {cardConsulta.agrupadoUltrassom
-                                    ? "Horarios do dia"
+                                    ? "Horários do dia"
                                     : formatarData(consulta.dataInicio)}
                                 </p>
                               </div>
@@ -1680,8 +1680,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     {faltouConsulta
                                       ? "Atendimento encerrado"
                                       : bloqueadoPorOrdem
-                                        ? `Libera apos concluir o ${indice} de ${total}`
-                                        : "Aguardando finalizacao"}
+                                        ? `Libera após concluir o ${indice} de ${total}`
+                                        : "Aguardando finalização"}
                                   </div>
                                 )}
                               </div>
