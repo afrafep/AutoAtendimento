@@ -1,0 +1,277 @@
+stages:
+  - build
+  - deploy
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+variables:
+  RELEASE_BASE: "2.1"
+  RELEASE_START_PATCH: "2"
+  GIT_PUSH_TAGS: "true"
+  DOCKER_BUILDKIT: "1"
+  IMAGE_SHA: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  SISCLINIC_SERVICE_NAME: "sisclinic-atendimento-front"
+  DEV_PROJECT_NAME: "sisclinic_atendimento_front_dev"
+  PROD_PROJECT_NAME: "sisclinic_atendimento_front_prod"
+  DEV_APP_DIR: "/var/app/frontend/sisclinic-atendimento"
+  PROD_APP_DIR: "/var/app/frontend/sisclinic-atendimento"
+  COMPOSE_FILE: "docker-compose.yml"
+
+.docker_login:
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+
+.push_git_tag:
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ] && [ "$GIT_PUSH_TAGS" = "true" ] && [ -f release.env ]; then
+        . release.env
+        if [ -n "$RELEASE_GIT_TAG" ]; then
+          git tag "$RELEASE_GIT_TAG" || echo "[!] Tag $RELEASE_GIT_TAG ja existe localmente"
+          git push origin "$RELEASE_GIT_TAG" || echo "[!] Sem permissao para enviar tag Git $RELEASE_GIT_TAG"
+        fi
+      fi
+
+build_image_dev:
+  stage: build
+  tags:
+    - dev_server
+  extends:
+    - .docker_login
+    - .push_git_tag
+  script:
+    - |
+      echo "[+] Iniciando build DEV em $(date)"
+      echo "[+] Calculando proxima versao candidata para base $RELEASE_BASE"
+      LAST_PATCH="$(python3 - <<'PY'
+      import json
+      import os
+      import re
+      import sys
+      import urllib.parse
+      import urllib.request
+
+      api_base = os.environ["CI_API_V4_URL"].rstrip("/")
+      project_id = os.environ["CI_PROJECT_ID"]
+      release_base = os.environ["RELEASE_BASE"]
+      job_token = os.environ["CI_JOB_TOKEN"]
+      pattern = re.compile(rf"^{re.escape(release_base)}\.(\d+)(-rc)?$")
+
+      def request_json(url):
+          request = urllib.request.Request(url)
+          request.add_header("JOB-TOKEN", job_token)
+          with urllib.request.urlopen(request) as response:
+              return json.load(response), response.headers
+
+      try:
+          repos_url = f"{api_base}/projects/{urllib.parse.quote_plus(project_id)}/registry/repositories?per_page=100"
+          repositories, _ = request_json(repos_url)
+          if not repositories:
+              print("")
+              sys.exit(0)
+
+          repository_id = repositories[0]["id"]
+          tags = []
+          page = 1
+          while True:
+              tags_url = (
+                  f"{api_base}/projects/{urllib.parse.quote_plus(project_id)}"
+                  f"/registry/repositories/{repository_id}/tags?per_page=100&page={page}"
+              )
+              payload, headers = request_json(tags_url)
+              tags.extend(tag["name"] for tag in payload if isinstance(tag, dict) and "name" in tag)
+              next_page = headers.get("X-Next-Page")
+              if not next_page:
+                  break
+              page = int(next_page)
+      except Exception as exc:
+          print(f"[!] Erro ao consultar tags do GitLab Registry: {exc}", file=sys.stderr)
+          print("")
+          sys.exit(0)
+
+      patches = []
+      for tag in tags:
+          match = pattern.match(tag)
+          if match:
+              patches.append(int(match.group(1)))
+
+      print(max(patches) if patches else "")
+      PY
+      )"
+      if [ -z "$LAST_PATCH" ]; then
+        NEXT_PATCH="$RELEASE_START_PATCH"
+      else
+        NEXT_PATCH=$((LAST_PATCH + 1))
+      fi
+
+      export RELEASE_VERSION="${RELEASE_BASE}.${NEXT_PATCH}"
+      export RELEASE_CANDIDATE="${RELEASE_VERSION}-rc"
+      export SISCLINIC_ATENDIMENTO_IMAGE="$CI_REGISTRY_IMAGE:$RELEASE_CANDIDATE"
+      export RELEASE_GIT_TAG="v$RELEASE_CANDIDATE"
+
+      {
+        printf "RELEASE_VERSION=%s\n" "$RELEASE_VERSION"
+        printf "RELEASE_CANDIDATE=%s\n" "$RELEASE_CANDIDATE"
+        printf "RELEASE_GIT_TAG=%s\n" "$RELEASE_GIT_TAG"
+        printf "SISCLINIC_ATENDIMENTO_IMAGE=%s\n" "$SISCLINIC_ATENDIMENTO_IMAGE"
+      } > release.env
+
+      docker build --pull \
+        --label "org.opencontainers.image.title=$SISCLINIC_SERVICE_NAME" \
+        --label "org.opencontainers.image.revision=$CI_COMMIT_SHA" \
+        --label "org.opencontainers.image.version=$RELEASE_CANDIDATE" \
+        -t "$SISCLINIC_ATENDIMENTO_IMAGE" \
+        -t "$CI_REGISTRY_IMAGE:dev" \
+        -t "$IMAGE_SHA" \
+        .
+
+      docker push "$SISCLINIC_ATENDIMENTO_IMAGE"
+      docker push "$CI_REGISTRY_IMAGE:dev"
+      docker push "$IMAGE_SHA"
+  artifacts:
+    reports:
+      dotenv: release.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+deploy_dev:
+  stage: deploy
+  tags:
+    - dev_server
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: build_image_dev
+      artifacts: true
+  script:
+    - |
+      export SISCLINIC_ATENDIMENTO_IMAGE="${SISCLINIC_ATENDIMENTO_IMAGE:-$CI_REGISTRY_IMAGE:dev}"
+      export SISCLINIC_ATENDIMENTO_CONTAINER_NAME="${SISCLINIC_ATENDIMENTO_CONTAINER_NAME:-sisclinic-atendimento-front-dev}"
+      cd "$DEV_APP_DIR"
+
+      echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+      docker pull "$SISCLINIC_ATENDIMENTO_IMAGE"
+      docker compose -f "$COMPOSE_FILE" -p "$DEV_PROJECT_NAME" pull
+      docker compose -f "$COMPOSE_FILE" -p "$DEV_PROJECT_NAME" down --remove-orphans || true
+      docker compose -f "$COMPOSE_FILE" -p "$DEV_PROJECT_NAME" up -d --no-build --force-recreate
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+
+build_image_prod:
+  stage: build
+  tags:
+    - prod_server
+  extends:
+    - .docker_login
+    - .push_git_tag
+  script:
+    - |
+      echo "[+] Promovendo ultima imagem RC da base $RELEASE_BASE para producao"
+      export RELEASE_CANDIDATE="$(python3 - <<'PY'
+      import json
+      import os
+      import re
+      import sys
+      import urllib.parse
+      import urllib.request
+
+      api_base = os.environ["CI_API_V4_URL"].rstrip("/")
+      project_id = os.environ["CI_PROJECT_ID"]
+      release_base = os.environ["RELEASE_BASE"]
+      job_token = os.environ["CI_JOB_TOKEN"]
+      pattern = re.compile(rf"^{re.escape(release_base)}\.(\d+)-rc$")
+
+      def request_json(url):
+          request = urllib.request.Request(url)
+          request.add_header("JOB-TOKEN", job_token)
+          with urllib.request.urlopen(request) as response:
+              return json.load(response), response.headers
+
+      try:
+          repos_url = f"{api_base}/projects/{urllib.parse.quote_plus(project_id)}/registry/repositories?per_page=100"
+          repositories, _ = request_json(repos_url)
+          if not repositories:
+              print(f"[!] Nenhum repositorio de container encontrado no projeto {project_id}", file=sys.stderr)
+              sys.exit(1)
+
+          repository_id = repositories[0]["id"]
+          tags = []
+          page = 1
+          while True:
+              tags_url = (
+                  f"{api_base}/projects/{urllib.parse.quote_plus(project_id)}"
+                  f"/registry/repositories/{repository_id}/tags?per_page=100&page={page}"
+              )
+              payload, headers = request_json(tags_url)
+              tags.extend(tag["name"] for tag in payload if isinstance(tag, dict) and "name" in tag)
+              next_page = headers.get("X-Next-Page")
+              if not next_page:
+                  break
+              page = int(next_page)
+      except Exception as exc:
+          print(f"[!] Erro ao consultar tags do GitLab Registry: {exc}", file=sys.stderr)
+          sys.exit(1)
+
+      candidates = []
+      for tag in tags:
+          match = pattern.match(tag)
+          if match:
+              candidates.append((int(match.group(1)), tag))
+
+      if not candidates:
+          print(f"[!] Nenhuma imagem RC encontrada para RELEASE_BASE={release_base}", file=sys.stderr)
+          sys.exit(1)
+
+      candidates.sort(key=lambda item: item[0])
+      print(candidates[-1][1])
+      PY
+      )"
+
+      export RELEASE_VERSION="${RELEASE_CANDIDATE%-rc}"
+      export SISCLINIC_ATENDIMENTO_IMAGE="$CI_REGISTRY_IMAGE:$RELEASE_VERSION"
+      export RELEASE_GIT_TAG="v$RELEASE_VERSION"
+
+      {
+        printf "RELEASE_VERSION=%s\n" "$RELEASE_VERSION"
+        printf "RELEASE_CANDIDATE=%s\n" "$RELEASE_CANDIDATE"
+        printf "RELEASE_GIT_TAG=%s\n" "$RELEASE_GIT_TAG"
+        printf "SISCLINIC_ATENDIMENTO_IMAGE=%s\n" "$SISCLINIC_ATENDIMENTO_IMAGE"
+      } > release.env
+
+      docker pull "$CI_REGISTRY_IMAGE:$RELEASE_CANDIDATE"
+      docker tag "$CI_REGISTRY_IMAGE:$RELEASE_CANDIDATE" "$SISCLINIC_ATENDIMENTO_IMAGE"
+      docker tag "$CI_REGISTRY_IMAGE:$RELEASE_CANDIDATE" "$CI_REGISTRY_IMAGE:latest"
+      docker push "$SISCLINIC_ATENDIMENTO_IMAGE"
+      docker push "$CI_REGISTRY_IMAGE:latest"
+  artifacts:
+    reports:
+      dotenv: release.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+deploy_prod:
+  stage: deploy
+  tags:
+    - prod_server
+  variables:
+    GIT_STRATEGY: none
+  needs:
+    - job: build_image_prod
+      artifacts: true
+  script:
+    - |
+      export SISCLINIC_ATENDIMENTO_IMAGE="${SISCLINIC_ATENDIMENTO_IMAGE:-$CI_REGISTRY_IMAGE:latest}"
+      export SISCLINIC_ATENDIMENTO_CONTAINER_NAME="${SISCLINIC_ATENDIMENTO_CONTAINER_NAME:-sisclinic-atendimento-front-prod}"
+      cd "$PROD_APP_DIR"
+
+      echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+      docker pull "$SISCLINIC_ATENDIMENTO_IMAGE"
+      docker compose -f "$COMPOSE_FILE" -p "$PROD_PROJECT_NAME" pull
+      docker compose -f "$COMPOSE_FILE" -p "$PROD_PROJECT_NAME" down --remove-orphans || true
+      docker compose -f "$COMPOSE_FILE" -p "$PROD_PROJECT_NAME" up -d --no-build --force-recreate
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'

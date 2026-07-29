@@ -1,0 +1,12 @@
+services:
+  sisclinic-atendimento-front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${SISCLINIC_ATENDIMENTO_IMAGE:-sisclinic-atendimento-front:latest}
+    container_name: ${SISCLINIC_ATENDIMENTO_CONTAINER_NAME:-sisclinic-atendimento-front}
+    ports:
+      - "${PORT:-5173}:5173"
+    env_file:
+      - .env
+    restart: unless-stopped

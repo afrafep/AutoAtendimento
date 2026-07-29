@@ -1,0 +1,123 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import "tailwindcss";
+
+
+body {
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased; 
+}
+
+
+.swal-wide {
+  width: 700px !important;
+  max-width: 90vw;
+  padding: 20px;
+}
+
+@media (min-width: 1280px) {
+  .container {
+      max-width: 1000px;
+  }
+  
+}
+
+.bg-dark {
+   --bs-bg-opacity: 0; 
+}
+
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
+.auto-scene {
+  position: relative;
+  perspective: 1200px;
+}
+
+.auto-scene__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  color: #f8fbff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.auto-scene__panel {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 12px 24px rgba(0, 28, 88, 0.12);
+}
+
+.auto-scene__symbol {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.auto-scene__symbol-line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: #8ad7ff;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+}
+
+.auto-scene__symbol-line--horizontal {
+  width: 16px;
+  height: 3px;
+}
+
+.auto-scene__symbol-line--vertical {
+  width: 3px;
+  height: 16px;
+}
+
+.auto-scene__copy {
+  text-align: center;
+}
+
+.auto-scene__title {
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.auto-scene__detail {
+  margin-top: 2px;
+  color: rgba(230,244,255,0.82);
+  font-size: 0.58rem;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .auto-scene {
+    max-width: 100%;
+  }
+
+  .auto-scene__panel {
+    padding: 10px 8px;
+  }
+}
+

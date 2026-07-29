@@ -1,0 +1,642 @@
+﻿import Swal from "sweetalert2";
+import { api } from "../config/configApi";
+
+const toSafeString = (value: unknown) => {
+  if (value == null) return "";
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return String(
+      obj.value ??
+        obj.codigo ??
+        obj.id ??
+        obj.numero ??
+        obj.sigla ??
+        "",
+    ).trim();
+  }
+  return String(value).trim();
+};
+
+const toSafeNumber = (value: unknown) => {
+  const normalized = toSafeString(value);
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const resolveNumeroGuiaOperadora = (
+  senhaGuia: unknown,
+  numeroGuiaOperadora: unknown,
+) => {
+  const numeroDireto = toSafeNumber(numeroGuiaOperadora);
+  if (numeroDireto > 0) return numeroDireto;
+
+  const senhaComoNumero = toSafeNumber(senhaGuia);
+  if (senhaComoNumero > 0) return senhaComoNumero;
+
+  return 0;
+};
+
+const extrairRetornoApi = (data: any) => ({
+  status: toSafeString(data?.status),
+  mensagem: toSafeString(data?.mensagem || data?.message || data?.error),
+});
+
+const normalizarMensagemToken = (mensagem?: string) => {
+  const texto = toSafeString(mensagem);
+  const textoLower = texto.toLowerCase();
+
+  if (
+    textoLower.includes("token invalido") ||
+    textoLower.includes("token inválido") ||
+    textoLower.includes("ora-20400")
+  ) {
+    return "Token inválido";
+  }
+
+  return texto;
+};
+
+interface TokenValidarProps {
+  nome: string;
+  nrCarteiraPlano: string;
+  senhaGuia: string;
+  numeroGuiaGerado?: string;
+  numeroGuiaOperadora?: number;
+  tokenEnviado: boolean;
+  onTokenValidado?: (token: string, tokenValidado: boolean) => void;
+  onReenviarToken?: () => Promise<boolean | void> | boolean | void;
+  onCancelar?: () => void;
+}
+
+interface TokenValidarResult {
+  tokenDigitado?: string;
+  dismiss?: any;
+}
+
+interface TokenValidationResult {
+  token: string;
+  tokenValidado: boolean;
+  apiStatus?: string;
+  apiMensagem?: string;
+}
+
+export const TokenValidar = async ({
+  nome,
+  nrCarteiraPlano,
+  senhaGuia,
+  numeroGuiaOperadora = 0,
+  tokenEnviado,
+  onTokenValidado,
+  onReenviarToken,
+  onCancelar,
+}: TokenValidarProps): Promise<TokenValidarResult> => {
+  const numeroGuiaPayload = resolveNumeroGuiaOperadora(
+    senhaGuia,
+    numeroGuiaOperadora,
+  );
+  const numeroGuiaExibicao =
+    toSafeString(numeroGuiaPayload) || toSafeString(senhaGuia);
+
+  const clearValidationMessage = () => {
+    const validationContainer = Swal.getHtmlContainer()?.querySelector(
+      ".swal2-validation-message",
+    );
+    if (validationContainer) {
+      validationContainer.innerHTML = "";
+      validationContainer.classList.remove("swal2-validation-message");
+    }
+  };
+
+  const setInlineResendFeedback = (
+    type: "info" | "success" | "error",
+    message: string,
+  ) => {
+    const container = document.getElementById("token-resend-feedback");
+    if (!container) return;
+
+    const classMap = {
+      info: "border-cyan-400/40 bg-cyan-500/10 text-cyan-100",
+      success: "border-emerald-400/40 bg-emerald-500/10 text-emerald-100",
+      error: "border-rose-400/40 bg-rose-500/10 text-rose-100",
+    };
+
+    container.className = `rounded-[0.85rem] border px-3 py-2 text-center text-[0.66rem] leading-4 sm:text-[0.72rem] ${classMap[type]}`;
+    container.textContent = message;
+    container.classList.remove("hidden");
+  };
+
+  const hideInlineResendFeedback = () => {
+    const container = document.getElementById("token-resend-feedback");
+    if (!container) return;
+
+    container.textContent = "";
+    container.className =
+      "hidden rounded-[0.85rem] border px-3 py-2 text-center text-[0.66rem] leading-4 sm:text-[0.72rem]";
+  };
+
+  const setReenviarTokenState = (processing: boolean) => {
+    const denyButton = Swal.getDenyButton();
+    const confirmButton = Swal.getConfirmButton();
+    const cancelButton = Swal.getCancelButton();
+
+    if (denyButton) {
+      denyButton.disabled = processing;
+      denyButton.innerHTML = processing ? "Reenviando..." : "📲 Reenviar token";
+    }
+
+    if (confirmButton) confirmButton.disabled = processing;
+    if (cancelButton) cancelButton.disabled = processing;
+  };
+
+  const setupTokenInputs = () => {
+    const inputs =
+      Swal.getHtmlContainer()?.querySelectorAll<HTMLInputElement>(".token-input");
+    const hiddenInput = document.getElementById("full-token") as HTMLInputElement;
+    const keypadButtons =
+      Swal.getHtmlContainer()?.querySelectorAll<HTMLButtonElement>(".token-keypad-button");
+    const clearButton = document.getElementById("token-keypad-clear") as HTMLButtonElement | null;
+    const backspaceButton = document.getElementById("token-keypad-backspace") as HTMLButtonElement | null;
+
+    if (!inputs || !hiddenInput) return;
+
+    inputs.forEach((input) => {
+      input.replaceWith(input.cloneNode(true));
+    });
+
+    keypadButtons?.forEach((button) => {
+      button.replaceWith(button.cloneNode(true));
+    });
+
+    clearButton?.replaceWith(clearButton.cloneNode(true));
+    backspaceButton?.replaceWith(backspaceButton.cloneNode(true));
+
+    const freshInputs =
+      Swal.getHtmlContainer()?.querySelectorAll<HTMLInputElement>(".token-input");
+    const freshHiddenInput = document.getElementById(
+      "full-token",
+    ) as HTMLInputElement;
+    const freshKeypadButtons =
+      Swal.getHtmlContainer()?.querySelectorAll<HTMLButtonElement>(".token-keypad-button");
+    const freshClearButton = document.getElementById("token-keypad-clear") as HTMLButtonElement | null;
+    const freshBackspaceButton = document.getElementById("token-keypad-backspace") as HTMLButtonElement | null;
+
+    if (!freshInputs || !freshHiddenInput) return;
+
+    const syncHiddenToken = () => {
+      freshHiddenInput.value = Array.from(freshInputs)
+        .map((inp) => inp.value)
+        .join("");
+    };
+
+    const getActiveIndex = () => {
+      const focusedIndex = Array.from(freshInputs).findIndex(
+        (input) => input === document.activeElement,
+      );
+
+      if (focusedIndex >= 0) return focusedIndex;
+
+      const firstEmptyIndex = Array.from(freshInputs).findIndex((input) => !input.value);
+      return firstEmptyIndex >= 0 ? firstEmptyIndex : freshInputs.length - 1;
+    };
+
+    const fillTokenDigit = (digit: string) => {
+      if (!/^\d$/.test(digit)) return;
+
+      clearValidationMessage();
+
+      const activeIndex = getActiveIndex();
+      const targetInput = freshInputs[activeIndex];
+      targetInput.value = digit;
+
+      if (activeIndex < freshInputs.length - 1) {
+        freshInputs[activeIndex + 1].focus();
+      } else {
+        targetInput.focus();
+      }
+
+      syncHiddenToken();
+    };
+
+    const removeLastDigit = () => {
+      clearValidationMessage();
+
+      const activeIndex = getActiveIndex();
+      const currentInput = freshInputs[activeIndex];
+
+      if (currentInput.value) {
+        currentInput.value = "";
+        currentInput.focus();
+      } else if (activeIndex > 0) {
+        freshInputs[activeIndex - 1].value = "";
+        freshInputs[activeIndex - 1].focus();
+      }
+
+      syncHiddenToken();
+    };
+
+    const clearAllDigits = () => {
+      clearValidationMessage();
+      freshInputs.forEach((input) => {
+        input.value = "";
+      });
+      syncHiddenToken();
+      freshInputs[0]?.focus();
+    };
+
+    freshInputs.forEach((input, idx) => {
+      input.addEventListener("input", (e) => {
+        const target = e.target as HTMLInputElement;
+        const value = target.value.replace(/\D/g, "").slice(-1);
+
+        clearValidationMessage();
+        target.value = value;
+
+        if (value && idx < freshInputs.length - 1) {
+          freshInputs[idx + 1].focus();
+        }
+
+        syncHiddenToken();
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" || e.key === "Delete") {
+          e.preventDefault();
+          removeLastDigit();
+          return;
+        }
+
+        if (e.key === "ArrowLeft" && idx > 0) {
+          e.preventDefault();
+          freshInputs[idx - 1].focus();
+          return;
+        }
+
+        if (e.key === "ArrowRight" && idx < freshInputs.length - 1) {
+          e.preventDefault();
+          freshInputs[idx + 1].focus();
+          return;
+        }
+
+        if (e.key === "Tab") {
+          return;
+        }
+
+        if (!/^\d$/.test(e.key)) {
+          e.preventDefault();
+        }
+      });
+
+      input.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const pasteData = e.clipboardData?.getData("text") || "";
+        const numbers = pasteData.replace(/\D/g, "").slice(0, 4);
+
+        clearValidationMessage();
+        freshInputs.forEach((field) => {
+          field.value = "";
+        });
+
+        numbers.split("").forEach((char, charIndex) => {
+          if (freshInputs[charIndex]) {
+            freshInputs[charIndex].value = char;
+          }
+        });
+
+        syncHiddenToken();
+        const lastFilledIndex = Math.min(Math.max(numbers.length - 1, 0), freshInputs.length - 1);
+        freshInputs[lastFilledIndex]?.focus();
+      });
+
+      input.addEventListener("click", clearValidationMessage);
+      input.addEventListener("focus", clearValidationMessage);
+    });
+
+    freshKeypadButtons?.forEach((button) => {
+      button.addEventListener("click", () => {
+        fillTokenDigit(button.dataset.digit || "");
+      });
+    });
+
+    freshBackspaceButton?.addEventListener("click", removeLastDigit);
+    freshClearButton?.addEventListener("click", clearAllDigits);
+
+    freshInputs[0]?.focus();
+  };
+
+  const result = await Swal.fire({
+    title: "🔐 Validação de Token",
+    html: `
+      <div class="space-y-2.5 sm:space-y-3">
+        <div class="rounded-[0.95rem] border border-slate-700/80 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.88))] px-3 py-3 shadow-[0_16px_28px_rgba(2,6,23,0.22)]">
+          <div class="text-center">
+            <p class="text-[0.82rem] font-semibold leading-5 text-slate-100 sm:text-[0.92rem]">Digite o token de 4 dígitos recebido no celular.</p>
+            <p class="mt-1 text-[0.68rem] leading-4 text-slate-400 sm:text-[0.74rem]">Use o teclado abaixo para preencher o código.</p>
+          </div>
+
+          <div class="mt-3 flex justify-center gap-1.5 sm:gap-2">
+            ${Array.from({ length: 4 })
+              .map(
+                (_, i) => `
+              <input 
+                type="text" 
+                maxlength="1" 
+                class="token-input h-10 w-10 rounded-[0.8rem] border border-slate-500/70 bg-slate-950/80 text-center text-[1.05rem] font-black tracking-[0.04em] text-white transition-all duration-200 focus:border-cyan-400 focus:bg-slate-900 focus:ring-2 focus:ring-cyan-500/15 sm:h-11 sm:w-11 sm:text-[1.18rem]" 
+                data-index="${i}"
+                inputmode="numeric"
+                pattern="[0-9]*"
+              />
+            `,
+              )
+              .join("")}
+          </div>
+        </div>
+        <input type="hidden" id="full-token" />
+
+        <div class="rounded-[0.95rem] border border-slate-700/80 bg-slate-900/65 p-2.5 shadow-[0_10px_20px_rgba(15,23,42,0.14)]">
+          <div class="mb-2 flex items-center justify-between">
+            <p class="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-slate-400">Teclado numérico</p>
+            <p class="text-[0.64rem] text-slate-500">Toque para digitar</p>
+          </div>
+          <div class="grid grid-cols-3 gap-1.5">
+            ${["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+              .map(
+                (digit) => `
+              <button
+                type="button"
+                class="token-keypad-button flex h-8 items-center justify-center rounded-[0.78rem] border border-slate-600/80 bg-slate-950/90 text-[0.88rem] font-black text-slate-100 transition hover:border-cyan-400/80 hover:bg-slate-800 focus:outline-none sm:h-9 sm:text-[0.96rem]"
+                data-digit="${digit}"
+              >
+                ${digit}
+              </button>
+            `,
+              )
+              .join("")}
+            <button
+              type="button"
+              id="token-keypad-clear"
+              class="flex h-8 items-center justify-center rounded-[0.78rem] border border-rose-400/70 bg-rose-500/10 px-1 text-[0.52rem] font-black uppercase tracking-[0.05em] text-rose-200 transition hover:bg-rose-500/20 focus:outline-none sm:h-9 sm:text-[0.58rem]"
+            >
+              Limpar
+            </button>
+            <button
+              type="button"
+              class="token-keypad-button flex h-8 items-center justify-center rounded-[0.78rem] border border-slate-600/80 bg-slate-950/90 text-[0.88rem] font-black text-slate-100 transition hover:border-cyan-400/80 hover:bg-slate-800 focus:outline-none sm:h-9 sm:text-[0.96rem]"
+              data-digit="0"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              id="token-keypad-backspace"
+              class="flex h-8 items-center justify-center rounded-[0.78rem] border border-amber-400/70 bg-amber-500/10 px-1 text-[0.52rem] font-black uppercase tracking-[0.05em] text-amber-200 transition hover:bg-amber-500/20 focus:outline-none sm:h-9 sm:text-[0.58rem]"
+            >
+              Apagar
+            </button>
+          </div>
+        </div>
+        
+        <div class="hidden rounded-[0.9rem] border border-slate-700/80 bg-slate-900/55 p-2.5 shadow-[0_10px_18px_rgba(15,23,42,0.12)]">
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[0.66rem] text-left text-slate-300 sm:text-[0.74rem]">
+            <div>
+              <p class="text-slate-500">Paciente</p>
+              <p class="mt-0.5 font-semibold leading-4 text-slate-100">${nome}</p>
+            </div>
+            <div>
+              <p class="text-slate-500">Carteira</p>
+              <p class="mt-0.5 font-mono text-slate-100">${nrCarteiraPlano || "N/A"}</p>
+            </div>
+            <div>
+              <p class="text-slate-500">Número da guia</p>
+              <p class="mt-0.5 font-mono text-slate-100">${numeroGuiaExibicao || "N/A"}</p>
+            </div>
+            <div>
+              <p class="text-slate-500">Status</p>
+              <p class="mt-0.5 inline-flex rounded-full px-2 py-0.5 text-[0.6rem] font-black ${
+                tokenEnviado
+                  ? "bg-emerald-500/12 text-emerald-300"
+                  : "bg-amber-500/12 text-amber-300"
+              }">${tokenEnviado ? "Enviado" : "Pendente"}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[0.85rem] border border-cyan-500/20 bg-cyan-500/8 px-3 py-2">
+          <p class="text-center text-[0.66rem] leading-4 text-cyan-100 sm:text-[0.72rem]">
+            Se não recebeu o código, toque em <span class="font-bold text-white">Reenviar token</span>.
+          </p>
+        </div>
+
+        <div id="token-resend-feedback" class="hidden rounded-[0.85rem] border px-3 py-2 text-center text-[0.66rem] leading-4 sm:text-[0.72rem]"></div>
+      </div>
+    `,
+    showDenyButton: true,
+    showCancelButton: true,
+    confirmButtonText: "✅ Confirmar",
+    cancelButtonText: "↩️ Voltar",
+    denyButtonText: "📲 Reenviar token",
+    background: "#1f2937",
+    color: "#f9fafb",
+    allowOutsideClick: false,
+    buttonsStyling: false,
+    customClass: {
+      popup: "!w-[min(94vw,28rem)] !rounded-[0.95rem] !border !border-slate-700 !bg-slate-800/95 !px-3 !pb-3 !pt-2.5 !shadow-[0_20px_40px_rgba(2,6,23,0.28)]",
+      title: "!mb-2 !text-[0.95rem] !font-black !tracking-tight !text-slate-50 sm:!text-[1.15rem]",
+      htmlContainer: "!mx-0 !mt-0 !px-0 !pb-0 !text-left",
+      actions: "!grid !grid-cols-3 !gap-2 !w-full !mt-2.5 !pt-0",
+      confirmButton:
+        "!m-0 !flex !h-9 !w-full !items-center !justify-center !rounded-[0.78rem] !border !border-emerald-500 !bg-emerald-600 !px-1 !text-[0.64rem] !font-black !text-white !transition hover:!bg-emerald-500 sm:!text-[0.72rem]",
+      denyButton:
+        "!m-0 !flex !h-9 !w-full !items-center !justify-center !rounded-[0.78rem] !border !border-amber-300 !bg-amber-50 !px-1 !text-[0.58rem] !font-black !text-amber-900 !transition hover:!bg-amber-100 sm:!text-[0.64rem]",
+      cancelButton:
+        "!m-0 !flex !h-9 !w-full !items-center !justify-center !rounded-[0.78rem] !border !border-slate-500 !bg-slate-600 !px-1 !text-[0.64rem] !font-black !text-white !transition hover:!bg-slate-500 sm:!text-[0.72rem]",
+    },
+    preDeny: async () => {
+      hideInlineResendFeedback();
+      clearValidationMessage();
+      setReenviarTokenState(true);
+      setInlineResendFeedback("info", "Reenviando token para o celular...");
+
+      try {
+        const reenvioOk = await onReenviarToken?.();
+
+        if (reenvioOk === false) {
+          setInlineResendFeedback(
+            "error",
+            "Não foi possível reenviar o token. Tente novamente em alguns instantes.",
+          );
+          return false;
+        }
+
+        setInlineResendFeedback(
+          "success",
+          "Novo token enviado. Digite o código recebido no celular.",
+        );
+        return false;
+      } catch (_error) {
+        setInlineResendFeedback(
+          "error",
+          "Não foi possível reenviar o token. Tente novamente em alguns instantes.",
+        );
+        return false;
+      } finally {
+        setReenviarTokenState(false);
+      }
+    },
+    preConfirm: async (): Promise<TokenValidationResult | null> => {
+      const token =
+        (document.getElementById("full-token") as HTMLInputElement)?.value || "";
+
+      if (token.length !== 4) {
+        Swal.showValidationMessage("Digite todos os 4 dígitos do token");
+        return null;
+      }
+      if (!/^\d+$/.test(token)) {
+        Swal.showValidationMessage("O token deve conter apenas números");
+        return null;
+      }
+
+      try {
+        Swal.showLoading();
+
+        const payloadValidacao = {
+          token: toSafeString(token),
+          cdBeneficiario: toSafeString(nrCarteiraPlano),
+          numeroGuiaOperadora: numeroGuiaPayload,
+        };
+
+        console.log("📤 Enviando para validação:", payloadValidacao);
+
+        const response = await api.post("/sisclinic/token/validar", payloadValidacao);
+
+        Swal.hideLoading();
+
+        console.log("📥 Resposta da API:", response.data);
+
+        const retornoApi = extrairRetornoApi(response.data);
+        const mensagem = normalizarMensagemToken(retornoApi.mensagem || "");
+        const mensagemLower = mensagem.toLowerCase();
+
+        if (mensagemLower.includes("token validado com sucesso")) {
+          return {
+            token,
+            tokenValidado: true,
+            apiStatus: retornoApi.status,
+            apiMensagem: mensagem,
+          };
+        }
+
+        if (mensagemLower.includes("senha já validada com envio de token")) {
+          Swal.showValidationMessage(
+            `✅ ${retornoApi.status ? `[${retornoApi.status}] ` : ""}${mensagem}`,
+          );
+          return {
+            token,
+            tokenValidado: true,
+            apiStatus: retornoApi.status,
+            apiMensagem: mensagem,
+          };
+        }
+
+        Swal.showValidationMessage(
+          mensagem === "Token inválido"
+            ? mensagem
+            : `${retornoApi.status ? `[${retornoApi.status}] ` : ""}${mensagem || "Token inválido"}`,
+        );
+        return null;
+      } catch (error: any) {
+        Swal.hideLoading();
+        console.error("❌ Erro na validação:", error);
+
+        let errorMessage = "Erro ao validar token";
+        let errorStatus = "";
+
+        if (error.response) {
+          const status = error.response.status;
+          const data = error.response.data;
+          const retornoApi = extrairRetornoApi(data);
+          errorStatus = retornoApi.status || String(status);
+
+          console.log(`📥 Erro ${status}:`, data);
+
+          if (typeof data === "string") {
+            errorMessage = normalizarMensagemToken(data);
+          } else if (retornoApi.mensagem) {
+            errorMessage = normalizarMensagemToken(retornoApi.mensagem);
+          } else if (status === 400) {
+            errorMessage = "Requisição inválida - verifique os dados enviados";
+          } else if (status === 401) {
+            errorMessage = "Não autorizado";
+          } else if (status === 404) {
+            errorMessage = "Serviço não encontrado";
+          } else if (status === 500) {
+            errorMessage = "Erro interno do servidor";
+          } else {
+            errorMessage = `Erro ${status} - ${JSON.stringify(data)}`;
+          }
+        } else if (error.request) {
+          errorMessage = "Sem resposta do servidor - verifique sua conexão";
+          errorStatus = "SEM_RESPOSTA";
+        } else {
+          errorMessage = error.message || "Erro desconhecido";
+        }
+
+        Swal.showValidationMessage(
+          errorMessage === "Token inválido"
+            ? errorMessage
+            : `${errorStatus ? `[${errorStatus}] ` : ""}${errorMessage}`,
+        );
+        return null;
+      }
+    },
+    didOpen: () => {
+      setTimeout(setupTokenInputs, 100);
+    },
+  });
+
+  if (result.value) {
+    const validationResult = result.value as TokenValidationResult;
+    const { token, tokenValidado, apiStatus, apiMensagem } = validationResult;
+
+    onTokenValidado?.(token, tokenValidado);
+
+    await Swal.fire({
+      title: "✅ Token Validado!",
+      html: `
+        <div class="space-y-3 text-left">
+          <div class="bg-green-500/10 rounded-lg p-3 border border-green-500/30">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-green-200">Status API:</span>
+              <span class="text-white font-mono">${apiStatus || "N/A"}</span>
+            </div>
+            <div class="mt-2 text-sm text-green-100 break-words">
+              ${apiMensagem || "Token validado com sucesso!"}
+            </div>
+          </div>
+        </div>
+      `,
+      icon: "success",
+      background: "#1f2937",
+      color: "#f9fafb",
+      confirmButtonText: "Continuar",
+    });
+  } else if (result.dismiss === Swal.DismissReason.cancel) {
+    onCancelar?.();
+  }
+
+  return {
+    tokenDigitado: result.value
+      ? (result.value as TokenValidationResult).token
+      : undefined,
+    dismiss: result.dismiss,
+  };
+};
+
+
+
+
+
+
+
+
+
+
