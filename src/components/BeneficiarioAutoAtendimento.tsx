@@ -1595,37 +1595,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               : "Finalize este atendimento para liberar o próximo horário."}
                           </p>
                         </div>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                          <button
-                            onClick={() => void buscarConsultas()}
-                            disabled={loading}
-                            className="h-10 rounded-[0.85rem] border border-slate-200 bg-white px-4 text-[0.76rem] font-bold text-[#00338d] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d]/25 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {loading ? "Atualizando..." : "Atualizar"}
-                          </button>
-                          <div className="flex gap-3">
-                            <button
-                              type="button"
-                              onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
-                              disabled={indiceConsultaAtual === 0}
-                              className="h-10 min-w-[118px] rounded-[0.85rem] border border-slate-200 bg-white px-3 text-[0.76rem] font-black uppercase text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d] hover:text-[#00338d] disabled:cursor-not-allowed disabled:opacity-45"
-                            >
-                              Voltar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setIndiceConsultaAtual((valorAtual) =>
-                                  Math.min(valorAtual + 1, indiceMaximoLiberado),
-                                )
-                              }
-                              disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                              className="h-10 min-w-[118px] rounded-[0.85rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] px-3 text-[0.76rem] font-black uppercase !text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
-                            >
-                              Próximo
-                            </button>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
@@ -1648,8 +1617,18 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 : "border-slate-200 bg-white"
                             }`}
                           >
-                            <div className="grid gap-3">
-                              <div className="grid gap-1.5 text-center">
+                            <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 md:grid-cols-[54px_minmax(0,1fr)_54px] md:gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
+                                disabled={indiceConsultaAtual === 0}
+                                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-[1.15rem] font-black text-[#00338d] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d] hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-35 md:h-12 md:w-12 md:text-[1.3rem]"
+                                aria-label="Voltar atendimento"
+                              >
+                                ‹
+                              </button>
+
+                              <div className="grid gap-3">
                                 <div className="flex justify-center md:justify-end">
                                   <p className={`inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border px-3 text-center text-[0.68rem] font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : tokenEnviado && !autorizacaoConcluida ? "border-amber-200 bg-amber-50 text-amber-800" : compareceuConsulta ? "border-orange-200 bg-orange-50 text-orange-700" : autorizacaoConcluida ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
                                     {!autorizacaoConcluida ? (
@@ -1675,59 +1654,76 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                           : formatarStatus(consulta.statusAgendamento)}
                                   </p>
                                 </div>
-                                {cardConsulta.agrupadoUltrassom ? (
-                                  <p className="text-[0.96rem] font-black uppercase tracking-[0.1em] text-[#00338d]">
-                                    Horários do dia
-                                  </p>
+
+                                <div className="grid gap-2 text-center">
+                                  {cardConsulta.agrupadoUltrassom ? (
+                                    <p className="text-[0.96rem] font-black uppercase tracking-[0.1em] text-[#00338d]">
+                                      Horários do dia
+                                    </p>
+                                  ) : (
+                                    <p className="text-[1.9rem] font-black tracking-tight text-[#00338d]">
+                                      {formatarHora(consulta.horaInicio)}
+                                    </p>
+                                  )}
+
+                                  <div className={`border px-3 py-3 text-center ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-slate-100 bg-slate-50"}`}>
+                                    <p className="text-[0.9rem] font-bold uppercase tracking-[0.06em] text-slate-900">
+                                      {consulta.profissionalNome}
+                                    </p>
+                                    <p className="mt-1 text-[0.84rem] text-slate-600">
+                                      {consulta.especialidadeNome}
+                                    </p>
+                                  </div>
+
+                                  {cardConsulta.agrupadoUltrassom ? (
+                                    <div className={`border px-3 py-2.5 text-left ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
+                                      <div className="grid gap-1.5">
+                                        {cardConsulta.consultasRelacionadas.map((item) => (
+                                          <div
+                                            key={item.idEvento}
+                                            className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
+                                          >
+                                            <p className="text-[0.82rem] text-slate-700">
+                                              <span className="font-black text-[#00338d]">
+                                                {formatarHora(item.horaInicio)}
+                                              </span>
+                                              {" - "}
+                                              {obterDescricaoProcedimentoConsulta(item)}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </div>
+
+                                {podeSeguir ? (
+                                  <button
+                                    onClick={() => abrirEtapaSenha(consulta)}
+                                    className="h-12 bg-[#00338d] px-4 text-[0.88rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f]"
+                                  >
+                                    {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
+                                  </button>
                                 ) : (
-                                  <p className="text-[1.9rem] font-black tracking-tight text-[#00338d]">
-                                    {formatarHora(consulta.horaInicio)}
-                                  </p>
+                                  <div className={`flex h-12 items-center justify-center px-3 text-center text-[0.84rem] font-bold ${faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}>
+                                    {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
+                                  </div>
                                 )}
                               </div>
 
-                              <div className={`border px-3 py-3 text-center ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-slate-100 bg-slate-50"}`}>
-                                <p className="text-[0.9rem] font-bold uppercase tracking-[0.06em] text-slate-900">
-                                  {consulta.profissionalNome}
-                                </p>
-                                <p className="mt-1 text-[0.84rem] text-slate-600">
-                                  {consulta.especialidadeNome}
-                                </p>
-                              </div>
-
-                              {cardConsulta.agrupadoUltrassom ? (
-                                <div className={`border px-3 py-2.5 ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
-                                  <div className="grid gap-1.5">
-                                    {cardConsulta.consultasRelacionadas.map((item) => (
-                                      <div
-                                        key={item.idEvento}
-                                        className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
-                                      >
-                                        <p className="text-[0.82rem] text-slate-700">
-                                          <span className="font-black text-[#00338d]">
-                                            {formatarHora(item.horaInicio)}
-                                          </span>
-                                          {" - "}
-                                          {obterDescricaoProcedimentoConsulta(item)}
-                                        </p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : null}
-
-                              {podeSeguir ? (
-                                <button
-                                  onClick={() => abrirEtapaSenha(consulta)}
-                                  className="h-12 bg-[#00338d] px-4 text-[0.88rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f]"
-                                >
-                                  {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
-                                </button>
-                              ) : (
-                                <div className={`flex h-12 items-center justify-center px-3 text-center text-[0.84rem] font-bold ${faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}>
-                                  {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
-                                </div>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setIndiceConsultaAtual((valorAtual) =>
+                                    Math.min(valorAtual + 1, indiceMaximoLiberado),
+                                  )
+                                }
+                                disabled={indiceConsultaAtual >= indiceMaximoLiberado}
+                                className="flex h-11 w-11 items-center justify-center rounded-full border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-[1.15rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-slate-200 disabled:!bg-slate-200 disabled:!text-slate-500 disabled:shadow-none disabled:hover:brightness-100 md:h-12 md:w-12 md:text-[1.3rem]"
+                                aria-label="Próximo atendimento"
+                              >
+                                ›
+                              </button>
                             </div>
                           </article>
                         );
@@ -1824,6 +1820,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
