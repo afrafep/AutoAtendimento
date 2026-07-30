@@ -1480,7 +1480,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
                         Digite o CPF do beneficiário
                       </h2>
-                      <p className="mt-3 max-w-[34rem] text-[1rem] text-blue-100">
+                      <p className="mt-3 max-w-136 text-[1.6rem] text-blue-100">
                         Localize os agendamentos de hoje.
                       </p>
                     </div>
@@ -1609,9 +1609,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <div className="flex min-h-0 h-full flex-col gap-3">
                       <button
                         onClick={() => void confirmarEncerramentoAutoAtendimento()}
-                        className="h-10 rounded-[0.85rem] border border-red-300/35 bg-red-500/90 px-4 text-[0.78rem] font-bold text-white shadow-[0_8px_18px_rgba(127,29,29,0.16)] transition hover:bg-red-600"
+                        className="h-12 rounded-2xl border border-red-300/35 bg-red-500/90 px-7 text-[0.9rem] font-bold text-white shadow-[0_10px_22px_rgba(127,29,29,0.18)] transition hover:bg-red-600 md:h-13 md:px-8 md:text-[0.96rem]"
                       >
-                        Sair
+                        SAIR
                       </button>
                     </div>
                   </div>
@@ -1875,6 +1875,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
