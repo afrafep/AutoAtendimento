@@ -1636,7 +1636,16 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               </button>
 
                               <div className="grid gap-3">
-                                <div className="flex justify-center md:justify-end">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-h-8 min-w-[96px]">
+                                    {autorizacaoConcluida && consulta.senhaPainel ? (
+                                      <div className="inline-flex items-center rounded-[0.9rem] border border-emerald-200 bg-emerald-50 px-3 py-2 text-left shadow-[0_10px_18px_rgba(16,185,129,0.12)]">
+                                        <span className="text-[0.98rem] font-black tracking-[0.04em] text-emerald-800 md:text-[1.08rem]">
+                                          {`Senha: ${String(consulta.senhaPainel).toUpperCase()}`}
+                                        </span>
+                                      </div>
+                                    ) : null}
+                                  </div>
                                   <p className={`inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border px-3 text-center text-[0.68rem] font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : tokenEnviado && !autorizacaoConcluida ? "border-amber-200 bg-amber-50 text-amber-800" : compareceuConsulta ? "border-orange-200 bg-orange-50 text-orange-700" : autorizacaoConcluida ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
                                     {!autorizacaoConcluida ? (
                                       <span
