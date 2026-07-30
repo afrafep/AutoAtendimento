@@ -1619,7 +1619,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                 <div className="flex-1 overflow-hidden px-3 py-2 md:px-6 md:py-3">
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden">
-                    <div className="rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                    <div className="shrink-0 rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-0.5">
                           <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#00338d]">
@@ -1733,9 +1733,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                         ))}
                                       </div>
                                     </div>
-                                  ) : null}
+                                  ) : (
+                                    <div className="flex min-h-[10.5rem] flex-1 items-stretch" />
+                                  )}
                                 </div>
-
                                 {autorizacaoConcluida ? null : podeSeguir ? (
                                   <button
                                     onClick={() => tokenEnviado && !autorizacaoConcluida ? void abrirValidacaoTokenDireta(consulta) : void abrirEtapaSenha(consulta)}
