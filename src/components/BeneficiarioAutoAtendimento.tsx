@@ -1750,10 +1750,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   <div className="text-center md:text-left">
                     <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
                       AUTORIZAÇÃO
-                    </h2>
+                    </h2>                    
                     <p className="mt-2 text-[0.95rem] text-blue-100">
                       Confira o atendimento. A senha do painel será gerada e vinculada automaticamente antes de seguir, para autorização.
                     </p>
+                       <p className="mt-2.5 text-[1rem] font-black uppercase tracking-[0.06em] text-white md:text-[1.16rem]">
+                        Beneficiário: {pacienteNome || "Beneficiário"}
+                      </p>
                   </div>
                 </div>
               </div>
