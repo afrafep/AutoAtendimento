@@ -555,29 +555,34 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       ),
     );
   }, [consultas]);
-  const cardsConsultasFluxo = useMemo(
-    () =>
-      cardsConsultas.map((cardConsulta, indice) => {
-        const consulta = cardConsulta.consultaBase;
-        const total = cardsConsultas.length;
-        const etapasAnterioresConcluidas =
-          indice === 0 ||
-          cardsConsultas.slice(0, indice).every((item) =>
-            Boolean(item.consultaBase.autorizado && item.consultaBase.tokenValidado),
-          );
+  const cardsConsultasFluxo = useMemo(() => {
+    const indicePrimeiraNaoAutorizada = cardsConsultas.findIndex(
+      (item) => !normalizarBoolean(item.consultaBase.autorizado),
+    );
+    const indiceEtapaAtual =
+      indicePrimeiraNaoAutorizada === -1
+        ? Math.max(cardsConsultas.length - 1, 0)
+        : indicePrimeiraNaoAutorizada;
 
-        return {
-          cardConsulta,
-          consulta,
-          indice,
-          total,
-          etapaAtual: indice + 1,
-          etapasAnterioresConcluidas,
-          etapaConcluida: Boolean(consulta.autorizado && consulta.tokenValidado),
-        };
-      }),
-    [cardsConsultas],
-  );
+    return cardsConsultas.map((cardConsulta, indice) => {
+      const consulta = cardConsulta.consultaBase;
+      const autorizado = normalizarBoolean(consulta.autorizado);
+      const tokenValidado = normalizarBoolean(consulta.tokenValidado);
+
+      return {
+        cardConsulta,
+        consulta,
+        indice,
+        total: cardsConsultas.length,
+        etapaAtual: indice + 1,
+        autorizado,
+        tokenValidado,
+        etapaFinalizada: autorizado && tokenValidado,
+        etapaJaLiberada: indice <= indiceEtapaAtual,
+        etapaEmDestaque: indice === indiceEtapaAtual,
+      };
+    });
+  }, [cardsConsultas]);
 
   const dataConsultasCabecalho = useMemo(
     () => formatarData(cardsConsultas[0]?.consultaBase.dataInicio),
@@ -1393,15 +1398,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   <div className="mx-auto max-w-5xl px-2 md:px-3">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="text-center md:text-left">
-                    <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
+                    <h2 className="text-[1.28rem] font-black tracking-tight text-white md:text-[1.95rem]">
                       Digite o seu CPF para começar
                     </h2>
-                    <p className="mt-3 max-w-[34rem] text-[1rem] text-blue-100">
+                    <p className="mt-2 max-w-[34rem] text-[0.92rem] text-blue-100 md:text-[0.98rem]">
                       Digite o seu CPF para localizar seus agendamentos de hoje.
                     </p>
                     </div>
                       <div className="flex justify-center md:justify-end">
-                        <p className="inline-flex min-h-9 items-center rounded-full border border-white/20 bg-white/10 px-4 text-[0.84rem] font-black uppercase tracking-[0.16em] text-white">
+                        <p className="inline-flex min-h-8 items-center rounded-full border border-white/20 bg-white/10 px-3.5 text-[0.76rem] font-black uppercase tracking-[0.14em] text-white md:text-[0.8rem]">
                         {`JOAO PESSOA - ${dataCabecalhoAtual}`}
                         </p>
                       </div>
@@ -1409,18 +1414,18 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                 </div>
               </div>
 
-              <div className="px-4 py-5 md:px-8 md:py-6">
+              <div className="px-4 py-4 md:px-8 md:py-5">
                 <div className="mx-auto max-w-5xl">
-                  <div className="grid gap-5">
+                  <div className="grid gap-4">
                     <div>
                       <label
                         htmlFor="beneficiario-cpf"
-                        className="block text-center text-[0.72rem] font-bold uppercase tracking-[0.16em] text-slate-500"
+                        className="block text-center text-[0.68rem] font-bold uppercase tracking-[0.14em] text-slate-500 md:text-[0.72rem]"
                       >
                         CPF do beneficiário
                       </label>
 
-                      <div className="mt-3 bg-white p-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                      <div className="mt-2 bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
                         <input
                           id="beneficiario-cpf"
                           type="text"
@@ -1437,28 +1442,28 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           onPaste={handleCpfPaste}
                           placeholder="000.000.000-00"
                           pattern="[0-9]*"
-                          className="h-[4.5rem] w-full border-0 bg-slate-50 px-5 text-center text-[1.45rem] font-black tracking-[0.14em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[5rem] md:text-[1.8rem]"
+                          className="h-[4rem] w-full border-0 bg-slate-50 px-4 text-center text-[1.2rem] font-black tracking-[0.12em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[4.35rem] md:text-[1.5rem]"
                         />
                       </div>
                     </div>
 
-                    <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/95 p-4 shadow-[0_22px_42px_rgba(15,23,42,0.09)] md:p-5">
-                      <div className="mb-4 flex items-center justify-between px-1">
-                        <p className="text-[0.72rem] font-black uppercase tracking-[0.18em] text-slate-500">
+                    <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:p-4">
+                      <div className="mb-3 flex items-center justify-between px-1">
+                        <p className="text-[0.68rem] font-black uppercase tracking-[0.15em] text-slate-500 md:text-[0.72rem]">
                           Teclado numérico
                         </p>
-                        <p className="text-[0.78rem] font-medium text-slate-400">
+                        <p className="text-[0.72rem] font-medium text-slate-400 md:text-[0.76rem]">
                           Toque para digitar
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 md:gap-4">
+                      <div className="grid grid-cols-3 gap-2.5 md:gap-3">
                         {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
                           <button
                             key={`cpf-tecla-${digito}`}
                             type="button"
                             onClick={() => adicionarDigitoCpf(digito)}
-                            className="flex h-15 items-center justify-center rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1.32rem] font-black text-white shadow-[0_14px_24px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_30px_rgba(15,23,42,0.22)] md:h-16 md:text-[1.46rem]"
+                            className="flex h-13 items-center justify-center rounded-[0.95rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1.1rem] font-black text-white shadow-[0_12px_20px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_16px_26px_rgba(15,23,42,0.18)] md:h-14 md:text-[1.24rem]"
                           >
                             {digito}
                           </button>
@@ -1467,7 +1472,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         <button
                           type="button"
                           onClick={limparCpfDigitado}
-                          className="flex h-15 items-center justify-center rounded-[1.05rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.72rem] font-black uppercase tracking-[0.08em] text-rose-700 shadow-[0_12px_20px_rgba(244,63,94,0.09)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-16 md:text-[0.8rem]"
+                          className="flex h-13 items-center justify-center rounded-[0.95rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.66rem] font-black uppercase tracking-[0.06em] text-rose-700 shadow-[0_10px_18px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-14 md:text-[0.74rem]"
                         >
                           Limpar CPF
                         </button>
@@ -1483,7 +1488,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         <button
                           type="button"
                           onClick={apagarUltimoDigitoCpf}
-                          className="flex h-15 items-center justify-center rounded-[1.05rem] border border-amber-200 bg-[linear-gradient(180deg,#fffdf2_0%,#fef0bf_100%)] px-2 text-[0.72rem] font-black uppercase tracking-[0.08em] text-amber-800 shadow-[0_12px_20px_rgba(245,158,11,0.09)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-16 md:text-[0.8rem]"
+                          className="flex h-13 items-center justify-center rounded-[0.95rem] border border-amber-200 bg-[linear-gradient(180deg,#fffdf2_0%,#fef0bf_100%)] px-2 text-[0.66rem] font-black uppercase tracking-[0.06em] text-amber-800 shadow-[0_10px_18px_rgba(245,158,11,0.08)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-14 md:text-[0.74rem]"
                         >
                           Apagar
                         </button>
@@ -1493,7 +1498,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         type="button"
                         onClick={() => void buscarConsultas()}
                         disabled={loading || normalizarCpf(cpf).length < 11}
-                        className="mt-4 flex h-15 w-full items-center justify-center rounded-[1.15rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.94rem] font-black uppercase tracking-[0.08em] text-white shadow-[0_20px_36px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_24px_42px_rgba(37,99,235,0.34)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-16 md:text-[0.98rem]"
+                        className="mt-3 flex h-13 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.88rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_20px_34px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-14 md:text-[0.94rem]"
                       >
                         {loading ? "Buscando..." : "Entrar"}
                       </button>
@@ -1548,6 +1553,18 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </div>
                     </div>
 
+                    <div className="rounded-[1rem] border border-blue-100/70 bg-[linear-gradient(135deg,#f8fbff_0%,#eef5ff_100%)] px-4 py-3 shadow-[0_16px_30px_rgba(0,51,141,0.06)]">
+                      <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#00338d]">
+                        Fluxo de atendimento
+                      </p>
+                      <p className="mt-1 text-[1rem] font-bold text-slate-800 md:text-[1.08rem]">
+                        Atendimento atual: {cardsConsultasFluxo.find((item) => item.etapaEmDestaque)?.etapaAtual ?? 1} de {cardsConsultasFluxo.length || 1}
+                      </p>
+                      <p className="mt-1 text-[0.82rem] text-slate-600 md:text-[0.88rem]">
+                        Os horários anteriores continuam acessíveis. O próximo só é liberado quando o atendimento atual for autorizado.
+                      </p>
+                    </div>
+
                     <div className="grid gap-3">
                       {cardsConsultasFluxo.map(({
                         cardConsulta,
@@ -1555,57 +1572,56 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         indice,
                         total,
                         etapaAtual,
-                        etapasAnterioresConcluidas,
-                        etapaConcluida,
+                        autorizado,
+                        tokenValidado,
+                        etapaFinalizada,
+                        etapaJaLiberada,
+                        etapaEmDestaque,
                       }) => {
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
-                        const autorizado = normalizarBoolean(consulta.autorizado);
-                        const tokenValidado = normalizarBoolean(consulta.tokenValidado);
-                        const etapaFinalizada = autorizado && tokenValidado;
                         const faltouConsulta = statusAtual === "FALTOU";
                         const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
                         const tokenEnviado = autorizado && !tokenValidado;
-                        const bloqueadoPorOrdem = !etapasAnterioresConcluidas;
-                        const etapaLiberada = etapasAnterioresConcluidas && !faltouConsulta;
-                        const podeSeguir = etapaLiberada && !etapaFinalizada && (podeAutorizar || tokenEnviado);
+                        const bloqueadoPorOrdem = !etapaJaLiberada;
+                        const podeAbrirEtapa = etapaJaLiberada && !faltouConsulta;
+                        const podeSeguir = podeAbrirEtapa && (podeAutorizar || tokenEnviado || etapaFinalizada);
                         const etapaLabel = `${etapaAtual} de ${total}`;
-                        const destaqueEtapaAtual = etapaLiberada && !etapaFinalizada;
 
                         const statusFluxo = faltouConsulta
                           ? "Consulta não realizada"
                           : etapaFinalizada
-                            ? "Processo finalizado"
+                            ? "Autorizado e validado"
                             : tokenEnviado
                               ? "Aguardando validação do token"
-                              : bloqueadoPorOrdem
-                                ? `Aguardando conclusão do ${indice} de ${total}`
-                                : "Pronto para iniciar";
+                              : etapaEmDestaque
+                                ? "Atendimento atual"
+                                : bloqueadoPorOrdem
+                                  ? `Libera após autorizar o ${indice} de ${total}`
+                                  : "Etapa liberada";
 
                         return (
                           <article
                             key={cardConsulta.chave}
-                            className={`rounded-[1rem] border px-4 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.07)] transition ${
+                            className={`w-full overflow-hidden rounded-[1rem] border px-3 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.07)] transition md:px-4 ${
                               etapaFinalizada
-                                ? "border-emerald-200 bg-[linear-gradient(180deg,#f7fff9_0%,#ecfdf3_100%)] opacity-80"
-                                : destaqueEtapaAtual
-                                  ? "border-[#00338d]/20 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] shadow-[0_18px_32px_rgba(0,51,141,0.1)]"
+                                ? "border-emerald-200 bg-[linear-gradient(180deg,#f7fff9_0%,#ecfdf3_100%)]"
+                                : etapaEmDestaque
+                                  ? "border-[#00338d]/25 bg-[linear-gradient(180deg,#ffffff_0%,#f3f8ff_100%)] shadow-[0_20px_34px_rgba(0,51,141,0.12)]"
                                   : bloqueadoPorOrdem
                                     ? "border-slate-200 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]"
-                                    : "border-slate-200 bg-white"
+                                    : "border-blue-100 bg-white"
                             }`}
                           >
-                            <div className="grid gap-3 lg:grid-cols-[96px_minmax(0,1fr)_230px] lg:items-center">
-                              <div className="grid gap-1 text-center">
-                                <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-slate-500">
+                            <div className="grid gap-3 xl:grid-cols-[110px_minmax(0,1fr)_220px] xl:items-center">
+                              <div className="grid gap-1 text-center xl:text-left">
+                                <p className={`text-[0.72rem] font-black uppercase tracking-[0.12em] ${etapaEmDestaque ? "text-[#00338d]" : "text-slate-500"}`}>
                                   {etapaLabel}
                                 </p>
-                                <p className="text-[1.95rem] font-black tracking-tight text-[#00338d]">
+                                <p className="text-[1.72rem] font-black tracking-tight text-[#00338d] md:text-[1.9rem]">
                                   {cardConsulta.agrupadoUltrassom ? "Fluxo" : formatarHora(consulta.horaInicio)}
                                 </p>
                                 <p className="text-[0.74rem] font-bold uppercase tracking-[0.06em] text-slate-500">
-                                  {cardConsulta.agrupadoUltrassom
-                                    ? "Horários do dia"
-                                    : formatarData(consulta.dataInicio)}
+                                  {cardConsulta.agrupadoUltrassom ? "Horários do dia" : formatarData(consulta.dataInicio)}
                                 </p>
                               </div>
 
@@ -1614,15 +1630,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   className={`rounded-[0.95rem] border px-4 py-3 text-center ${
                                     etapaFinalizada
                                       ? "border-emerald-100 bg-white/80"
-                                      : destaqueEtapaAtual
-                                        ? "border-[#00338d]/10 bg-slate-50"
+                                      : etapaEmDestaque
+                                        ? "border-[#00338d]/10 bg-blue-50/70"
                                         : "border-slate-100 bg-slate-50/80"
                                   }`}
                                 >
-                                  <p className="text-[0.95rem] font-bold uppercase tracking-[0.07em] text-slate-900">
+                                  <p className="text-[0.9rem] font-bold uppercase tracking-[0.05em] text-slate-900 md:text-[0.95rem]">
                                     {consulta.profissionalNome}
                                   </p>
-                                  <p className="mt-1 text-[0.92rem] text-slate-600">
+                                  <p className="mt-1 text-[0.88rem] text-slate-600 md:text-[0.92rem]">
                                     {consulta.especialidadeNome}
                                   </p>
                                 </div>
@@ -1649,8 +1665,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 ) : null}
                               </div>
 
-                              <div className="grid gap-2">
-                                <div className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-3 text-center text-[0.72rem] font-black uppercase tracking-[0.08em] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : etapaFinalizada ? "border-emerald-200 bg-emerald-50 text-emerald-800" : tokenEnviado ? "border-cyan-200 bg-cyan-50 text-cyan-800" : bloqueadoPorOrdem ? "border-slate-200 bg-slate-100 text-slate-600" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
+                              <div className="grid min-w-0 gap-2 xl:justify-self-end xl:w-[220px]">
+                                <div className={`inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border px-3 py-2 text-center text-[0.68rem] font-black uppercase leading-tight tracking-[0.06em] md:text-[0.72rem] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : etapaFinalizada ? "border-emerald-200 bg-emerald-50 text-emerald-800" : tokenEnviado ? "border-cyan-200 bg-cyan-50 text-cyan-800" : bloqueadoPorOrdem ? "border-slate-200 bg-slate-100 text-slate-600" : etapaEmDestaque ? "border-blue-200 bg-blue-50 text-[#00338d]" : "border-blue-100 bg-white text-[#00338d]"}`}>
                                   {!etapaFinalizada ? (
                                     <span
                                       aria-hidden="true"
@@ -1662,7 +1678,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       aria-hidden="true"
                                       className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
                                     >
-                                      ?
+                                      ✓
                                     </span>
                                   ) : null}
                                   {statusFluxo}
@@ -1671,17 +1687,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 {podeSeguir ? (
                                   <button
                                     onClick={() => abrirEtapaSenha(consulta)}
-                                    className={`h-14 rounded-[0.95rem] border px-4 text-[0.9rem] font-black uppercase tracking-[0.06em] text-white transition ${tokenEnviado ? "border-cyan-200/40 bg-[linear-gradient(135deg,#0f766e_0%,#0891b2_58%,#38bdf8_100%)] shadow-[0_16px_28px_rgba(8,145,178,0.2)] hover:shadow-[0_18px_30px_rgba(8,145,178,0.26)]" : "border-blue-200/40 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] shadow-[0_16px_28px_rgba(0,51,141,0.2)] hover:shadow-[0_18px_30px_rgba(0,51,141,0.26)]"}`}
+                                    className={`h-13 w-full rounded-[0.95rem] border px-4 text-[0.84rem] font-black uppercase tracking-[0.05em] transition md:h-14 md:text-[0.9rem] ${tokenEnviado ? "border-cyan-200/40 bg-[linear-gradient(135deg,#0f766e_0%,#0891b2_58%,#38bdf8_100%)] text-white shadow-[0_16px_28px_rgba(8,145,178,0.2)] hover:shadow-[0_18px_30px_rgba(8,145,178,0.26)]" : etapaEmDestaque ? "border-blue-200/40 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.2)] hover:shadow-[0_18px_30px_rgba(0,51,141,0.26)]" : "border-blue-200 bg-white text-[#00338d] hover:bg-blue-50"}`}
                                   >
-                                    {tokenEnviado ? "Continuar token" : "Iniciar atendimento"}
+                                    {tokenEnviado ? "Continuar token" : etapaEmDestaque ? "Iniciar atendimento" : "Voltar para este atendimento"}
                                   </button>
                                 ) : (
-                                  <div className={`flex h-14 items-center justify-center rounded-[0.95rem] border px-3 text-center text-[0.8rem] font-black uppercase tracking-[0.05em] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-600" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
+                                  <div className={`flex min-h-[3.25rem] w-full items-center justify-center rounded-[0.95rem] border px-3 py-2 text-center text-[0.74rem] font-black uppercase leading-tight tracking-[0.04em] md:min-h-[3.5rem] md:text-[0.8rem] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-600" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
                                     {faltouConsulta
                                       ? "Atendimento encerrado"
                                       : bloqueadoPorOrdem
-                                        ? `Libera após concluir o ${indice} de ${total}`
-                                        : "Aguardando finalização"}
+                                        ? `Libera ap?s autorizar o ${indice} de ${total}`
+                                        : "Aguardando a??o"}
                                   </div>
                                 )}
                               </div>
