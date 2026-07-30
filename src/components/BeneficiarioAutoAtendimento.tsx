@@ -154,6 +154,13 @@ const formatarDataAtual = () => {
   return `${dia}/${mes}/${ano}`;
 };
 
+const formatarHoraAtual = () => {
+  const agora = new Date();
+  const horas = String(agora.getHours()).padStart(2, "0");
+  const minutos = String(agora.getMinutes()).padStart(2, "0");
+  return `${horas}:${minutos}`;
+};
+
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
     String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
@@ -510,6 +517,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [indiceConsultaAtual, setIndiceConsultaAtual] = useState(0);
   const [etapaTela, setEtapaTela] = useState<EtapaTelaAutoAtendimento>("cpf");
   const [mostrarTecladoCpf, setMostrarTecladoCpf] = useState(false);
+  const [horaCabecalhoAtual, setHoraCabecalhoAtual] = useState(() => formatarHoraAtual());
 
   const consultaSelecionada =
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) || null;
@@ -601,6 +609,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     [cardsConsultas],
   );
   const dataCabecalhoAtual = useMemo(() => formatarDataAtual(), []);
+
+  useEffect(() => {
+    setHoraCabecalhoAtual(formatarHoraAtual());
+    const intervaloHora = window.setInterval(() => {
+      setHoraCabecalhoAtual(formatarHoraAtual());
+    }, 60000);
+
+    return () => window.clearInterval(intervaloHora);
+  }, []);
 
   useEffect(() => {
     const estadoPersistidoInicial = lerEstadoTelaPersistido();
@@ -1441,9 +1458,14 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </p>
                     </div>
                     <div className="flex justify-center md:justify-end">
-                      <p className="inline-flex min-h-9 items-center rounded-full border border-white/20 bg-white/10 px-4 text-[0.84rem] font-black uppercase tracking-[0.16em] text-white">
-                        {`JOAO PESSOA - ${dataCabecalhoAtual}`}
-                      </p>
+                      <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
+                        <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
+                          {`JOAO PESSOA - ${dataCabecalhoAtual}`}
+                        </p>
+                        <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
+                          {`Horário Atual: ${horaCabecalhoAtual}`}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1822,6 +1844,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
