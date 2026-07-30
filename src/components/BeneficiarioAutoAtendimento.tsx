@@ -1592,7 +1592,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
           {etapaTela === "consultas" && (
             <>
-              <section className="w-full">
+              <section className="flex h-[100dvh] w-full flex-col overflow-hidden">
                 <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
                   <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-[minmax(0,1fr)_210px] md:items-center">
                     <div className="min-w-0 text-center md:text-left">
@@ -1872,6 +1872,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
