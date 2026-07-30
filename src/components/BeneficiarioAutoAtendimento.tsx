@@ -1620,7 +1620,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 )
                               }
                               disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                              className="h-10 min-w-[118px] rounded-[0.85rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] px-3 text-[0.76rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+                              className="h-10 min-w-[118px] rounded-[0.85rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] px-3 text-[0.76rem] font-black uppercase !text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
                             >
                               Próximo
                             </button>
@@ -1824,6 +1824,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
