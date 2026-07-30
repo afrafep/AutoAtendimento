@@ -1454,7 +1454,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <div>
                       <label
                         htmlFor="beneficiario-cpf"
-                        className="block text-center text-[1rem] font-black uppercase tracking-[0.16em] text-slate-600 md:text-[1.08rem]"
+                        className="block text-center text-[2rem] font-black uppercase tracking-[0.16em] text-slate-600 md:text-[1.508rem]"
 
                       >
                         DIGITE O CPF DO BENEFICIÁRIO
