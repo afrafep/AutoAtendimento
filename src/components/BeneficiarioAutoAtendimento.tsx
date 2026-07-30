@@ -1592,7 +1592,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
           {etapaTela === "consultas" && (
             <>
-              <section className="flex h-[100dvh] w-full flex-col overflow-hidden">
+              <section className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
                 <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
                   <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-[minmax(0,1fr)_210px] md:items-center">
                     <div className="min-w-0 text-center md:text-left">
@@ -1617,7 +1617,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden px-3 py-2 md:px-6 md:py-3">
+                <div className="flex-1 overflow-hidden px-3 pb-[6.5rem] pt-2 md:px-6 md:pb-[7rem] md:pt-3">
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden">
                     <div className="shrink-0 rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1734,7 +1734,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       </div>
                                     </div>
                                   ) : (
-                                    <div className="flex min-h-[10.5rem] flex-1 items-stretch" />
+                                    <div className="flex min-h-[6rem] flex-1 items-stretch" />
                                   )}
                                 </div>
                                 {autorizacaoConcluida ? null : podeSeguir ? (
@@ -1755,7 +1755,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           </article>
                         );
                       })() : null}
-                                <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-slate-100 bg-white/95 px-3 py-3 backdrop-blur md:px-5">
+                                <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-3 md:px-6 md:pb-4">
+                                  <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-3 py-2 md:px-5">
                                   <button
                                     type="button"
                                     onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
@@ -1778,6 +1779,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   </button>
                                 </div>
 
+                                  </div>
                     </div>
                   </div>
                                 </div>
@@ -1873,6 +1875,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
