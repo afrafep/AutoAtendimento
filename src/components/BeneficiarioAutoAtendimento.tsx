@@ -1704,7 +1704,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   ) : null}
                                 </div>
 
-                                {podeSeguir ? (
+                                {autorizacaoConcluida ? null : podeSeguir ? (
                                   <button
                                     onClick={() => abrirEtapaSenha(consulta)}
                                     className="h-12 bg-[#00338d] px-4 text-[0.88rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f]"
