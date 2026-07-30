@@ -1498,9 +1498,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                 </div>
               </div>
 
-              <div className="px-4 py-3 md:px-8 md:py-4">
+              <div className="flex-1 overflow-hidden px-3 py-2 md:px-6 md:py-3">
                 <div className="mx-auto max-w-6xl">
-                  <div className="flex h-full flex-col gap-3">
+                  <div className="flex min-h-0 h-full flex-col gap-3">
                     <div>
                       <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)] md:p-2.5">
                         <input
@@ -1606,7 +1606,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
                       </p>
                     </div>
-                    <div className="flex h-full flex-col gap-3">
+                    <div className="flex min-h-0 h-full flex-col gap-3">
                       <button
                         onClick={() => void confirmarEncerramentoAutoAtendimento()}
                         className="h-10 rounded-[0.85rem] border border-red-300/35 bg-red-500/90 px-4 text-[0.78rem] font-bold text-white shadow-[0_8px_18px_rgba(127,29,29,0.16)] transition hover:bg-red-600"
@@ -1617,9 +1617,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="px-4 py-3 md:px-8 md:py-4">
-                  <div className="mx-auto max-w-6xl space-y-4">
-                    <div className="rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-4 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                <div className="flex-1 overflow-hidden px-3 py-2 md:px-6 md:py-3">
+                  <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden">
+                    <div className="rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-0.5">
                           <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#00338d]">
@@ -1636,7 +1636,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex min-h-[calc(100vh-22rem)] flex-col gap-4 md:min-h-[calc(100vh-20rem)]">
+                      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
                       {consultaFluxoAtual ? (() => {
                         const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
@@ -1649,15 +1649,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         return (
                           <article
                             key={cardConsulta.chave}
-                            className={`flex flex-1 flex-col border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                            className={`flex min-h-0 flex-1 flex-col border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
                               autorizacaoConcluida
                                 ? "border-emerald-200 bg-emerald-50/55 opacity-75"
                                 : "border-slate-200 bg-white"
                             }`}
                           >
-                              <div className="flex h-full flex-col gap-3">
+                              <div className="flex min-h-0 h-full flex-col gap-3">
 
-                              <div className="flex h-full flex-col gap-3">
+                              <div className="flex min-h-0 h-full flex-col gap-3">
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-h-8 min-w-[96px]">
                                     {(autorizacaoConcluida || (tokenEnviado && !autorizacaoConcluida)) && consulta.senhaPainel ? (
@@ -1693,7 +1693,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   </p>
                                 </div>
 
-                                <div className="flex flex-1 flex-col gap-2 text-center">
+                                <div className="flex min-h-0 flex-1 flex-col gap-2 text-center">
                                   {cardConsulta.agrupadoUltrassom ? (
                                     <p className="text-[1.35rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.7rem]">
                                       Horários do dia
@@ -1714,7 +1714,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   </div>
 
                                   {cardConsulta.agrupadoUltrassom ? (
-                                    <div className={`max-h-[calc(100vh-33rem)] overflow-y-auto border px-3 py-2.5 text-left ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
+                                    <div className={`min-h-0 flex-1 overflow-y-auto border px-3 py-2 text-left ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
                                       <div className="grid gap-1.5">
                                         {agruparProcedimentosRelacionados(cardConsulta.consultasRelacionadas).map((item) => (
                                           <div
@@ -1754,7 +1754,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           </article>
                         );
                       })() : null}
-                                <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-4 border-t border-slate-100 bg-white/95 px-3 py-3 backdrop-blur md:px-5">
+                                <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-slate-100 bg-white/95 px-3 py-3 backdrop-blur md:px-5">
                                   <button
                                     type="button"
                                     onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
@@ -1818,7 +1818,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     }
                   />
 
-                  <div className="flex h-full flex-col gap-3">
+                  <div className="flex min-h-0 h-full flex-col gap-3">
                     {!consultaSelecionada.autorizado && !consultaSelecionada.tokenValidado && (
                       <button
                         onClick={() => void vincularSenhaPainel(consultaSelecionada)}
@@ -1872,6 +1872,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
