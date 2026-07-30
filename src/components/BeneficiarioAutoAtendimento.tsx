@@ -1442,7 +1442,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     </div>
                     <div className="flex justify-center md:justify-end">
                       <p className="inline-flex min-h-9 items-center rounded-full border border-white/20 bg-white/10 px-4 text-[0.84rem] font-black uppercase tracking-[0.16em] text-white">
-
                         {`JOAO PESSOA - ${dataCabecalhoAtual}`}
                       </p>
                     </div>
@@ -1454,7 +1453,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                 <div className="mx-auto max-w-6xl">
                   <div className="grid gap-3">
                     <div>
-                      <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                      <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)] md:p-2.5">
                         <input
                           id="beneficiario-cpf"
                           type="text"
@@ -1501,12 +1500,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                             </button>
                           ))}
 
-
                           <button
                             type="button"
                             onClick={limparCpfDigitado}
                             className="flex h-12 items-center justify-center rounded-[0.95rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.62rem] font-black uppercase tracking-[0.05em] text-rose-700 shadow-[0_10px_16px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-13 md:text-[0.68rem]"
-
                           >
                             Limpar CPF
                           </button>
@@ -1538,7 +1535,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         </button>
                       </div>
                     ) : null}
-
                   </div>
                 </div>
               </div>
