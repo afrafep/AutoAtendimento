@@ -1721,7 +1721,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     type="button"
                                     onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
                                     disabled={indiceConsultaAtual === 0}
-                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual === 0 ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
+                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual === 0 ? "border-slate-300 bg-slate-300 text-white" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
                                   >
                                     Voltar
                                   </button>
@@ -1733,7 +1733,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       )
                                     }
                                     disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual >= indiceMaximoLiberado ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
+                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual >= indiceMaximoLiberado ? "border-slate-300 bg-slate-300 text-white" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
                                   >
                                     Próximo
                                   </button>
@@ -1834,6 +1834,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
