@@ -326,11 +326,11 @@ export const TokenValidar = async ({
   const result = await Swal.fire({
     title: "🔐 Validação de Token",
     html: `
-      <div class="space-y-2.5 sm:space-y-3">
-        <div class="rounded-[0.95rem] border border-slate-700/80 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(30,41,59,0.88))] px-3 py-3 shadow-[0_16px_28px_rgba(2,6,23,0.22)]">
+      <div class="space-y-3.5 sm:space-y-4">
+        <div class="rounded-[1.1rem] border border-slate-200 bg-white px-4 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
           <div class="text-center">
-            <p class="text-[0.82rem] font-semibold leading-5 text-slate-100 sm:text-[0.92rem]">Digite o token de 4 dígitos recebido no celular.</p>
-            <p class="mt-1 text-[0.68rem] leading-4 text-slate-400 sm:text-[0.74rem]">Use o teclado abaixo para preencher o código.</p>
+            <p class="text-[0.94rem] font-bold leading-6 text-slate-900 sm:text-[1.08rem]">Digite o token de 4 dígitos recebido no celular.</p>
+            <p class="mt-1 text-[0.76rem] leading-5 text-slate-500 sm:text-[0.84rem]">Use o teclado abaixo para preencher o código.</p>
           </div>
 
           <div class="mt-3 flex justify-center gap-1.5 sm:gap-2">
@@ -340,7 +340,7 @@ export const TokenValidar = async ({
               <input 
                 type="text" 
                 maxlength="1" 
-                class="token-input h-10 w-10 rounded-[0.8rem] border border-slate-500/70 bg-slate-950/80 text-center text-[1.05rem] font-black tracking-[0.04em] text-white transition-all duration-200 focus:border-cyan-400 focus:bg-slate-900 focus:ring-2 focus:ring-cyan-500/15 sm:h-11 sm:w-11 sm:text-[1.18rem]" 
+                class="token-input h-12 w-12 rounded-[0.95rem] border border-slate-300 bg-white text-center text-[1.18rem] font-black tracking-[0.04em] text-slate-900 transition-all duration-200 focus:border-cyan-400 focus:bg-sky-50 focus:ring-2 focus:ring-cyan-500/15 sm:h-14 sm:w-14 sm:text-[1.35rem]" 
                 data-index="${i}"
                 inputmode="numeric"
                 pattern="[0-9]*"
@@ -352,10 +352,10 @@ export const TokenValidar = async ({
         </div>
         <input type="hidden" id="full-token" />
 
-        <div class="rounded-[0.95rem] border border-slate-700/80 bg-slate-900/65 p-2.5 shadow-[0_10px_20px_rgba(15,23,42,0.14)]">
+        <div class="rounded-[1.1rem] border border-slate-200 bg-slate-50 p-3.5 shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
           <div class="mb-2 flex items-center justify-between">
-            <p class="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-slate-400">Teclado numérico</p>
-            <p class="text-[0.64rem] text-slate-500">Toque para digitar</p>
+            <p class="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-slate-500">Teclado numérico</p>
+            <p class="text-[0.7rem] text-slate-500">Toque para digitar</p>
           </div>
           <div class="grid grid-cols-3 gap-1.5">
             ${["1", "2", "3", "4", "5", "6", "7", "8", "9"]
@@ -363,7 +363,7 @@ export const TokenValidar = async ({
                 (digit) => `
               <button
                 type="button"
-                class="token-keypad-button flex h-8 items-center justify-center rounded-[0.78rem] border border-slate-600/80 bg-slate-950/90 text-[0.88rem] font-black text-slate-100 transition hover:border-cyan-400/80 hover:bg-slate-800 focus:outline-none sm:h-9 sm:text-[0.96rem]"
+                class="token-keypad-button flex h-12 items-center justify-center rounded-[1rem] border border-slate-300 bg-white text-[1.1rem] font-black text-slate-900 transition hover:border-cyan-400 hover:bg-sky-50 focus:outline-none sm:h-13 sm:text-[1.2rem]"
                 data-digit="${digit}"
               >
                 ${digit}
@@ -374,13 +374,13 @@ export const TokenValidar = async ({
             <button
               type="button"
               id="token-keypad-clear"
-              class="flex h-8 items-center justify-center rounded-[0.78rem] border border-rose-400/70 bg-rose-500/10 px-1 text-[0.52rem] font-black uppercase tracking-[0.05em] text-rose-200 transition hover:bg-rose-500/20 focus:outline-none sm:h-9 sm:text-[0.58rem]"
+              class="flex h-12 items-center justify-center rounded-[1rem] border border-rose-300 bg-rose-50 px-2 text-[0.68rem] font-black uppercase tracking-[0.05em] text-rose-700 transition hover:bg-rose-100 focus:outline-none sm:h-13 sm:text-[0.74rem]"
             >
               Limpar
             </button>
             <button
               type="button"
-              class="token-keypad-button flex h-8 items-center justify-center rounded-[0.78rem] border border-slate-600/80 bg-slate-950/90 text-[0.88rem] font-black text-slate-100 transition hover:border-cyan-400/80 hover:bg-slate-800 focus:outline-none sm:h-9 sm:text-[0.96rem]"
+              class="token-keypad-button flex h-12 items-center justify-center rounded-[1rem] border border-slate-300 bg-white text-[1.1rem] font-black text-slate-900 transition hover:border-cyan-400 hover:bg-sky-50 focus:outline-none sm:h-13 sm:text-[1.2rem]"
               data-digit="0"
             >
               0
@@ -388,26 +388,26 @@ export const TokenValidar = async ({
             <button
               type="button"
               id="token-keypad-backspace"
-              class="flex h-8 items-center justify-center rounded-[0.78rem] border border-amber-400/70 bg-amber-500/10 px-1 text-[0.52rem] font-black uppercase tracking-[0.05em] text-amber-200 transition hover:bg-amber-500/20 focus:outline-none sm:h-9 sm:text-[0.58rem]"
+              class="flex h-12 items-center justify-center rounded-[1rem] border border-amber-300 bg-amber-50 px-2 text-[0.68rem] font-black uppercase tracking-[0.05em] text-amber-700 transition hover:bg-amber-100 focus:outline-none sm:h-13 sm:text-[0.74rem]"
             >
               Apagar
             </button>
           </div>
         </div>
         
-        <div class="hidden rounded-[0.9rem] border border-slate-700/80 bg-slate-900/55 p-2.5 shadow-[0_10px_18px_rgba(15,23,42,0.12)]">
-          <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[0.66rem] text-left text-slate-300 sm:text-[0.74rem]">
+        <div class="hidden rounded-[1rem] border border-slate-200 bg-white p-3 shadow-[0_12px_24px_rgba(15,23,42,0.08)]">
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[0.66rem] text-left text-slate-600 sm:text-[0.78rem]">
             <div>
-              <p class="text-slate-500">Paciente</p>
-              <p class="mt-0.5 font-semibold leading-4 text-slate-100">${nome}</p>
+              <p class="text-slate-400">Paciente</p>
+              <p class="mt-0.5 font-semibold leading-4 text-slate-900">${nome}</p>
             </div>
             <div>
               <p class="text-slate-500">Carteira</p>
-              <p class="mt-0.5 font-mono text-slate-100">${nrCarteiraPlano || "N/A"}</p>
+              <p class="mt-0.5 font-mono text-slate-900">${nrCarteiraPlano || "N/A"}</p>
             </div>
             <div>
               <p class="text-slate-500">Número da guia</p>
-              <p class="mt-0.5 font-mono text-slate-100">${numeroGuiaExibicao || "N/A"}</p>
+              <p class="mt-0.5 font-mono text-slate-900">${numeroGuiaExibicao || "N/A"}</p>
             </div>
             <div>
               <p class="text-slate-500">Status</p>
@@ -420,9 +420,9 @@ export const TokenValidar = async ({
           </div>
         </div>
 
-        <div class="rounded-[0.85rem] border border-cyan-500/20 bg-cyan-500/8 px-3 py-2">
-          <p class="text-center text-[0.66rem] leading-4 text-cyan-100 sm:text-[0.72rem]">
-            Se não recebeu o código, toque em <span class="font-bold text-white">Reenviar token</span>.
+        <div class="rounded-[1rem] border border-sky-200 bg-sky-50 px-3.5 py-3">
+          <p class="text-center text-[0.72rem] leading-5 text-sky-900 sm:text-[0.8rem]">
+            Se não recebeu o código, toque em <span class="font-bold text-sky-950">Reenviar token</span>.
           </p>
         </div>
 
@@ -434,21 +434,21 @@ export const TokenValidar = async ({
     confirmButtonText: "✅ Confirmar",
     cancelButtonText: "↩️ Voltar",
     denyButtonText: "📲 Reenviar token",
-    background: "#1f2937",
-    color: "#f9fafb",
+    background: "#ffffff",
+    color: "#0f172a",
     allowOutsideClick: false,
     buttonsStyling: false,
     customClass: {
-      popup: "!w-[min(94vw,28rem)] !rounded-[0.95rem] !border !border-slate-700 !bg-slate-800/95 !px-3 !pb-3 !pt-2.5 !shadow-[0_20px_40px_rgba(2,6,23,0.28)]",
-      title: "!mb-2 !text-[0.95rem] !font-black !tracking-tight !text-slate-50 sm:!text-[1.15rem]",
+      popup: "!w-[min(97vw,42rem)] !rounded-[1.35rem] !border !border-slate-200 !bg-white !px-5 !pb-5 !pt-4 !shadow-[0_28px_60px_rgba(15,23,42,0.22)]",
+      title: "!mb-3 !text-[1.22rem] !font-black !tracking-tight !text-slate-900 sm:!text-[1.6rem]",
       htmlContainer: "!mx-0 !mt-0 !px-0 !pb-0 !text-left",
-      actions: "!grid !grid-cols-3 !gap-2 !w-full !mt-2.5 !pt-0",
+      actions: "!grid !grid-cols-3 !gap-3 !w-full !mt-4 !pt-0",
       confirmButton:
-        "!m-0 !flex !h-9 !w-full !items-center !justify-center !rounded-[0.78rem] !border !border-emerald-500 !bg-emerald-600 !px-1 !text-[0.64rem] !font-black !text-white !transition hover:!bg-emerald-500 sm:!text-[0.72rem]",
+        "!m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-emerald-500 !bg-emerald-600 !px-2 !text-[0.72rem] !font-black !text-white !transition hover:!bg-emerald-500 sm:!h-12 sm:!text-[0.8rem]",
       denyButton:
-        "!m-0 !flex !h-9 !w-full !items-center !justify-center !rounded-[0.78rem] !border !border-amber-300 !bg-amber-50 !px-1 !text-[0.58rem] !font-black !text-amber-900 !transition hover:!bg-amber-100 sm:!text-[0.64rem]",
+        "!m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-amber-300 !bg-amber-50 !px-2 !text-[0.64rem] !font-black !text-amber-900 !transition hover:!bg-amber-100 sm:!h-12 sm:!text-[0.72rem]",
       cancelButton:
-        "!m-0 !flex !h-9 !w-full !items-center !justify-center !rounded-[0.78rem] !border !border-slate-500 !bg-slate-600 !px-1 !text-[0.64rem] !font-black !text-white !transition hover:!bg-slate-500 sm:!text-[0.72rem]",
+        "!m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-slate-200 !bg-white !px-2 !text-[0.72rem] !font-black !text-slate-800 !transition hover:!bg-slate-50 sm:!h-12 sm:!text-[0.8rem]",
     },
     preDeny: async () => {
       hideInlineResendFeedback();
@@ -615,8 +615,8 @@ export const TokenValidar = async ({
         </div>
       `,
       icon: "success",
-      background: "#1f2937",
-      color: "#f9fafb",
+      background: "#ffffff",
+      color: "#0f172a",
       confirmButtonText: "Continuar",
     });
   } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -630,6 +630,9 @@ export const TokenValidar = async ({
     dismiss: result.dismiss,
   };
 };
+
+
+
 
 
 
