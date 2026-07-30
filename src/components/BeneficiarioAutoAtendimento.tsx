@@ -195,6 +195,33 @@ const obterDescricaoProcedimentoConsulta = (consulta: ConsultaAutoAtendimento) =
   ).trim();
 };
 
+const agruparProcedimentosRelacionados = (consultas: ConsultaAutoAtendimento[]) => {
+  const mapa = new Map<string, { descricao: string; horarios: string[]; quantidade: number; chave: string }>();
+
+  consultas.forEach((consulta) => {
+    const descricao = obterDescricaoProcedimentoConsulta(consulta);
+    const chave = descricao.trim().toUpperCase();
+    const existente = mapa.get(chave);
+
+    if (existente) {
+      existente.horarios.push(formatarHora(consulta.horaInicio));
+      existente.quantidade += 1;
+      return;
+    }
+
+    mapa.set(chave, {
+      descricao,
+      horarios: [formatarHora(consulta.horaInicio)],
+      quantidade: 1,
+      chave,
+    });
+  });
+
+  return Array.from(mapa.values()).map((item) => ({
+    ...item,
+    horarios: item.horarios.sort((a, b) => a.localeCompare(b)),
+  }));
+};
 const criarEventoBaseDaConsulta = (
   consulta: ConsultaAutoAtendimento,
 ): AgendaEvento => ({
@@ -1473,7 +1500,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
               <div className="px-4 py-3 md:px-8 md:py-4">
                 <div className="mx-auto max-w-6xl">
-                  <div className="grid gap-3">
+                  <div className="flex h-full flex-col gap-3">
                     <div>
                       <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)] md:p-2.5">
                         <input
@@ -1579,7 +1606,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
                       </p>
                     </div>
-                    <div className="grid gap-3">
+                    <div className="flex h-full flex-col gap-3">
                       <button
                         onClick={() => void confirmarEncerramentoAutoAtendimento()}
                         className="h-10 rounded-[0.85rem] border border-red-300/35 bg-red-500/90 px-4 text-[0.78rem] font-bold text-white shadow-[0_8px_18px_rgba(127,29,29,0.16)] transition hover:bg-red-600"
@@ -1609,7 +1636,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex min-h-[34rem] flex-col gap-4 md:min-h-[36rem]">
+                      <div className="flex min-h-[calc(100vh-22rem)] flex-col gap-4 md:min-h-[calc(100vh-20rem)]">
                       {consultaFluxoAtual ? (() => {
                         const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
@@ -1622,15 +1649,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         return (
                           <article
                             key={cardConsulta.chave}
-                            className={`flex-1 border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                            className={`flex flex-1 flex-col border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
                               autorizacaoConcluida
                                 ? "border-emerald-200 bg-emerald-50/55 opacity-75"
                                 : "border-slate-200 bg-white"
                             }`}
                           >
-                              <div className="grid gap-3">
+                              <div className="flex h-full flex-col gap-3">
 
-                              <div className="grid gap-3">
+                              <div className="flex h-full flex-col gap-3">
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-h-8 min-w-[96px]">
                                     {(autorizacaoConcluida || (tokenEnviado && !autorizacaoConcluida)) && consulta.senhaPainel ? (
@@ -1666,7 +1693,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   </p>
                                 </div>
 
-                                <div className="flex-1 grid gap-2 text-center content-start">
+                                <div className="flex flex-1 flex-col gap-2 text-center">
                                   {cardConsulta.agrupadoUltrassom ? (
                                     <p className="text-[1.75rem] font-black uppercase tracking-[0.08em] text-[#00338d] md:text-[2.15rem]">
                                       Horários do dia
@@ -1687,19 +1714,20 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   </div>
 
                                   {cardConsulta.agrupadoUltrassom ? (
-                                    <div className={`border px-3 py-2.5 text-left ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
+                                    <div className={`max-h-[calc(100vh-33rem)] overflow-y-auto border px-3 py-2.5 text-left ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
                                       <div className="grid gap-1.5">
-                                        {cardConsulta.consultasRelacionadas.map((item) => (
+                                        {agruparProcedimentosRelacionados(cardConsulta.consultasRelacionadas).map((item) => (
                                           <div
-                                            key={item.idEvento}
+                                            key={item.chave}
                                             className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
                                           >
                                             <p className="text-[1.08rem] text-slate-700 md:text-[1.16rem]">
                                               <span className="text-[1.16rem] font-black text-[#00338d] md:text-[1.24rem]">
-                                                {formatarHora(item.horaInicio)}
+                                                {item.horarios.join(" e ")}
                                               </span>
                                               {" - "}
-                                              {obterDescricaoProcedimentoConsulta(item)}
+                                              {item.descricao}
+                                              {item.quantidade > 1 ? ` (${item.quantidade} VEZES)` : ""}
                                             </p>
                                           </div>
                                         ))}
@@ -1726,7 +1754,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           </article>
                         );
                       })() : null}
-                                <div className="mt-auto flex items-center justify-between gap-4 px-3 pt-2 md:px-5">
+                                <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-4 border-t border-slate-100 bg-white/95 px-3 py-3 backdrop-blur md:px-5">
                                   <button
                                     type="button"
                                     onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
@@ -1790,7 +1818,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     }
                   />
 
-                  <div className="grid gap-3">
+                  <div className="flex h-full flex-col gap-3">
                     {!consultaSelecionada.autorizado && !consultaSelecionada.tokenValidado && (
                       <button
                         onClick={() => void vincularSenhaPainel(consultaSelecionada)}
@@ -1844,6 +1872,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
 
 
 
