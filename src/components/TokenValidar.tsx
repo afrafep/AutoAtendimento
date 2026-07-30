@@ -439,7 +439,7 @@ export const TokenValidar = async ({
     allowOutsideClick: false,
     buttonsStyling: false,
     customClass: {
-      popup: "!w-[min(97vw,42rem)] !rounded-[1.35rem] !border !border-slate-200 !bg-white !px-5 !pb-5 !pt-4 !shadow-[0_28px_60px_rgba(15,23,42,0.22)]",
+      popup: "!w-[min(99vw,56rem)] !rounded-[1.35rem] !border !border-slate-200 !bg-white !px-6 !pb-5 !pt-4 !shadow-[0_28px_60px_rgba(15,23,42,0.22)]",
       title: "!mb-3 !text-[1.22rem] !font-black !tracking-tight !text-slate-900 sm:!text-[1.6rem]",
       htmlContainer: "!mx-0 !mt-0 !px-0 !pb-0 !text-left",
       actions: "!grid !grid-cols-3 !gap-3 !w-full !mt-4 !pt-0",
@@ -630,6 +630,7 @@ export const TokenValidar = async ({
     dismiss: result.dismiss,
   };
 };
+
 
 
 
