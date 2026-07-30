@@ -1564,7 +1564,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         {`Escolha o atendimento${dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? ` - ${dataConsultasCabecalho}` : ""}`}
                       </h2>
                       <p className="mt-2.5 text-[1rem] font-black uppercase tracking-[0.06em] text-white md:text-[1.16rem]">
-                        {pacienteNome || "Beneficiário"}
+                        Beneficiário: {pacienteNome || "Beneficiário"}
                       </p>
                     </div>
                     <div className="grid gap-3">
