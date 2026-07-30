@@ -1593,7 +1593,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           </p>
                           <p className="text-[0.84rem] font-medium text-slate-600">
                             {consultaFluxoAtual?.autorizacaoConcluida
-                              ? "Autoatendimento concluído. Próximo horário liberado."
+                              ? "Autorizado. Próximo horário liberado."
                               : "Finalize o autoatendimento para liberar o próximo horário."}
                           </p>
                         </div>
@@ -1651,7 +1651,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       : tokenEnviado && !autorizacaoConcluida
                                         ? "Autorizado e token enviado para o celular"
                                         : autorizacaoConcluida
-                                          ? "Autoatendimento concluído"
+                                          ? "AUTORIZADO"
                                           : formatarStatus(consulta.statusAgendamento)}
                                   </p>
                                 </div>
@@ -1834,6 +1834,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
