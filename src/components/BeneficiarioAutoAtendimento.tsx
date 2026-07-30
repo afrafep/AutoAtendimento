@@ -1487,7 +1487,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <div className="flex justify-center md:justify-end">
                       <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
                         <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
-                          {`JOAO PESSOA - ${dataCabecalhoAtual}`}
+                          {`JOÃO PESSOA - ${dataCabecalhoAtual}`}
                         </p>
                         <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
                           {`Horário Atual: ${horaCabecalhoAtual}`}
@@ -1875,6 +1875,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
