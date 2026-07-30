@@ -1595,6 +1595,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               : "Finalize este atendimento para liberar o próximo horário."}
                           </p>
                         </div>
+                        <button
+                          onClick={() => void buscarConsultas()}
+                          disabled={loading}
+                          className="h-10 rounded-[0.85rem] border border-slate-200 bg-white px-4 text-[0.76rem] font-bold text-[#00338d] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d]/25 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {loading ? "Atualizando..." : "Atualizar"}
+                        </button>
                       </div>
                     </div>
 
@@ -1657,11 +1664,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                                 <div className="grid gap-2 text-center">
                                   {cardConsulta.agrupadoUltrassom ? (
-                                    <p className="text-[0.96rem] font-black uppercase tracking-[0.1em] text-[#00338d]">
+                                    <p className="text-[1.45rem] font-black uppercase tracking-[0.08em] text-[#00338d] md:text-[1.8rem]">
                                       Horários do dia
                                     </p>
                                   ) : (
-                                    <p className="text-[1.9rem] font-black tracking-tight text-[#00338d]">
+                                    <p className="text-[2.45rem] font-black tracking-tight text-[#00338d] md:text-[2.8rem]">
                                       {formatarHora(consulta.horaInicio)}
                                     </p>
                                   )}
@@ -1820,6 +1827,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
