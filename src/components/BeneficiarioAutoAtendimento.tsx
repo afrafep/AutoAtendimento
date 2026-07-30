@@ -507,7 +507,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     useState(false);
   const [senhasPainelDigitadas, setSenhasPainelDigitadas] = useState<Record<number, string>>({});
   const [consultaSelecionadaId, setConsultaSelecionadaId] = useState<number | null>(null);
+  const [indiceConsultaAtual, setIndiceConsultaAtual] = useState(0);
   const [etapaTela, setEtapaTela] = useState<EtapaTelaAutoAtendimento>("cpf");
+  const [mostrarTecladoCpf, setMostrarTecladoCpf] = useState(false);
 
   const consultaSelecionada =
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) || null;
@@ -554,35 +556,45 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         String(b.consultaBase.horaInicio || ""),
       ),
     );
+
   }, [consultas]);
-  const cardsConsultasFluxo = useMemo(() => {
-    const indicePrimeiraNaoAutorizada = cardsConsultas.findIndex(
-      (item) => !normalizarBoolean(item.consultaBase.autorizado),
-    );
-    const indiceEtapaAtual =
-      indicePrimeiraNaoAutorizada === -1
-        ? Math.max(cardsConsultas.length - 1, 0)
-        : indicePrimeiraNaoAutorizada;
 
-    return cardsConsultas.map((cardConsulta, indice) => {
-      const consulta = cardConsulta.consultaBase;
-      const autorizado = normalizarBoolean(consulta.autorizado);
-      const tokenValidado = normalizarBoolean(consulta.tokenValidado);
+  const cardsConsultasFluxo = useMemo(
+    () =>
+      cardsConsultas.map((cardConsulta, indice) => {
+        const consulta = cardConsulta.consultaBase;
+        const autorizado = normalizarBoolean(consulta.autorizado);
+        const tokenValidado = normalizarBoolean(consulta.tokenValidado);
 
-      return {
-        cardConsulta,
-        consulta,
-        indice,
-        total: cardsConsultas.length,
-        etapaAtual: indice + 1,
-        autorizado,
-        tokenValidado,
-        etapaFinalizada: autorizado && tokenValidado,
-        etapaJaLiberada: indice <= indiceEtapaAtual,
-        etapaEmDestaque: indice === indiceEtapaAtual,
-      };
+        return {
+          cardConsulta,
+          consulta,
+          indice,
+          etapaAtual: indice + 1,
+          total: cardsConsultas.length,
+          autorizado,
+          tokenValidado,
+          tokenEnviado: autorizado,
+          autorizacaoConcluida: autorizado && tokenValidado,
+        };
+      }),
+    [cardsConsultas],
+  );
+
+  const indiceMaximoLiberado = useMemo(() => {
+    let maiorIndiceLiberado = 0;
+
+    cardsConsultasFluxo.forEach((item, indice) => {
+      if (item.tokenEnviado) {
+        maiorIndiceLiberado = Math.min(indice + 1, cardsConsultasFluxo.length - 1);
+      }
     });
-  }, [cardsConsultas]);
+
+    return maiorIndiceLiberado;
+  }, [cardsConsultasFluxo]);
+
+  const consultaFluxoAtual = cardsConsultasFluxo[indiceConsultaAtual] || null;
+
 
   const dataConsultasCabecalho = useMemo(
     () => formatarData(cardsConsultas[0]?.consultaBase.dataInicio),
@@ -602,11 +614,30 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         estadoPersistidoInicial.consultas.length > 0
       ) {
         setEtapaTela("consultas");
+        setIndiceConsultaAtual(0);
       }
     }
 
     setHidratado(true);
   }, []);
+
+  useEffect(() => {
+    if (cardsConsultasFluxo.length === 0) {
+      if (indiceConsultaAtual !== 0) {
+        setIndiceConsultaAtual(0);
+      }
+      return;
+    }
+
+    if (indiceConsultaAtual > indiceMaximoLiberado) {
+      setIndiceConsultaAtual(indiceMaximoLiberado);
+      return;
+    }
+
+    if (indiceConsultaAtual > cardsConsultasFluxo.length - 1) {
+      setIndiceConsultaAtual(cardsConsultasFluxo.length - 1);
+    }
+  }, [cardsConsultasFluxo, indiceConsultaAtual, indiceMaximoLiberado]);
 
   if (!hidratado) {
     return null;
@@ -629,7 +660,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setConsultaAutorizacaoAberta(null);
     setIniciarAutorizacaoAutomaticamente(false);
     setConsultaSelecionadaId(null);
+    setIndiceConsultaAtual(0);
     setSenhasPainelDigitadas({});
+    setMostrarTecladoCpf(false);
     setEtapaTela("cpf");
     limparEstadoTelaPersistido();
   };
@@ -1394,35 +1427,37 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
           {etapaTela === "cpf" && (
             <section className="w-full">
-                <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
-                  <div className="mx-auto max-w-5xl px-2 md:px-3">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
+                <div className="mx-auto max-w-5xl px-2 md:px-3">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="text-center md:text-left">
-                    <h2 className="text-[1.28rem] font-black tracking-tight text-white md:text-[1.95rem]">
-                      Digite o seu CPF para começar
-                    </h2>
-                    <p className="mt-2 max-w-[34rem] text-[0.92rem] text-blue-100 md:text-[0.98rem]">
-                      Digite o seu CPF para localizar seus agendamentos de hoje.
-                    </p>
+                      <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
+                        Digite o seu CPF para começar
+                      </h2>
+                      <p className="mt-3 max-w-[34rem] text-[1rem] text-blue-100">
+                        Digite o seu CPF para localizar seus agendamentos de hoje.
+                      </p>
                     </div>
-                      <div className="flex justify-center md:justify-end">
-                        <p className="inline-flex min-h-8 items-center rounded-full border border-white/20 bg-white/10 px-3.5 text-[0.76rem] font-black uppercase tracking-[0.14em] text-white md:text-[0.8rem]">
+                    <div className="flex justify-center md:justify-end">
+                      <p className="inline-flex min-h-9 items-center rounded-full border border-white/20 bg-white/10 px-4 text-[0.84rem] font-black uppercase tracking-[0.16em] text-white">
+
                         {`JOAO PESSOA - ${dataCabecalhoAtual}`}
-                        </p>
-                      </div>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="px-4 py-4 md:px-8 md:py-5">
+              <div className="px-4 py-3 md:px-8 md:py-4">
                 <div className="mx-auto max-w-5xl">
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     <div>
                       <label
                         htmlFor="beneficiario-cpf"
-                        className="block text-center text-[0.68rem] font-bold uppercase tracking-[0.14em] text-slate-500 md:text-[0.72rem]"
+                        className="block text-center text-[1rem] font-black uppercase tracking-[0.16em] text-slate-600 md:text-[1.08rem]"
+
                       >
-                        CPF do beneficiário
+                        DIGITE O CPF DO BENEFICIÁRIO
                       </label>
 
                       <div className="mt-2 bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
@@ -1433,6 +1468,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           maxLength={14}
                           value={cpf}
                           onChange={handleCpfChange}
+                          onFocus={() => setMostrarTecladoCpf(true)}
+                          onClick={() => setMostrarTecladoCpf(true)}
                           onKeyDown={(event) => {
                             handleCpfKeyDown(event);
                             if (event.key === "Enter") {
@@ -1447,62 +1484,67 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:p-4">
-                      <div className="mb-3 flex items-center justify-between px-1">
-                        <p className="text-[0.68rem] font-black uppercase tracking-[0.15em] text-slate-500 md:text-[0.72rem]">
-                          Teclado numérico
-                        </p>
-                        <p className="text-[0.72rem] font-medium text-slate-400 md:text-[0.76rem]">
-                          Toque para digitar
-                        </p>
-                      </div>
+                    {mostrarTecladoCpf ? (
+                      <div className="rounded-[1.1rem] border border-slate-200/80 bg-white/95 p-3 shadow-[0_18px_30px_rgba(15,23,42,0.08)] md:p-3.5">
+                        <div className="mb-3 flex items-center justify-between px-1">
+                          <p className="text-[0.66rem] font-black uppercase tracking-[0.15em] text-slate-500">
+                            Teclado numérico
+                          </p>
+                          <p className="text-[0.72rem] font-medium text-slate-400">
+                            Toque para digitar
+                          </p>
+                        </div>
 
-                      <div className="grid grid-cols-3 gap-2.5 md:gap-3">
-                        {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
+                        <div className="grid grid-cols-3 gap-2.5 md:gap-3">
+                          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
+                            <button
+                              key={`cpf-tecla-${digito}`}
+                              type="button"
+                              onClick={() => adicionarDigitoCpf(digito)}
+                              className="flex h-12 items-center justify-center rounded-[0.95rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1rem] font-black text-white shadow-[0_10px_18px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_14px_24px_rgba(15,23,42,0.18)] md:h-13 md:text-[1.12rem]"
+                            >
+                              {digito}
+                            </button>
+                          ))}
+
+
                           <button
-                            key={`cpf-tecla-${digito}`}
                             type="button"
-                            onClick={() => adicionarDigitoCpf(digito)}
-                            className="flex h-13 items-center justify-center rounded-[0.95rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1.1rem] font-black text-white shadow-[0_12px_20px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_16px_26px_rgba(15,23,42,0.18)] md:h-14 md:text-[1.24rem]"
+                            onClick={limparCpfDigitado}
+                            className="flex h-12 items-center justify-center rounded-[0.95rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.62rem] font-black uppercase tracking-[0.05em] text-rose-700 shadow-[0_10px_16px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-13 md:text-[0.68rem]"
+
                           >
-                            {digito}
+                            Limpar CPF
                           </button>
-                        ))}
+
+                          <button
+                            type="button"
+                            onClick={() => adicionarDigitoCpf('0')}
+                            className="flex h-12 items-center justify-center rounded-[0.95rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1rem] font-black text-white shadow-[0_10px_18px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_14px_24px_rgba(15,23,42,0.18)] md:h-13 md:text-[1.12rem]"
+                          >
+                            0
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={apagarUltimoDigitoCpf}
+                            className="flex h-12 items-center justify-center rounded-[0.95rem] border border-amber-200 bg-[linear-gradient(180deg,#fffdf2_0%,#fef0bf_100%)] px-2 text-[0.62rem] font-black uppercase tracking-[0.05em] text-amber-800 shadow-[0_10px_16px_rgba(245,158,11,0.08)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-13 md:text-[0.68rem]"
+                          >
+                            Apagar
+                          </button>
+                        </div>
 
                         <button
                           type="button"
-                          onClick={limparCpfDigitado}
-                          className="flex h-13 items-center justify-center rounded-[0.95rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.66rem] font-black uppercase tracking-[0.06em] text-rose-700 shadow-[0_10px_18px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-14 md:text-[0.74rem]"
+                          onClick={() => void buscarConsultas()}
+                          disabled={loading || normalizarCpf(cpf).length < 11}
+                          className="mt-3 flex h-12 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.84rem] font-black uppercase tracking-[0.05em] text-white shadow-[0_16px_26px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_20px_32px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-13 md:text-[0.88rem]"
                         >
-                          Limpar CPF
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => adicionarDigitoCpf('0')}
-                          className="flex h-15 items-center justify-center rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1.32rem] font-black text-white shadow-[0_14px_24px_rgba(15,23,42,0.16)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_30px_rgba(15,23,42,0.22)] md:h-16 md:text-[1.46rem]"
-                        >
-                          0
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={apagarUltimoDigitoCpf}
-                          className="flex h-13 items-center justify-center rounded-[0.95rem] border border-amber-200 bg-[linear-gradient(180deg,#fffdf2_0%,#fef0bf_100%)] px-2 text-[0.66rem] font-black uppercase tracking-[0.06em] text-amber-800 shadow-[0_10px_18px_rgba(245,158,11,0.08)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-14 md:text-[0.74rem]"
-                        >
-                          Apagar
+                          {loading ? "Buscando..." : "Entrar"}
                         </button>
                       </div>
+                    ) : null}
 
-                      <button
-                        type="button"
-                        onClick={() => void buscarConsultas()}
-                        disabled={loading || normalizarCpf(cpf).length < 11}
-                        className="mt-3 flex h-13 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.88rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_20px_34px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-14 md:text-[0.94rem]"
-                      >
-                        {loading ? "Buscando..." : "Entrar"}
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1512,23 +1554,23 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           {etapaTela === "consultas" && (
             <>
               <section className="w-full">
-                <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-5 text-white shadow-[0_18px_36px_rgba(15,23,42,0.16)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-7">
-                  <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
+                <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
+                  <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-[minmax(0,1fr)_210px] md:items-center">
                     <div className="min-w-0 text-center md:text-left">
-                      <p className="text-[0.82rem] font-bold uppercase tracking-[0.18em] text-blue-100/80">
+                      <p className="text-[0.74rem] font-bold uppercase tracking-[0.16em] text-blue-100/80">
                         Atendimentos do dia
                       </p>
-                      <h2 className="text-[1.35rem] font-black tracking-tight text-white md:text-[2rem]">
+                      <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
                         {`Escolha o atendimento${dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? ` - ${dataConsultasCabecalho}` : ""}`}
                       </h2>
-                      <p className="mt-4 text-[1.15rem] font-black uppercase tracking-[0.08em] text-white md:text-[1.35rem]">
+                      <p className="mt-2.5 text-[1rem] font-black uppercase tracking-[0.06em] text-white md:text-[1.16rem]">
                         {pacienteNome || "Beneficiário"}
                       </p>
                     </div>
                     <div className="grid gap-3">
                       <button
                         onClick={() => void confirmarEncerramentoAutoAtendimento()}
-                        className="h-12 border border-red-300/35 bg-red-500/90 px-5 text-[0.86rem] font-bold text-white shadow-[0_10px_24px_rgba(127,29,29,0.18)] transition hover:bg-red-600"
+                        className="h-10 rounded-[0.85rem] border border-red-300/35 bg-red-500/90 px-4 text-[0.78rem] font-bold text-white shadow-[0_8px_18px_rgba(127,29,29,0.16)] transition hover:bg-red-600"
                       >
                         Retorna ao menu inicial
                       </button>
@@ -1536,179 +1578,165 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="px-4 py-4 md:px-8 md:py-5">
+                <div className="px-4 py-3 md:px-8 md:py-4">
                   <div className="mx-auto max-w-6xl space-y-4">
-                    <div className="border border-slate-200/80 bg-white px-4 py-4 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <p className="text-center text-[0.95rem] font-semibold text-slate-600 md:text-[1rem] md:text-left">
-                          Toque no atendimento desejado para continuar.
-                        </p>
-                        <button
-                          onClick={() => void buscarConsultas()}
-                          disabled={loading}
-                          className="h-11 border border-slate-200 bg-slate-50 px-5 text-[0.86rem] font-bold text-[#00338d] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:border-[#00338d]/25 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {loading ? "Atualizando..." : "Atualizar"}
-                        </button>
+                    <div className="rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-4 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="space-y-0.5">
+                          <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#00338d]">
+                            Fluxo do atendimento
+                          </p>
+                          <p className="text-[0.98rem] font-black text-slate-900 md:text-[1.08rem]">
+                            {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total} agendamentos do dia` : "0 de 0 agendamentos do dia"}
+                          </p>
+                          <p className="text-[0.84rem] font-medium text-slate-600">
+                            {consultaFluxoAtual?.tokenEnviado
+                              ? "Atendimento liberado para seguir ao próximo horário."
+                              : "Finalize este atendimento para liberar o próximo horário."}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <button
+                            onClick={() => void buscarConsultas()}
+                            disabled={loading}
+                            className="h-10 rounded-[0.85rem] border border-slate-200 bg-white px-4 text-[0.76rem] font-bold text-[#00338d] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d]/25 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {loading ? "Atualizando..." : "Atualizar"}
+                          </button>
+                          <div className="flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
+                              disabled={indiceConsultaAtual === 0}
+                              className="h-10 min-w-[118px] rounded-[0.85rem] border border-slate-200 bg-white px-3 text-[0.76rem] font-black uppercase text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d] hover:text-[#00338d] disabled:cursor-not-allowed disabled:opacity-45"
+                            >
+                              Voltar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setIndiceConsultaAtual((valorAtual) =>
+                                  Math.min(valorAtual + 1, indiceMaximoLiberado),
+                                )
+                              }
+                              disabled={indiceConsultaAtual >= indiceMaximoLiberado}
+                              className="h-10 min-w-[118px] rounded-[0.85rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] px-3 text-[0.76rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+                            >
+                              Próximo
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="rounded-[1rem] border border-blue-100/70 bg-[linear-gradient(135deg,#f8fbff_0%,#eef5ff_100%)] px-4 py-3 shadow-[0_16px_30px_rgba(0,51,141,0.06)]">
-                      <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#00338d]">
-                        Fluxo de atendimento
-                      </p>
-                      <p className="mt-1 text-[1rem] font-bold text-slate-800 md:text-[1.08rem]">
-                        Atendimento atual: {cardsConsultasFluxo.find((item) => item.etapaEmDestaque)?.etapaAtual ?? 1} de {cardsConsultasFluxo.length || 1}
-                      </p>
-                      <p className="mt-1 text-[0.82rem] text-slate-600 md:text-[0.88rem]">
-                        Os horários anteriores continuam acessíveis. O próximo só é liberado quando o atendimento atual for autorizado.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-3">
-                      {cardsConsultasFluxo.map(({
-                        cardConsulta,
-                        consulta,
-                        indice,
-                        total,
-                        etapaAtual,
-                        autorizado,
-                        tokenValidado,
-                        etapaFinalizada,
-                        etapaJaLiberada,
-                        etapaEmDestaque,
-                      }) => {
+                    <div className="space-y-4">
+                      {consultaFluxoAtual ? (() => {
+                        const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
                         const faltouConsulta = statusAtual === "FALTOU";
+                        const compareceuConsulta = statusAtual === "COMPARECEU";
                         const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
-                        const tokenEnviado = autorizado && !tokenValidado;
-                        const bloqueadoPorOrdem = !etapaJaLiberada;
-                        const podeAbrirEtapa = etapaJaLiberada && !faltouConsulta;
-                        const podeSeguir = podeAbrirEtapa && (podeAutorizar || tokenEnviado || etapaFinalizada);
-                        const etapaLabel = `${etapaAtual} de ${total}`;
+                        const podeSeguir = podeAutorizar || tokenEnviado || autorizacaoConcluida;
 
-                        const statusFluxo = faltouConsulta
-                          ? "Consulta não realizada"
-                          : etapaFinalizada
-                            ? "Autorizado e validado"
-                            : tokenEnviado
-                              ? "Aguardando validação do token"
-                              : etapaEmDestaque
-                                ? "Atendimento atual"
-                                : bloqueadoPorOrdem
-                                  ? `Libera após autorizar o ${indice} de ${total}`
-                                  : "Etapa liberada";
 
                         return (
                           <article
                             key={cardConsulta.chave}
-                            className={`w-full overflow-hidden rounded-[1rem] border px-3 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.07)] transition md:px-4 ${
-                              etapaFinalizada
-                                ? "border-emerald-200 bg-[linear-gradient(180deg,#f7fff9_0%,#ecfdf3_100%)]"
-                                : etapaEmDestaque
-                                  ? "border-[#00338d]/25 bg-[linear-gradient(180deg,#ffffff_0%,#f3f8ff_100%)] shadow-[0_20px_34px_rgba(0,51,141,0.12)]"
-                                  : bloqueadoPorOrdem
-                                    ? "border-slate-200 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)]"
-                                    : "border-blue-100 bg-white"
+                            className={`border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                              autorizacaoConcluida
+                                ? "border-emerald-200 bg-emerald-50/55 opacity-75"
+                                : "border-slate-200 bg-white"
                             }`}
                           >
-                            <div className="grid gap-3 xl:grid-cols-[110px_minmax(0,1fr)_220px] xl:items-center">
-                              <div className="grid gap-1 text-center xl:text-left">
-                                <p className={`text-[0.72rem] font-black uppercase tracking-[0.12em] ${etapaEmDestaque ? "text-[#00338d]" : "text-slate-500"}`}>
-                                  {etapaLabel}
-                                </p>
-                                <p className="text-[1.72rem] font-black tracking-tight text-[#00338d] md:text-[1.9rem]">
-                                  {cardConsulta.agrupadoUltrassom ? "Fluxo" : formatarHora(consulta.horaInicio)}
-                                </p>
-                                <p className="text-[0.74rem] font-bold uppercase tracking-[0.06em] text-slate-500">
-                                  {cardConsulta.agrupadoUltrassom ? "Horários do dia" : formatarData(consulta.dataInicio)}
-                                </p>
-                              </div>
-
-                              <div className="grid gap-2">
-                                <div
-                                  className={`rounded-[0.95rem] border px-4 py-3 text-center ${
-                                    etapaFinalizada
-                                      ? "border-emerald-100 bg-white/80"
-                                      : etapaEmDestaque
-                                        ? "border-[#00338d]/10 bg-blue-50/70"
-                                        : "border-slate-100 bg-slate-50/80"
-                                  }`}
-                                >
-                                  <p className="text-[0.9rem] font-bold uppercase tracking-[0.05em] text-slate-900 md:text-[0.95rem]">
-                                    {consulta.profissionalNome}
-                                  </p>
-                                  <p className="mt-1 text-[0.88rem] text-slate-600 md:text-[0.92rem]">
-                                    {consulta.especialidadeNome}
-                                  </p>
-                                </div>
-
-                                {cardConsulta.agrupadoUltrassom ? (
-                                  <div className="rounded-[0.95rem] border border-blue-100 bg-blue-50/60 px-4 py-3">
-                                    <div className="grid gap-1.5">
-                                      {cardConsulta.consultasRelacionadas.map((item) => (
-                                        <div
-                                          key={item.idEvento}
-                                          className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
-                                        >
-                                          <p className="text-[0.88rem] text-slate-700">
-                                            <span className="font-black text-[#00338d]">
-                                              {formatarHora(item.horaInicio)}
-                                            </span>
-                                            {" - "}
-                                            {obterDescricaoProcedimentoConsulta(item)}
-                                          </p>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-
-                              <div className="grid min-w-0 gap-2 xl:justify-self-end xl:w-[220px]">
-                                <div className={`inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border px-3 py-2 text-center text-[0.68rem] font-black uppercase leading-tight tracking-[0.06em] md:text-[0.72rem] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : etapaFinalizada ? "border-emerald-200 bg-emerald-50 text-emerald-800" : tokenEnviado ? "border-cyan-200 bg-cyan-50 text-cyan-800" : bloqueadoPorOrdem ? "border-slate-200 bg-slate-100 text-slate-600" : etapaEmDestaque ? "border-blue-200 bg-blue-50 text-[#00338d]" : "border-blue-100 bg-white text-[#00338d]"}`}>
-                                  {!etapaFinalizada ? (
-                                    <span
-                                      aria-hidden="true"
-                                      className={`inline-flex h-2.5 w-2.5 rounded-full ${faltouConsulta ? "bg-red-500" : tokenEnviado ? "bg-cyan-500" : bloqueadoPorOrdem ? "bg-slate-400" : "bg-[#00338d]"}`}
-                                    />
-                                  ) : null}
-                                  {etapaFinalizada ? (
-                                    <span
-                                      aria-hidden="true"
-                                      className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
-                                    >
-                                      ✓
-                                    </span>
-                                  ) : null}
-                                  {statusFluxo}
-                                </div>
-
-                                {podeSeguir ? (
-                                  <button
-                                    onClick={() => abrirEtapaSenha(consulta)}
-                                    className={`h-13 w-full rounded-[0.95rem] border px-4 text-[0.84rem] font-black uppercase tracking-[0.05em] transition md:h-14 md:text-[0.9rem] ${tokenEnviado ? "border-cyan-200/40 bg-[linear-gradient(135deg,#0f766e_0%,#0891b2_58%,#38bdf8_100%)] text-white shadow-[0_16px_28px_rgba(8,145,178,0.2)] hover:shadow-[0_18px_30px_rgba(8,145,178,0.26)]" : etapaEmDestaque ? "border-blue-200/40 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.2)] hover:shadow-[0_18px_30px_rgba(0,51,141,0.26)]" : "border-blue-200 bg-white text-[#00338d] hover:bg-blue-50"}`}
-                                  >
-                                    {tokenEnviado ? "Continuar token" : etapaEmDestaque ? "Iniciar atendimento" : "Voltar para este atendimento"}
-                                  </button>
-                                ) : (
-                                  <div className={`flex min-h-[3.25rem] w-full items-center justify-center rounded-[0.95rem] border px-3 py-2 text-center text-[0.74rem] font-black uppercase leading-tight tracking-[0.04em] md:min-h-[3.5rem] md:text-[0.8rem] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-600" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
+                            <div className="grid gap-3">
+                              <div className="grid gap-1.5 text-center">
+                                <div className="flex justify-center md:justify-end">
+                                  <p className={`inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border px-3 text-center text-[0.68rem] font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : tokenEnviado && !autorizacaoConcluida ? "border-amber-200 bg-amber-50 text-amber-800" : compareceuConsulta ? "border-orange-200 bg-orange-50 text-orange-700" : autorizacaoConcluida ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
+                                    {!autorizacaoConcluida ? (
+                                      <span
+                                        aria-hidden="true"
+                                        className={`inline-flex h-2.5 w-2.5 rounded-full ${faltouConsulta ? "bg-red-500" : tokenEnviado ? "bg-amber-500" : compareceuConsulta ? "bg-orange-500" : "bg-[#00338d]"}`}
+                                      />
+                                    ) : null}
+                                    {autorizacaoConcluida ? (
+                                      <span
+                                        aria-hidden="true"
+                                        className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
+                                      >
+                                        ✓
+                                      </span>
+                                    ) : null}
                                     {faltouConsulta
-                                      ? "Atendimento encerrado"
-                                      : bloqueadoPorOrdem
-                                        ? `Libera ap?s autorizar o ${indice} de ${total}`
-                                        : "Aguardando a??o"}
-                                  </div>
+                                      ? "Consulta não realizada"
+                                      : tokenEnviado && !autorizacaoConcluida
+                                        ? "Autorizado e token enviado"
+                                        : autorizacaoConcluida
+                                          ? "Autoatendimento concluído"
+                                          : formatarStatus(consulta.statusAgendamento)}
+                                  </p>
+                                </div>
+                                {cardConsulta.agrupadoUltrassom ? (
+                                  <p className="text-[0.96rem] font-black uppercase tracking-[0.1em] text-[#00338d]">
+                                    Horários do dia
+                                  </p>
+                                ) : (
+                                  <p className="text-[1.9rem] font-black tracking-tight text-[#00338d]">
+                                    {formatarHora(consulta.horaInicio)}
+                                  </p>
                                 )}
                               </div>
+
+                              <div className={`border px-3 py-3 text-center ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-slate-100 bg-slate-50"}`}>
+                                <p className="text-[0.9rem] font-bold uppercase tracking-[0.06em] text-slate-900">
+                                  {consulta.profissionalNome}
+                                </p>
+                                <p className="mt-1 text-[0.84rem] text-slate-600">
+                                  {consulta.especialidadeNome}
+                                </p>
+                              </div>
+
+                              {cardConsulta.agrupadoUltrassom ? (
+                                <div className={`border px-3 py-2.5 ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
+                                  <div className="grid gap-1.5">
+                                    {cardConsulta.consultasRelacionadas.map((item) => (
+                                      <div
+                                        key={item.idEvento}
+                                        className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
+                                      >
+                                        <p className="text-[0.82rem] text-slate-700">
+                                          <span className="font-black text-[#00338d]">
+                                            {formatarHora(item.horaInicio)}
+                                          </span>
+                                          {" - "}
+                                          {obterDescricaoProcedimentoConsulta(item)}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+
+                              {podeSeguir ? (
+                                <button
+                                  onClick={() => abrirEtapaSenha(consulta)}
+                                  className="h-12 bg-[#00338d] px-4 text-[0.88rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f]"
+                                >
+                                  {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
+                                </button>
+                              ) : (
+                                <div className={`flex h-12 items-center justify-center px-3 text-center text-[0.84rem] font-bold ${faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}>
+                                  {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
+                                </div>
+                              )}
                             </div>
                           </article>
                         );
-                      })}
+                      })() : null}
+
                     </div>
                   </div>
                 </div>
-              </section>
+            </section>
             </>
           )}
 
@@ -1717,11 +1745,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
               <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-5 text-white md:px-8 md:py-7">
                 <div className="mx-auto max-w-6xl text-center md:text-left">
                   <div className="text-center md:text-left">
-                    <h2 className="text-[1.35rem] font-black tracking-tight text-white md:text-[2rem]">
+                    <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
                       Vincule a senha do painel
                     </h2>
                     <p className="mt-2 text-[0.95rem] text-blue-100">
-                      Confira o atendimento. A senha do painel sera gerada e vinculada automaticamente antes de seguir.
+                      Confira o atendimento. A senha do painel será gerada e vinculada automaticamente antes de seguir.
                     </p>
                   </div>
                 </div>
@@ -1796,6 +1824,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
