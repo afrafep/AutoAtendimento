@@ -1629,7 +1629,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 type="button"
                                 onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
                                 disabled={indiceConsultaAtual === 0}
-                                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-[1.15rem] font-black text-[#00338d] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d] hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-35 md:h-12 md:w-12 md:text-[1.3rem]"
+                                className={`flex h-11 w-11 items-center justify-center rounded-full border text-[1.15rem] font-black shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition md:h-12 md:w-12 md:text-[1.3rem] ${indiceConsultaAtual === 0 ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
                                 aria-label="Voltar atendimento"
                               >
                                 ‹
@@ -1726,7 +1726,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   )
                                 }
                                 disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                                className="flex h-11 w-11 items-center justify-center rounded-full border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-[1.15rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:border-slate-200 disabled:!bg-slate-200 disabled:!text-slate-500 disabled:shadow-none disabled:hover:brightness-100 md:h-12 md:w-12 md:text-[1.3rem]"
+                                className={`flex h-11 w-11 items-center justify-center rounded-full border text-[1.15rem] font-black shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition md:h-12 md:w-12 md:text-[1.3rem] ${indiceConsultaAtual >= indiceMaximoLiberado ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
                                 aria-label="Próximo atendimento"
                               >
                                 ›
@@ -1827,6 +1827,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
 
 
 
