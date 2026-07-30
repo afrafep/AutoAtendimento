@@ -1451,18 +1451,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
               </div>
 
               <div className="px-4 py-3 md:px-8 md:py-4">
-                <div className="mx-auto max-w-5xl">
+                <div className="mx-auto max-w-6xl">
                   <div className="grid gap-3">
                     <div>
-                      <label
-                        htmlFor="beneficiario-cpf"
-                        className="block text-center text-[0.82rem] font-black uppercase tracking-[0.18em] text-slate-500 md:text-[0.9rem]"
-
-                      >
-                        CPF
-                      </label>
-
-                      <div className="mt-2 bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                      <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
                         <input
                           id="beneficiario-cpf"
                           type="text"
@@ -1481,7 +1473,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           onPaste={handleCpfPaste}
                           placeholder="000.000.000-00"
                           pattern="[0-9]*"
-                          className="h-[4rem] w-full border-0 bg-slate-50 px-4 text-center text-[1.2rem] font-black tracking-[0.12em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[4.35rem] md:text-[1.5rem]"
+                          className="h-[4.25rem] w-full border-0 bg-slate-50 px-6 text-center text-[1.26rem] font-black tracking-[0.12em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[4.75rem] md:text-[1.62rem]"
                         />
                       </div>
                     </div>
@@ -1834,6 +1826,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
