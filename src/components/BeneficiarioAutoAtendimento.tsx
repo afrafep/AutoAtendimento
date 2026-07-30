@@ -675,10 +675,12 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
 
   const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
-    setConsultaSelecionadaId(consulta.idEvento);
-    setEtapaTela("senha");
-
     if (String(consulta.senhaPainel || "").trim()) {
+      if (consulta.autorizado && !consulta.tokenValidado) {
+        await abrirValidacaoTokenDireta(consulta);
+        return;
+      }
+
       if (!consulta.autorizado) {
         await abrirAutorizacaoComCompareceu(consulta, true);
       }

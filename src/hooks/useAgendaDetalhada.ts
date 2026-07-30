@@ -2203,14 +2203,10 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
         </div>
       `,
         icon: "error",
-        confirmButtonText: "Tentar Novamente",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar",
+        confirmButtonText: "OK",
         background: "#1f2937",
         color: "#f9fafb",
         width: "500px",
-      }).then((result) => {
-        if (result.isConfirmed) marcarAutorizacao(evento);
       });
     }
   };
