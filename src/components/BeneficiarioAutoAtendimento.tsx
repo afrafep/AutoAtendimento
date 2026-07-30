@@ -1609,7 +1609,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="flex min-h-[34rem] flex-col gap-4 md:min-h-[36rem]">
                       {consultaFluxoAtual ? (() => {
                         const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
@@ -1622,7 +1622,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         return (
                           <article
                             key={cardConsulta.chave}
-                            className={`border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                            className={`flex-1 border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
                               autorizacaoConcluida
                                 ? "border-emerald-200 bg-emerald-50/55 opacity-75"
                                 : "border-slate-200 bg-white"
@@ -1666,7 +1666,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   </p>
                                 </div>
 
-                                <div className="grid gap-2 text-center">
+                                <div className="flex-1 grid gap-2 text-center content-start">
                                   {cardConsulta.agrupadoUltrassom ? (
                                     <p className="text-[1.75rem] font-black uppercase tracking-[0.08em] text-[#00338d] md:text-[2.15rem]">
                                       Horários do dia
@@ -1726,7 +1726,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           </article>
                         );
                       })() : null}
-                                <div className="mt-5 flex items-center justify-between gap-4 px-3 md:px-5">
+                                <div className="mt-auto flex items-center justify-between gap-4 px-3 pt-2 md:px-5">
                                   <button
                                     type="button"
                                     onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
@@ -1844,6 +1844,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
