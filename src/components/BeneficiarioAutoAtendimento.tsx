@@ -1695,7 +1695,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                                 <div className="flex flex-1 flex-col gap-2 text-center">
                                   {cardConsulta.agrupadoUltrassom ? (
-                                    <p className="text-[1.75rem] font-black uppercase tracking-[0.08em] text-[#00338d] md:text-[2.15rem]">
+                                    <p className="text-[1.35rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.7rem]">
                                       Horários do dia
                                     </p>
                                   ) : (
@@ -1705,10 +1705,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   )}
 
                                   <div className={`border px-3 py-3 text-center ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-slate-100 bg-slate-50"}`}>
-                                    <p className="text-[1rem] font-bold uppercase tracking-[0.06em] text-slate-900 md:text-[1.08rem]">
+                                    <p className="text-[0.92rem] font-bold uppercase tracking-[0.05em] text-slate-900 md:text-[1rem]">
                                       {consulta.profissionalNome}
                                     </p>
-                                    <p className="mt-1 text-[0.94rem] text-slate-600 md:text-[1rem]">
+                                    <p className="mt-1 text-[0.84rem] text-slate-600 md:text-[0.92rem]">
                                       {consulta.especialidadeNome}
                                     </p>
                                   </div>
@@ -1721,8 +1721,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                             key={item.chave}
                                             className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
                                           >
-                                            <p className="text-[1.08rem] text-slate-700 md:text-[1.16rem]">
-                                              <span className="text-[1.16rem] font-black text-[#00338d] md:text-[1.24rem]">
+                                            <p className="text-[0.94rem] leading-[1.4] text-slate-700 md:text-[1rem]">
+                                              <span className="text-[1rem] font-black text-[#00338d] md:text-[1.08rem]">
                                                 {item.horarios.join(" e ")}
                                               </span>
                                               {" - "}
@@ -1872,6 +1872,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
