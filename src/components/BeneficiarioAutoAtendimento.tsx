@@ -1434,10 +1434,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="text-center md:text-left">
                       <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
-                        Digite o seu CPF para começar
+                        Digite o CPF do beneficiário
                       </h2>
                       <p className="mt-3 max-w-[34rem] text-[1rem] text-blue-100">
-                        Digite o seu CPF para localizar seus agendamentos de hoje.
+                        Localize os agendamentos de hoje.
                       </p>
                     </div>
                     <div className="flex justify-center md:justify-end">
@@ -1456,10 +1456,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <div>
                       <label
                         htmlFor="beneficiario-cpf"
-                        className="block text-center text-[2rem] font-black uppercase tracking-[0.16em] text-slate-600 md:text-[1.508rem]"
+                        className="block text-center text-[0.82rem] font-black uppercase tracking-[0.18em] text-slate-500 md:text-[0.9rem]"
 
                       >
-                        DIGITE O CPF DO BENEFICIÁRIO
+                        CPF
                       </label>
 
                       <div className="mt-2 bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
@@ -1559,14 +1559,14 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                 <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
                   <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-[minmax(0,1fr)_210px] md:items-center">
                     <div className="min-w-0 text-center md:text-left">
-                      <p className="text-[0.74rem] font-bold uppercase tracking-[0.16em] text-blue-100/80">
+                      <p className="text-[0.98rem] font-black uppercase tracking-[0.18em] text-blue-100/85 md:text-[1.08rem]">
                         Atendimentos do dia
                       </p>
                       <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-                        {`Escolha o atendimento${dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? ` - ${dataConsultasCabecalho}` : ""}`}
+                        {pacienteNome || "Beneficiário"}
                       </h2>
-                      <p className="mt-2.5 text-[1rem] font-black uppercase tracking-[0.06em] text-white md:text-[1.16rem]">
-                        Beneficiário: {pacienteNome || "Beneficiário"}
+                      <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
+                        {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
                       </p>
                     </div>
                     <div className="grid gap-3">
@@ -1574,7 +1574,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         onClick={() => void confirmarEncerramentoAutoAtendimento()}
                         className="h-10 rounded-[0.85rem] border border-red-300/35 bg-red-500/90 px-4 text-[0.78rem] font-bold text-white shadow-[0_8px_18px_rgba(127,29,29,0.16)] transition hover:bg-red-600"
                       >
-                        Retorna ao menu inicial
+                        Sair
                       </button>
                     </div>
                   </div>
@@ -1597,17 +1597,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               : "Finalize o autoatendimento para liberar o próximo horário."}
                           </p>
                         </div>
-                        <button
-                          onClick={() => void buscarConsultas()}
-                          disabled={loading}
-                          className="h-10 rounded-[0.85rem] border border-slate-200 bg-white px-4 text-[0.76rem] font-bold text-[#00338d] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:border-[#00338d]/25 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {loading ? "Atualizando..." : "Atualizar"}
-                        </button>
                       </div>
-                    </div>
 
-                    <div className="space-y-4">
+                      <div className="space-y-4">
                       {consultaFluxoAtual ? (() => {
                         const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
                         const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
@@ -1626,16 +1618,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 : "border-slate-200 bg-white"
                             }`}
                           >
-                            <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 md:grid-cols-[54px_minmax(0,1fr)_54px] md:gap-3">
-                              <button
-                                type="button"
-                                onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
-                                disabled={indiceConsultaAtual === 0}
-                                className={`flex h-11 w-11 items-center justify-center rounded-full border text-[1.15rem] font-black shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition md:h-12 md:w-12 md:text-[1.3rem] ${indiceConsultaAtual === 0 ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
-                                aria-label="Voltar atendimento"
-                              >
-                                ‹
-                              </button>
+                              <div className="grid gap-3">
 
                               <div className="grid gap-3">
                                 <div className="flex items-start justify-between gap-3">
@@ -1675,7 +1658,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                                 <div className="grid gap-2 text-center">
                                   {cardConsulta.agrupadoUltrassom ? (
-                                    <p className="text-[1.45rem] font-black uppercase tracking-[0.08em] text-[#00338d] md:text-[1.8rem]">
+                                    <p className="text-[1.75rem] font-black uppercase tracking-[0.08em] text-[#00338d] md:text-[2.15rem]">
                                       Horários do dia
                                     </p>
                                   ) : (
@@ -1685,10 +1668,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                   )}
 
                                   <div className={`border px-3 py-3 text-center ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-slate-100 bg-slate-50"}`}>
-                                    <p className="text-[0.9rem] font-bold uppercase tracking-[0.06em] text-slate-900">
+                                    <p className="text-[1rem] font-bold uppercase tracking-[0.06em] text-slate-900 md:text-[1.08rem]">
                                       {consulta.profissionalNome}
                                     </p>
-                                    <p className="mt-1 text-[0.84rem] text-slate-600">
+                                    <p className="mt-1 text-[0.94rem] text-slate-600 md:text-[1rem]">
                                       {consulta.especialidadeNome}
                                     </p>
                                   </div>
@@ -1701,8 +1684,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                             key={item.idEvento}
                                             className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
                                           >
-                                            <p className="text-[0.82rem] text-slate-700">
-                                              <span className="font-black text-[#00338d]">
+                                            <p className="text-[1.08rem] text-slate-700 md:text-[1.16rem]">
+                                              <span className="text-[1.16rem] font-black text-[#00338d] md:text-[1.24rem]">
                                                 {formatarHora(item.horaInicio)}
                                               </span>
                                               {" - "}
@@ -1729,26 +1712,36 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                 )}
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setIndiceConsultaAtual((valorAtual) =>
-                                    Math.min(valorAtual + 1, indiceMaximoLiberado),
-                                  )
-                                }
-                                disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                                className={`flex h-11 w-11 items-center justify-center rounded-full border text-[1.15rem] font-black shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition md:h-12 md:w-12 md:text-[1.3rem] ${indiceConsultaAtual >= indiceMaximoLiberado ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
-                                aria-label="Próximo atendimento"
-                              >
-                                ›
-                              </button>
                             </div>
                           </article>
                         );
                       })() : null}
+                                <div className="mt-5 flex items-center justify-between gap-4 px-3 md:px-5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
+                                    disabled={indiceConsultaAtual === 0}
+                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual === 0 ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
+                                  >
+                                    Voltar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setIndiceConsultaAtual((valorAtual) =>
+                                        Math.min(valorAtual + 1, indiceMaximoLiberado),
+                                      )
+                                    }
+                                    disabled={indiceConsultaAtual >= indiceMaximoLiberado}
+                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual >= indiceMaximoLiberado ? "border-slate-200 bg-white text-slate-300" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
+                                  >
+                                    Próximo
+                                  </button>
+                                </div>
 
                     </div>
                   </div>
+                                </div>
                 </div>
             </section>
             </>
@@ -1765,8 +1758,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <p className="mt-2 text-[0.95rem] text-blue-100">
                       Confira o atendimento. A senha do painel será gerada e vinculada automaticamente antes de seguir, para autorização.
                     </p>
-                       <p className="mt-2.5 text-[1rem] font-black uppercase tracking-[0.06em] text-white md:text-[1.16rem]">
-                        Beneficiário: {pacienteNome || "Beneficiário"}
+                       <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
+                        {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
                       </p>
                   </div>
                 </div>
@@ -1841,6 +1834,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
+
 
 
 
