@@ -585,7 +585,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     let maiorIndiceLiberado = 0;
 
     cardsConsultasFluxo.forEach((item, indice) => {
-      if (item.tokenEnviado) {
+      if (item.autorizacaoConcluida) {
         maiorIndiceLiberado = Math.min(indice + 1, cardsConsultasFluxo.length - 1);
       }
     });
@@ -1590,9 +1590,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                             {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total} agendamentos do dia` : "0 de 0 agendamentos do dia"}
                           </p>
                           <p className="text-[0.84rem] font-medium text-slate-600">
-                            {consultaFluxoAtual?.tokenEnviado
-                              ? "Atendimento liberado para seguir ao próximo horário."
-                              : "Finalize este atendimento para liberar o próximo horário."}
+                            {consultaFluxoAtual?.autorizacaoConcluida
+                              ? "Autoatendimento concluído. Próximo horário liberado."
+                              : "Finalize o autoatendimento para liberar o próximo horário."}
                           </p>
                         </div>
                         <button
@@ -1638,7 +1638,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               <div className="grid gap-3">
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-h-8 min-w-[96px]">
-                                    {autorizacaoConcluida && consulta.senhaPainel ? (
+                                    {(autorizacaoConcluida || (tokenEnviado && !autorizacaoConcluida)) && consulta.senhaPainel ? (
                                       <div className="inline-flex items-center rounded-[0.9rem] border border-emerald-200 bg-emerald-50 px-3 py-2 text-left shadow-[0_10px_18px_rgba(16,185,129,0.12)]">
                                         <span className="text-[0.98rem] font-black tracking-[0.04em] text-emerald-800 md:text-[1.08rem]">
                                           {`Senha: ${String(consulta.senhaPainel).toUpperCase()}`}
@@ -1664,7 +1664,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     {faltouConsulta
                                       ? "Consulta não realizada"
                                       : tokenEnviado && !autorizacaoConcluida
-                                        ? "Autorizado e token enviado"
+                                        ? "Autorizado e token enviado para o celular"
                                         : autorizacaoConcluida
                                           ? "Autoatendimento concluído"
                                           : formatarStatus(consulta.statusAgendamento)}
@@ -1715,7 +1715,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                                 {autorizacaoConcluida ? null : podeSeguir ? (
                                   <button
-                                    onClick={() => abrirEtapaSenha(consulta)}
+                                    onClick={() => tokenEnviado && !autorizacaoConcluida ? void abrirValidacaoTokenDireta(consulta) : void abrirEtapaSenha(consulta)}
                                     className="h-12 bg-[#00338d] px-4 text-[0.88rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f]"
                                   >
                                     {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
@@ -1839,6 +1839,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
