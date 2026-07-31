@@ -166,6 +166,21 @@ const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
     String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
   );
 
+const converterHoraParaMinutos = (hora?: string | null) => {
+  const horaFormatada = String(hora || "").trim();
+  if (!horaFormatada) return null;
+
+  const partes = horaFormatada.split(":");
+  const horas = Number(partes[0]);
+  const minutos = Number(partes[1]);
+
+  if (Number.isNaN(horas) || Number.isNaN(minutos)) return null;
+
+  return horas * 60 + minutos;
+};
+
+const LIMITE_INTERVALO_ULTRASSOM_MINUTOS = 60;
+
 const ehMedicoUltrassonografista = (consulta: ConsultaAutoAtendimento) =>
   String(consulta.especialidadeNome || "")
     .trim()
@@ -222,6 +237,25 @@ const agruparProcedimentosRelacionados = (consultas: ConsultaAutoAtendimento[]) 
     horarios: item.horarios.sort((a, b) => a.localeCompare(b)),
   }));
 };
+
+const obterFaixaHorariosConsultas = (consultas: ConsultaAutoAtendimento[]) => {
+  if (!consultas.length) return "";
+
+  const consultasOrdenadas = [...consultas].sort((a, b) =>
+    String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
+  );
+
+  const primeiraConsulta = consultasOrdenadas[0];
+  const ultimaConsulta = consultasOrdenadas[consultasOrdenadas.length - 1];
+  const horarioInicial = formatarHora(primeiraConsulta?.horaInicio);
+  const horarioFinal = formatarHora(ultimaConsulta?.horaInicio);
+
+  if (!horarioInicial) return "";
+  if (!horarioFinal || horarioFinal === horarioInicial) return horarioInicial;
+
+  return `${horarioInicial} até ${horarioFinal}`;
+};
+
 const criarEventoBaseDaConsulta = (
   consulta: ConsultaAutoAtendimento,
 ): AgendaEvento => ({
@@ -550,48 +584,79 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) || null;
 
   const cardsConsultas = useMemo<ConsultaCardAgrupado[]>(() => {
-    const mapa = new Map<string, ConsultaCardAgrupado>();
+    const cards: ConsultaCardAgrupado[] = [];
+    const mapaEventos = new Map<string, ConsultaCardAgrupado>();
+    const mapaUltrassom = new Map<string, ConsultaAutoAtendimento[]>();
 
     consultas.forEach((consulta) => {
-      const agrupadoUltrassom = ehMedicoUltrassonografista(consulta);
-      const chave = agrupadoUltrassom
-        ? [
-            normalizarCpf(consulta.nuCpf),
-            String(consulta.dataInicio || "").split("T")[0],
-            obterExecutanteConsulta(consulta),
-          ].join("::")
-        : `evento::${consulta.idEvento}`;
-
-      const existente = mapa.get(chave);
-
-      if (!existente) {
-        mapa.set(chave, {
-          chave,
+      if (!ehMedicoUltrassonografista(consulta)) {
+        mapaEventos.set(`evento::${consulta.idEvento}`, {
+          chave: `evento::${consulta.idEvento}`,
           consultaBase: consulta,
           consultasRelacionadas: [consulta],
-          agrupadoUltrassom,
+          agrupadoUltrassom: false,
         });
         return;
       }
 
-      const consultasRelacionadas = ordenarPorHora([
-        ...existente.consultasRelacionadas,
-        consulta,
-      ]);
+      const chaveUltrassom = [
+        normalizarCpf(consulta.nuCpf),
+        String(consulta.dataInicio || "").split("T")[0],
+        obterExecutanteConsulta(consulta),
+      ].join("::");
 
-      mapa.set(chave, {
-        ...existente,
-        consultaBase: consultasRelacionadas[0] || existente.consultaBase,
-        consultasRelacionadas,
+      const agrupadas = mapaUltrassom.get(chaveUltrassom) || [];
+      agrupadas.push(consulta);
+      mapaUltrassom.set(chaveUltrassom, agrupadas);
+    });
+
+    cards.push(...Array.from(mapaEventos.values()));
+
+    mapaUltrassom.forEach((consultasAgrupadas, chaveBase) => {
+      const consultasOrdenadas = ordenarPorHora(consultasAgrupadas);
+      let blocoAtual: ConsultaAutoAtendimento[] = [];
+      let indiceBloco = 0;
+
+      consultasOrdenadas.forEach((consultaAtual, indiceAtual) => {
+        if (blocoAtual.length === 0) {
+          blocoAtual = [consultaAtual];
+        } else {
+          const ultimaDoBloco = blocoAtual[blocoAtual.length - 1];
+          const minutosAtual = converterHoraParaMinutos(consultaAtual.horaInicio);
+          const minutosUltimo = converterHoraParaMinutos(ultimaDoBloco.horaInicio);
+          const diferencaMinutos =
+            minutosAtual !== null && minutosUltimo !== null ? minutosAtual - minutosUltimo : 0;
+
+          if (diferencaMinutos > LIMITE_INTERVALO_ULTRASSOM_MINUTOS) {
+            cards.push({
+              chave: `${chaveBase}::bloco::${indiceBloco}`,
+              consultaBase: blocoAtual[0],
+              consultasRelacionadas: blocoAtual,
+              agrupadoUltrassom: true,
+            });
+            indiceBloco += 1;
+            blocoAtual = [consultaAtual];
+          } else {
+            blocoAtual.push(consultaAtual);
+          }
+        }
+
+        if (indiceAtual === consultasOrdenadas.length - 1 && blocoAtual.length > 0) {
+          cards.push({
+            chave: `${chaveBase}::bloco::${indiceBloco}`,
+            consultaBase: blocoAtual[0],
+            consultasRelacionadas: blocoAtual,
+            agrupadoUltrassom: true,
+          });
+        }
       });
     });
 
-    return Array.from(mapa.values()).sort((a, b) =>
+    return cards.sort((a, b) =>
       String(a.consultaBase.horaInicio || "").localeCompare(
         String(b.consultaBase.horaInicio || ""),
       ),
     );
-
   }, [consultas]);
 
   const cardsConsultasFluxo = useMemo(
@@ -1689,7 +1754,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     <div className="flex min-h-0 flex-1 flex-col gap-4 text-center">
                                       {cardConsulta.agrupadoUltrassom ? (
                                         <p className="text-[2rem] font-black uppercase tracking-[0.07em] text-[#00338d] md:text-[2.4rem]">
-                                          Horários do dia
+                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
                                         </p>
                                       ) : (
                                         <p className="text-[4.2rem] font-black tracking-tight text-[#00338d] md:text-[5rem]">
@@ -1895,6 +1960,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
 
 
 
