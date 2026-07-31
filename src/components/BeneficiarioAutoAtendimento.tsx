@@ -1607,175 +1607,207 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                 <div className="flex-1 overflow-hidden px-3 pb-[6.5rem] pt-2 md:px-6 md:pb-[7rem] md:pt-3">
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden">
-                    <div className="shrink-0 rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="space-y-0.5">
-                          <p className="text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#00338d]">
-                            Fluxo do atendimento
-                          </p>
-                          <p className="text-[0.98rem] font-black text-slate-900 md:text-[1.08rem]">
-                            {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total} agendamentos do dia` : "0 de 0 agendamentos do dia"}
-                          </p>
-                          <p className="text-[0.84rem] font-medium text-slate-600">
-                            {consultaFluxoAtual?.autorizacaoConcluida
-                              ? "Autorizado. Próximo horário liberado."
-                              : "Finalize o autoatendimento para liberar o próximo horário."}
-                          </p>
-                        </div>
+                    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
+                      <div className="mb-3 flex items-start justify-between gap-4">
+                        <p className="text-[1rem] font-bold leading-[1.35] text-slate-700 md:text-[1.18rem]">
+                          {consultaFluxoAtual?.autorizacaoConcluida
+                            ? "Autorizado. Próximo horário liberado."
+                            : "Finalize o autoatendimento para liberar o próximo horário."}
+                        </p>
+                        <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-[0.98rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.08rem]">
+                          {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total}` : "0 de 0"}
+                        </span>
                       </div>
 
-                      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-                      {consultaFluxoAtual ? (() => {
-                        const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
-                        const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
-                        const faltouConsulta = statusAtual === "FALTOU";
-                        const compareceuConsulta = statusAtual === "COMPARECEU";
-                        const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
-                        const podeSeguir = podeAutorizar || tokenEnviado || autorizacaoConcluida;
+                      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                        {consultaFluxoAtual
+                          ? (() => {
+                              const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
+                              const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
+                              const faltouConsulta = statusAtual === "FALTOU";
+                              const compareceuConsulta = statusAtual === "COMPARECEU";
+                              const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
+                              const podeSeguir = podeAutorizar || tokenEnviado || autorizacaoConcluida;
 
-
-                        return (
-                          <article
-                            key={cardConsulta.chave}
-                            className={`flex min-h-0 flex-1 flex-col border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
-                              autorizacaoConcluida
-                                ? "border-emerald-200 bg-emerald-50/55 opacity-75"
-                                : "border-slate-200 bg-white"
-                            }`}
-                          >
-                              <div className="flex min-h-0 h-full flex-col gap-3">
-
-                              <div className="flex min-h-0 h-full flex-col gap-3">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-h-8 min-w-[96px]">
-                                    {(autorizacaoConcluida || (tokenEnviado && !autorizacaoConcluida)) && consulta.senhaPainel ? (
-                                      <div className="inline-flex items-center rounded-[0.9rem] border border-emerald-200 bg-emerald-50 px-3 py-2 text-left shadow-[0_10px_18px_rgba(16,185,129,0.12)]">
-                                        <span className="text-[0.98rem] font-black tracking-[0.04em] text-emerald-800 md:text-[1.08rem]">
-                                          {`Senha: ${String(consulta.senhaPainel).toUpperCase()}`}
-                                        </span>
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                  <p className={`inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border px-3 text-center text-[0.68rem] font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${faltouConsulta ? "border-red-200 bg-red-50 text-red-700" : tokenEnviado && !autorizacaoConcluida ? "border-amber-200 bg-amber-50 text-amber-800" : compareceuConsulta ? "border-orange-200 bg-orange-50 text-orange-700" : autorizacaoConcluida ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-blue-200 bg-blue-50 text-[#00338d]"}`}>
-                                    {!autorizacaoConcluida ? (
-                                      <span
-                                        aria-hidden="true"
-                                        className={`inline-flex h-2.5 w-2.5 rounded-full ${faltouConsulta ? "bg-red-500" : tokenEnviado ? "bg-amber-500" : compareceuConsulta ? "bg-orange-500" : "bg-[#00338d]"}`}
-                                      />
-                                    ) : null}
-                                    {autorizacaoConcluida ? (
-                                      <span
-                                        aria-hidden="true"
-                                        className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
+                              return (
+                                <article
+                                  key={cardConsulta.chave}
+                                  className={`flex min-h-0 flex-1 flex-col border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                                    autorizacaoConcluida
+                                      ? "border-emerald-200 bg-emerald-50/55 opacity-75"
+                                      : "border-slate-200 bg-white"
+                                  }`}
+                                >
+                                  <div className="flex min-h-0 flex-1 flex-col gap-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div />
+                                      <p
+                                        className={`inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border px-4 py-1.5 text-center text-[0.76rem] font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] md:text-[0.84rem] ${
+                                          faltouConsulta
+                                            ? "border-red-200 bg-red-50 text-red-700"
+                                            : tokenEnviado && !autorizacaoConcluida
+                                              ? "border-amber-200 bg-amber-50 text-amber-800"
+                                              : compareceuConsulta
+                                                ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                : autorizacaoConcluida
+                                                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                                  : "border-blue-200 bg-blue-50 text-[#00338d]"
+                                        }`}
                                       >
-                                        ✓
-                                      </span>
-                                    ) : null}
-                                    {faltouConsulta
-                                      ? "Consulta não realizada"
-                                      : tokenEnviado && !autorizacaoConcluida
-                                        ? "Autorizado e token enviado para o celular"
-                                        : autorizacaoConcluida
-                                          ? "AUTORIZADO"
-                                          : formatarStatus(consulta.statusAgendamento)}
-                                  </p>
-                                </div>
-
-                                <div className="flex min-h-0 flex-1 flex-col gap-2 text-center">
-                                  {cardConsulta.agrupadoUltrassom ? (
-                                    <p className="text-[1.35rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.7rem]">
-                                      Horários do dia
-                                    </p>
-                                  ) : (
-                                    <p className="text-[2.45rem] font-black tracking-tight text-[#00338d] md:text-[2.8rem]">
-                                      {formatarHora(consulta.horaInicio)}
-                                    </p>
-                                  )}
-
-                                  <div className={`border px-3 py-3 text-center ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-slate-100 bg-slate-50"}`}>
-                                    <p className="text-[0.92rem] font-bold uppercase tracking-[0.05em] text-slate-900 md:text-[1rem]">
-                                      {consulta.profissionalNome}
-                                    </p>
-                                    <p className="mt-1 text-[0.84rem] text-slate-600 md:text-[0.92rem]">
-                                      {consulta.especialidadeNome}
-                                    </p>
-                                  </div>
-
-                                  {cardConsulta.agrupadoUltrassom ? (
-                                    <div className={`min-h-0 flex-1 overflow-y-auto border px-3 py-2 text-left ${autorizacaoConcluida ? "border-emerald-100 bg-white/70" : "border-blue-100 bg-blue-50/50"}`}>
-                                      <div className="grid gap-1.5">
-                                        {agruparProcedimentosRelacionados(cardConsulta.consultasRelacionadas).map((item) => (
-                                          <div
-                                            key={item.chave}
-                                            className="border-b border-blue-100/80 pb-1.5 last:border-b-0 last:pb-0"
+                                        {!autorizacaoConcluida ? (
+                                          <span
+                                            aria-hidden="true"
+                                            className={`inline-flex h-2.5 w-2.5 rounded-full ${
+                                              faltouConsulta
+                                                ? "bg-red-500"
+                                                : tokenEnviado
+                                                  ? "bg-amber-500"
+                                                  : compareceuConsulta
+                                                    ? "bg-orange-500"
+                                                    : "bg-[#00338d]"
+                                            }`}
+                                          />
+                                        ) : null}
+                                        {autorizacaoConcluida ? (
+                                          <span
+                                            aria-hidden="true"
+                                            className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
                                           >
-                                            <p className="text-[0.94rem] leading-[1.4] text-slate-700 md:text-[1rem]">
-                                              <span className="text-[1rem] font-black text-[#00338d] md:text-[1.08rem]">
-                                                {item.horarios.join(" e ")}
-                                              </span>
-                                              {" - "}
-                                              {item.descricao}
-                                              {item.quantidade > 1 ? ` (${item.quantidade} VEZES)` : ""}
-                                            </p>
-                                          </div>
-                                        ))}
-                                      </div>
+                                            ✓
+                                          </span>
+                                        ) : null}
+                                        {faltouConsulta
+                                          ? "Consulta não realizada"
+                                          : tokenEnviado && !autorizacaoConcluida
+                                            ? "Autorizado e token enviado para o celular"
+                                            : autorizacaoConcluida
+                                              ? "Atendimento liberado"
+                                              : formatarStatus(consulta.statusAgendamento)}
+                                      </p>
                                     </div>
-                                  ) : (
-                                    <div className="flex min-h-[6rem] flex-1 items-stretch" />
-                                  )}
-                                </div>
-                                {autorizacaoConcluida ? null : podeSeguir ? (
-                                  <button
-                                    onClick={() => tokenEnviado && !autorizacaoConcluida ? void abrirValidacaoTokenDireta(consulta) : void abrirEtapaSenha(consulta)}
-                                    className="h-12 bg-[#00338d] px-4 text-[0.88rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f]"
-                                  >
-                                    {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
-                                  </button>
-                                ) : (
-                                  <div className={`flex h-12 items-center justify-center px-3 text-center text-[0.84rem] font-bold ${faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}>
-                                    {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
-                                  </div>
-                                )}
-                              </div>
 
-                            </div>
-                          </article>
-                        );
-                      })() : null}
-                                <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-3 md:px-6 md:pb-4">
-                                  <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-3 py-2 md:px-5">
-                                  <button
-                                    type="button"
-                                    onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
-                                    disabled={indiceConsultaAtual === 0}
-                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual === 0 ? "border-slate-300 bg-slate-300 text-white" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
-                                  >
-                                    Voltar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setIndiceConsultaAtual((valorAtual) =>
-                                        Math.min(valorAtual + 1, indiceMaximoLiberado),
-                                      )
-                                    }
-                                    disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                                    className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.9rem] font-black uppercase shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition ${indiceConsultaAtual >= indiceMaximoLiberado ? "border-slate-300 bg-slate-300 text-white" : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"} disabled:cursor-not-allowed disabled:shadow-none`}
-                                  >
-                                    Próximo
-                                  </button>
-                                </div>
+                                    <div className="flex min-h-0 flex-1 flex-col gap-4 text-center">
+                                      {cardConsulta.agrupadoUltrassom ? (
+                                        <p className="text-[2rem] font-black uppercase tracking-[0.07em] text-[#00338d] md:text-[2.4rem]">
+                                          Horários do dia
+                                        </p>
+                                      ) : (
+                                        <p className="text-[4.2rem] font-black tracking-tight text-[#00338d] md:text-[5rem]">
+                                          {formatarHora(consulta.horaInicio)}
+                                        </p>
+                                      )}
 
+                                      <div
+                                        className={`border px-4 py-4 text-center ${
+                                          autorizacaoConcluida
+                                            ? "border-emerald-100 bg-white/80"
+                                            : "border-slate-100 bg-slate-50"
+                                        }`}
+                                      >
+                                        <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.65rem]">
+                                          {consulta.profissionalNome}
+                                        </p>
+                                        <p className="mt-2 text-[1.14rem] font-medium uppercase tracking-[0.08em] text-slate-600 md:text-[1.28rem]">
+                                          {consulta.especialidadeNome}
+                                        </p>
+                                      </div>
+
+                                      {cardConsulta.agrupadoUltrassom ? (
+                                        <div
+                                          className={`min-h-0 flex-1 overflow-y-auto border px-4 py-3 text-left ${
+                                            autorizacaoConcluida
+                                              ? "border-emerald-100 bg-white/80"
+                                              : "border-blue-100 bg-blue-50/50"
+                                          }`}
+                                        >
+                                          <div className="grid gap-2">
+                                            {agruparProcedimentosRelacionados(cardConsulta.consultasRelacionadas).map((item) => (
+                                              <div
+                                                key={item.chave}
+                                                className="border-b border-blue-100/80 pb-2 last:border-b-0 last:pb-0"
+                                              >
+                                                <p className="text-[1.02rem] leading-[1.45] text-slate-700 md:text-[1.12rem]">
+                                                  <span className="text-[1.08rem] font-black text-[#00338d] md:text-[1.18rem]">
+                                                    {item.horarios.join(" e ")}
+                                                  </span>
+                                                  {" - "}
+                                                  {item.descricao}
+                                                  {item.quantidade > 1 ? ` (${item.quantidade} VEZES)` : ""}
+                                                </p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="flex min-h-[8rem] flex-1 items-stretch" />
+                                      )}
+                                    </div>
+
+                                    {autorizacaoConcluida ? null : podeSeguir ? (
+                                      <button
+                                        onClick={() =>
+                                          tokenEnviado && !autorizacaoConcluida
+                                            ? void abrirValidacaoTokenDireta(consulta)
+                                            : void abrirEtapaSenha(consulta)
+                                        }
+                                        className="mt-auto h-14 bg-[#00338d] px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f] md:text-[1.08rem]"
+                                      >
+                                        {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
+                                      </button>
+                                    ) : (
+                                      <div
+                                        className={`mt-auto flex h-14 items-center justify-center px-3 text-center text-[0.94rem] font-bold ${
+                                          faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
+                                        }`}
+                                      >
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
+                                      </div>
+                                    )}
                                   </div>
+                                </article>
+                              );
+                            })()
+                          : null}
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 px-3 py-3 md:px-5">
+                      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
+                          disabled={indiceConsultaAtual === 0}
+                          className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.96rem] font-black uppercase transition ${
+                            indiceConsultaAtual === 0
+                              ? "border-slate-300 bg-white text-slate-400"
+                              : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
+                          } disabled:cursor-not-allowed disabled:shadow-none`}
+                        >
+                          Voltar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIndiceConsultaAtual((valorAtual) =>
+                              Math.min(valorAtual + 1, indiceMaximoLiberado),
+                            )
+                          }
+                          disabled={indiceConsultaAtual >= indiceMaximoLiberado}
+                          className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.96rem] font-black uppercase transition ${
+                            indiceConsultaAtual >= indiceMaximoLiberado
+                              ? "border-slate-300 bg-white text-slate-400"
+                              : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
+                          } disabled:cursor-not-allowed disabled:shadow-none`}
+                        >
+                          Próximo
+                        </button>
+                      </div>
                     </div>
                   </div>
-                                </div>
                 </div>
-            </section>
+              </section>
             </>
           )}
-
           {etapaTela === "senha" && consultaSelecionada && (
             <section className="w-full">
               <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-5 text-white md:px-8 md:py-7">
@@ -1863,6 +1895,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
