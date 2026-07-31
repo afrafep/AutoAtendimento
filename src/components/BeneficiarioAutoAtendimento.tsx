@@ -757,19 +757,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setConsultaSelecionadaId(null);
   };
 
-  const confirmarEncerramentoAutoAtendimento = async () => {
-    const confirmacao = await Swal.fire({
-      title: "Encerrar autoatendimento?",
-      text: "Deseja encerrar o autoatendimento e voltar para o início?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sim, encerrar",
-      cancelButtonText: "Nao",
-      confirmButtonColor: "#00338d",
-    });
-
-    if (!confirmacao.isConfirmed) return;
-
+  const confirmarEncerramentoAutoAtendimento = () => {
     resetarTelaCpf();
   };
 
@@ -1554,7 +1542,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                             onClick={limparCpfDigitado}
                             className="flex h-14 items-center justify-center rounded-[1rem] border border-red-700 bg-[linear-gradient(180deg,#ef4444_0%,#b91c1c_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(185,28,28,0.2)] transition hover:-translate-y-0.5 hover:border-red-800 hover:shadow-[0_16px_26px_rgba(185,28,28,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
                           >
-                            Limpar CPF
+                            APAGAR
                           </button>
 
                           <button
@@ -1570,7 +1558,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                             onClick={apagarUltimoDigitoCpf}
                             className="flex h-14 items-center justify-center rounded-[1rem] border border-amber-700 bg-[linear-gradient(180deg,#f59e0b_0%,#d97706_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(245,158,11,0.2)] transition hover:-translate-y-0.5 hover:border-amber-800 hover:shadow-[0_16px_26px_rgba(245,158,11,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
                           >
-                            Apagar
+                            CORRIGIR
                           </button>
                         </div>
 
@@ -1875,6 +1863,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
