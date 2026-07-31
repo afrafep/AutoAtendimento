@@ -324,13 +324,13 @@ export const TokenValidar = async ({
   };
 
   const result = await Swal.fire({
-    title: "🔐 Validação de Token",
+    title: "TOKEN ENVIADO PARA O APLICATIVO OU SMS",
     html: `
       <div class="space-y-3.5 sm:space-y-4">
         <div class="rounded-[1.1rem] border border-slate-200 bg-white px-4 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
           <div class="text-center">
-            <p class="text-[0.94rem] font-bold leading-6 text-slate-900 sm:text-[1.08rem]">Digite o token de 4 dígitos recebido no celular.</p>
-            <p class="mt-1 text-[0.76rem] leading-5 text-slate-500 sm:text-[0.84rem]">Use o teclado abaixo para preencher o código.</p>
+            <p class="text-[1.08rem] font-bold leading-6 text-slate-900 sm:text-[1.26rem]">Digite o token de 4 dígitos recebido no celular.</p>
+            <p class="mt-1 text-[0.92rem] leading-5 text-slate-600 sm:text-[1rem]">Token enviado para o aplicativo ou SMS.</p>
           </div>
 
           <div class="mt-3 flex justify-center gap-1.5 sm:gap-2">
@@ -363,7 +363,7 @@ export const TokenValidar = async ({
                 (digit) => `
               <button
                 type="button"
-                class="token-keypad-button flex h-12 items-center justify-center rounded-[1rem] border border-slate-300 bg-white text-[1.1rem] font-black text-slate-900 transition hover:border-cyan-400 hover:bg-sky-50 focus:outline-none sm:h-13 sm:text-[1.2rem]"
+                class="token-keypad-button flex h-14 items-center justify-center rounded-[1rem] border border-slate-300 bg-white text-[1.45rem] font-black text-slate-900 transition hover:border-cyan-400 hover:bg-sky-50 focus:outline-none sm:h-15 sm:text-[1.6rem]"
                 data-digit="${digit}"
               >
                 ${digit}
@@ -374,13 +374,13 @@ export const TokenValidar = async ({
             <button
               type="button"
               id="token-keypad-clear"
-              class="flex h-12 items-center justify-center rounded-[1rem] border border-rose-300 bg-rose-50 px-2 text-[0.68rem] font-black uppercase tracking-[0.05em] text-rose-700 transition hover:bg-rose-100 focus:outline-none sm:h-13 sm:text-[0.74rem]"
+              class="flex h-14 items-center justify-center rounded-[1rem] border border-red-700 bg-[linear-gradient(180deg,#ef4444_0%,#dc2626_100%)] px-2 text-[0.95rem] font-black uppercase tracking-[0.05em] text-white transition hover:brightness-105 focus:outline-none sm:h-15 sm:text-[1.08rem]"
             >
-              Limpar
+              APAGAR
             </button>
             <button
               type="button"
-              class="token-keypad-button flex h-12 items-center justify-center rounded-[1rem] border border-slate-300 bg-white text-[1.1rem] font-black text-slate-900 transition hover:border-cyan-400 hover:bg-sky-50 focus:outline-none sm:h-13 sm:text-[1.2rem]"
+              class="token-keypad-button flex h-14 items-center justify-center rounded-[1rem] border border-slate-300 bg-white text-[1.45rem] font-black text-slate-900 transition hover:border-cyan-400 hover:bg-sky-50 focus:outline-none sm:h-15 sm:text-[1.6rem]"
               data-digit="0"
             >
               0
@@ -388,9 +388,9 @@ export const TokenValidar = async ({
             <button
               type="button"
               id="token-keypad-backspace"
-              class="flex h-12 items-center justify-center rounded-[1rem] border border-amber-300 bg-amber-50 px-2 text-[0.68rem] font-black uppercase tracking-[0.05em] text-amber-700 transition hover:bg-amber-100 focus:outline-none sm:h-13 sm:text-[0.74rem]"
+              class="flex h-14 items-center justify-center rounded-[1rem] border border-amber-600 bg-[linear-gradient(180deg,#f59e0b_0%,#d97706_100%)] px-2 text-[0.95rem] font-black uppercase tracking-[0.05em] text-white transition hover:brightness-105 focus:outline-none sm:h-15 sm:text-[1.08rem]"
             >
-              Apagar
+              CORRIGIR
             </button>
           </div>
         </div>
@@ -431,24 +431,24 @@ export const TokenValidar = async ({
     `,
     showDenyButton: true,
     showCancelButton: true,
-    confirmButtonText: "✅ Confirmar",
-    cancelButtonText: "↩️ Voltar",
-    denyButtonText: "📲 Reenviar token",
+    confirmButtonText: "CONFIRMAR",
+    cancelButtonText: "VOLTAR",
+    denyButtonText: "REENVIAR TOKEN",
     background: "#ffffff",
     color: "#0f172a",
     allowOutsideClick: false,
     buttonsStyling: false,
     customClass: {
-      popup: "!w-[min(99vw,56rem)] !rounded-[1.35rem] !border !border-slate-200 !bg-white !px-6 !pb-5 !pt-4 !shadow-[0_28px_60px_rgba(15,23,42,0.22)]",
-      title: "!mb-3 !text-[1.22rem] !font-black !tracking-tight !text-slate-900 sm:!text-[1.6rem]",
+      popup: "!w-[min(99vw,78rem)] !rounded-[1.5rem] !border !border-slate-200 !bg-white !px-8 !pb-6 !pt-5 !shadow-[0_28px_60px_rgba(15,23,42,0.22)]",
+      title: "!mb-3 !text-[1.2rem] !font-black !tracking-tight !text-slate-900 sm:!text-[1.5rem]",
       htmlContainer: "!mx-0 !mt-0 !px-0 !pb-0 !text-left",
       actions: "!grid !grid-cols-3 !gap-3 !w-full !mt-4 !pt-0",
       confirmButton:
-        "!m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-emerald-500 !bg-emerald-600 !px-2 !text-[0.72rem] !font-black !text-white !transition hover:!bg-emerald-500 sm:!h-12 sm:!text-[0.8rem]",
+        "!order-3 !m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-emerald-500 !bg-emerald-600 !px-2 !text-[0.72rem] !font-black !text-white !transition hover:!bg-emerald-500 sm:!h-12 sm:!text-[0.8rem]",
       denyButton:
-        "!m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-amber-300 !bg-amber-50 !px-2 !text-[0.64rem] !font-black !text-amber-900 !transition hover:!bg-amber-100 sm:!h-12 sm:!text-[0.72rem]",
+        "!order-2 !m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-amber-300 !bg-amber-50 !px-2 !text-[0.64rem] !font-black !text-amber-900 !transition hover:!bg-amber-100 sm:!h-12 sm:!text-[0.72rem]",
       cancelButton:
-        "!m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-slate-200 !bg-white !px-2 !text-[0.72rem] !font-black !text-slate-800 !transition hover:!bg-slate-50 sm:!h-12 sm:!text-[0.8rem]",
+        "!order-1 !m-0 !flex !h-11 !w-full !items-center !justify-center !rounded-[0.95rem] !border !border-slate-200 !bg-white !px-2 !text-[0.72rem] !font-black !text-slate-800 !transition hover:!bg-slate-50 sm:!h-12 sm:!text-[0.8rem]",
     },
     preDeny: async () => {
       hideInlineResendFeedback();
@@ -617,7 +617,7 @@ export const TokenValidar = async ({
       icon: "success",
       background: "#ffffff",
       color: "#0f172a",
-      confirmButtonText: "Continuar",
+      confirmButtonText: "CONFIRMAR",
     });
   } else if (result.dismiss === Swal.DismissReason.cancel) {
     onCancelar?.();
@@ -630,6 +630,10 @@ export const TokenValidar = async ({
     dismiss: result.dismiss,
   };
 };
+
+
+
+
 
 
 

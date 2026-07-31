@@ -1751,7 +1751,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       </p>
                                     </div>
 
-                                    <div className="flex min-h-0 flex-1 flex-col gap-4 text-center">
+                                    <div className="flex min-h-0 flex-1 flex-col gap-5 pb-2 text-center">
                                       {cardConsulta.agrupadoUltrassom ? (
                                         <p className="text-[2rem] font-black uppercase tracking-[0.07em] text-[#00338d] md:text-[2.4rem]">
                                           {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
@@ -1763,16 +1763,16 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       )}
 
                                       <div
-                                        className={`border px-4 py-4 text-center ${
+                                        className={`border px-4 py-5 text-center ${
                                           autorizacaoConcluida
                                             ? "border-emerald-100 bg-white/80"
                                             : "border-slate-100 bg-slate-50"
                                         }`}
                                       >
-                                        <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.65rem]">
+                                        <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.7rem]">
                                           {consulta.profissionalNome}
                                         </p>
-                                        <p className="mt-2 text-[1.14rem] font-medium uppercase tracking-[0.08em] text-slate-600 md:text-[1.28rem]">
+                                        <p className="mt-3 text-[1.16rem] font-black uppercase tracking-[0.08em] text-slate-900 md:text-[1.32rem]">
                                           {consulta.especialidadeNome}
                                         </p>
                                       </div>
@@ -1804,7 +1804,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                           </div>
                                         </div>
                                       ) : (
-                                        <div className="flex min-h-[8rem] flex-1 items-stretch" />
+                                        <div className="flex min-h-[12rem] flex-1 items-stretch md:min-h-[13rem]" />
                                       )}
                                     </div>
 
@@ -1815,13 +1815,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                             ? void abrirValidacaoTokenDireta(consulta)
                                             : void abrirEtapaSenha(consulta)
                                         }
-                                        className="mt-auto h-14 bg-[#00338d] px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f] md:text-[1.08rem]"
+                                        className="mt-3 h-14 shrink-0 bg-[#00338d] px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f] md:text-[1.08rem]"
                                       >
                                         {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
                                       </button>
                                     ) : (
                                       <div
-                                        className={`mt-auto flex h-14 items-center justify-center px-3 text-center text-[0.94rem] font-bold ${
+                                        className={`flex h-14 shrink-0 items-center justify-center px-3 text-center text-[0.94rem] font-bold ${
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
@@ -1960,6 +1960,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
