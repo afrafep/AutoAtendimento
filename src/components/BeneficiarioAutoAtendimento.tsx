@@ -1527,23 +1527,23 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     </div>
 
                     {mostrarTecladoCpf ? (
-                      <div className="rounded-[1.1rem] border border-slate-200/80 bg-white/95 p-3 shadow-[0_18px_30px_rgba(15,23,42,0.08)] md:p-3.5">
+                      <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_22px_36px_rgba(15,23,42,0.12)] md:p-4">
                         <div className="mb-3 flex items-center justify-between px-1">
-                          <p className="text-[0.66rem] font-black uppercase tracking-[0.15em] text-slate-500">
+                          <p className="text-[0.7rem] font-black uppercase tracking-[0.16em] text-slate-600">
                             Teclado numérico
                           </p>
-                          <p className="text-[0.72rem] font-medium text-slate-400">
+                          <p className="text-[0.76rem] font-semibold text-slate-400">
                             Toque para digitar
                           </p>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2.5 md:gap-3">
+                        <div className="grid grid-cols-3 gap-3 md:gap-3.5">
                           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
                             <button
                               key={`cpf-tecla-${digito}`}
                               type="button"
                               onClick={() => adicionarDigitoCpf(digito)}
-                              className="flex h-12 items-center justify-center rounded-[0.95rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1rem] font-black text-white shadow-[0_10px_18px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_14px_24px_rgba(15,23,42,0.18)] md:h-13 md:text-[1.12rem]"
+                              className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-700 bg-[linear-gradient(180deg,#0b1020_0%,#17213a_100%)] text-[1.45rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_16px_28px_rgba(15,23,42,0.24)] md:h-[3.9rem] md:text-[1.6rem]"
                             >
                               {digito}
                             </button>
@@ -1552,7 +1552,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           <button
                             type="button"
                             onClick={limparCpfDigitado}
-                            className="flex h-12 items-center justify-center rounded-[0.95rem] border border-rose-200 bg-[linear-gradient(180deg,#fff7f8_0%,#ffe7eb_100%)] px-2 text-[0.62rem] font-black uppercase tracking-[0.05em] text-rose-700 shadow-[0_10px_16px_rgba(244,63,94,0.08)] transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 md:h-13 md:text-[0.68rem]"
+                            className="flex h-14 items-center justify-center rounded-[1rem] border border-red-700 bg-[linear-gradient(180deg,#ef4444_0%,#b91c1c_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(185,28,28,0.2)] transition hover:-translate-y-0.5 hover:border-red-800 hover:shadow-[0_16px_26px_rgba(185,28,28,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
                           >
                             Limpar CPF
                           </button>
@@ -1560,7 +1560,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => adicionarDigitoCpf('0')}
-                            className="flex h-12 items-center justify-center rounded-[0.95rem] border border-slate-200 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-[1rem] font-black text-white shadow-[0_10px_18px_rgba(15,23,42,0.14)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_14px_24px_rgba(15,23,42,0.18)] md:h-13 md:text-[1.12rem]"
+                            className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-700 bg-[linear-gradient(180deg,#0b1020_0%,#17213a_100%)] text-[1.45rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_16px_28px_rgba(15,23,42,0.24)] md:h-[3.9rem] md:text-[1.6rem]"
                           >
                             0
                           </button>
@@ -1568,7 +1568,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                           <button
                             type="button"
                             onClick={apagarUltimoDigitoCpf}
-                            className="flex h-12 items-center justify-center rounded-[0.95rem] border border-amber-200 bg-[linear-gradient(180deg,#fffdf2_0%,#fef0bf_100%)] px-2 text-[0.62rem] font-black uppercase tracking-[0.05em] text-amber-800 shadow-[0_10px_16px_rgba(245,158,11,0.08)] transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100 md:h-13 md:text-[0.68rem]"
+                            className="flex h-14 items-center justify-center rounded-[1rem] border border-amber-700 bg-[linear-gradient(180deg,#f59e0b_0%,#d97706_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(245,158,11,0.2)] transition hover:-translate-y-0.5 hover:border-amber-800 hover:shadow-[0_16px_26px_rgba(245,158,11,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
                           >
                             Apagar
                           </button>
@@ -1875,6 +1875,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
