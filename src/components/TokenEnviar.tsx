@@ -158,7 +158,7 @@ export const TokenEnviar = async ({
                 </div>
               `,
               icon: "error",
-              confirmButtonText: "Entendi",
+              confirmButtonText: "Fechar",
               background: "#1f2937",
               color: "#f9fafb",
             });

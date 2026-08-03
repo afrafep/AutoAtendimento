@@ -1010,8 +1010,23 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       atualizarFeedbackTokenInline(
         consulta.idEvento,
         "success",
-        "Novo token enviado. Digite o c\u00f3digo recebido no celular.",
+        "Token reenviado com sucesso. Veja o novo c\u00f3digo no celular.",
       );
+      await Swal.fire({
+        title: "TOKEN REENVIADO",
+        text: "Um novo c\u00f3digo foi enviado para o seu celular, pelo aplicativo ou por SMS.",
+        icon: "success",
+        confirmButtonText: "Fechar",
+        allowOutsideClick: false,
+        background: "#ffffff",
+        color: "#0f172a",
+        customClass: {
+          popup: "!rounded-[1.2rem] !px-6 !py-5",
+          title: "!text-[1.5rem] !font-black !text-emerald-700",
+          confirmButton:
+            "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-6 !py-3",
+        },
+      });
     } catch (_error) {
       setTokenErroPorConsulta((prev) => ({
         ...prev,
@@ -2237,23 +2252,40 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           </div>
 
                                           {tokenErro ? (
-                                            <div className="rounded-[0.85rem] px-3 py-1.5 text-[0.78rem] font-semibold text-red-700">
+                                            <div className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-center shadow-sm">
+                                              <p className="text-[0.9rem] font-black uppercase tracking-[0.04em] text-red-700 md:text-[1rem]">
+                                                ATEN\u00c7\u00c3O
+                                              </p>
+                                              <p className="mt-1 text-[0.82rem] font-bold text-red-700 md:text-[0.92rem]">
+                                                {tokenErro}
+                                              </p>
                                             </div>
                                           ) : tokenFeedback ? (
                                             <div
-                                              className={`rounded-[0.85rem] border px-3 py-1.5 text-[0.76rem] font-semibold ${
+                                              className={`rounded-[1rem] border px-4 py-3 text-center shadow-sm ${
                                                 tokenFeedback.tipo === "success"
-                                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                  ? "border-emerald-300 bg-emerald-100 text-emerald-900"
                                                   : tokenFeedback.tipo === "error"
                                                     ? "border-red-200 bg-red-50 text-red-700"
                                                     : "border-sky-200 bg-sky-50 text-sky-700"
                                               }`}
                                             >
-                                              {tokenFeedback.mensagem}
+                                              {tokenFeedback.tipo === "success" ? (
+                                                <div className="space-y-1">
+                                                  <p className="text-[0.95rem] font-black uppercase tracking-[0.04em] md:text-[1.05rem]">
+                                                    TOKEN REENVIADO
+                                                  </p>
+                                                  <p className="text-[0.82rem] font-bold md:text-[0.92rem]">
+                                                    {tokenFeedback.mensagem}
+                                                  </p>
+                                                </div>
+                                              ) : (
+                                                tokenFeedback.mensagem
+                                              )}
                                             </div>
                                           ) : (
                                             <div className="rounded-[0.85rem] border border-sky-100 bg-sky-50/70 px-3 py-1.5 text-[0.74rem] text-sky-800">
-                                              {"Se n\u00e3o recebeu o c\u00f3digo no aplicativo ou por SMS no celular, toque em reenviar token."}
+                                              {"N\u00e3o recebeu? Toque em reenviar token."}
                                             </div>
                                           )}
 
@@ -2290,7 +2322,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indispon\u00edvel"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
                                       </div>
                                     )}
                                   </div>
