@@ -161,9 +161,9 @@ const formatarHoraAtual = () => {
   return `${horas}:${minutos}`;
 };
 
-const TEMPO_INATIVIDADE_MS = 1 * 60 * 1000;
+const TEMPO_INATIVIDADE_MS = 50 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
-const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 15;
+const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 10;
 
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
