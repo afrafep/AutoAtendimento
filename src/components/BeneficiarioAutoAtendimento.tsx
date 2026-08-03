@@ -2089,7 +2089,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                         {faltouConsulta
                                           ? "Consulta não realizada"
                                           : tokenEnviado && !autorizacaoConcluida
-                                            ? "Autorizado e token enviado para o celular"
+                                            ? "Autorizado e token enviado para o aplicativo ou SMS"
                                             : autorizacaoConcluida
                                               ? "Atendimento liberado"
                                               : formatarStatus(consulta.statusAgendamento)}
@@ -2154,12 +2154,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                           </div>
 
                                           <div>
-                                            <p className="text-[0.94rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.98rem]">
-                                              Digite o token de 4 digitos
-                                            </p>
-                                            <p className="mt-0.5 text-[0.78rem] leading-4 text-slate-600 md:text-[0.82rem]">
-                                              O codigo enviado por SMS ou aplicativo aparece aqui sem abrir outro modal.
-                                            </p>
+                                            <p className="text-[0.84rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.80rem]">
+                                              Digite o seu token de 4 digitos, que chegou no Aplicativo ou por SMS, para liberar o atendimento.
+                                            </p>                                           
                                           </div>
 
                                           <div className="flex flex-wrap items-center justify-center gap-2">
