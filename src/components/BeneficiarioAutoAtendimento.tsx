@@ -10,6 +10,13 @@ import {
 import AtendimentoResumoCard from "./AtendimentoResumoCard";
 import { TokenEnviar } from "./TokenEnviar";
 import { TokenValidar } from "./TokenValidar";
+import ConsultasHeader from "./beneficiario/ConsultasHeader";
+import CpfTecladoNumerico from "./beneficiario/CpfTecladoNumerico";
+import AutorizacaoPreparandoCard from "./beneficiario/AutorizacaoPreparandoCard";
+import TokenInlinePanel from "./beneficiario/TokenInlinePanel";
+import ConsultaProfissionalResumoCard from "./beneficiario/ConsultaProfissionalResumoCard";
+import ConsultaFluxoNavegacao from "./beneficiario/ConsultaFluxoNavegacao";
+import SenhaAutorizacaoAcoes from "./beneficiario/SenhaAutorizacaoAcoes";
 import { api } from "../config/configApi";
 import { useAgendaDetalhada } from "../hooks/useAgendaDetalhada";
 import { inteliteSenhaService } from "../services/inteliteSenhaService";
@@ -2145,62 +2152,14 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                     </div>
 
                     {mostrarTecladoCpf ? (
-                      <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_22px_36px_rgba(15,23,42,0.12)] md:p-4">
-                        <div className="mb-3 flex items-center justify-between px-1">
-                          <p className="text-[0.7rem] font-black uppercase tracking-[0.16em] text-slate-600">
-                            {"Teclado num\u00e9rico"}
-                          </p>
-                          <p className="text-[0.76rem] font-semibold text-slate-400">
-                            Toque para digitar
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3 md:gap-3.5">
-                          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digito) => (
-                            <button
-                              key={`cpf-tecla-${digito}`}
-                              type="button"
-                              onClick={() => adicionarDigitoCpf(digito)}
-                              className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-700 bg-[linear-gradient(180deg,#0b1020_0%,#17213a_100%)] text-[1.72rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_16px_28px_rgba(15,23,42,0.24)] md:h-[3.9rem] md:text-[1.9rem]"
-                            >
-                              {digito}
-                            </button>
-                          ))}
-
-                          <button
-                            type="button"
-                            onClick={limparCpfDigitado}
-                            className="flex h-14 items-center justify-center rounded-[1rem] border border-red-700 bg-[linear-gradient(180deg,#ef4444_0%,#b91c1c_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(185,28,28,0.2)] transition hover:-translate-y-0.5 hover:border-red-800 hover:shadow-[0_16px_26px_rgba(185,28,28,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
-                          >
-                            APAGAR
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => adicionarDigitoCpf('0')}
-                            className="flex h-14 items-center justify-center rounded-[1rem] border border-slate-700 bg-[linear-gradient(180deg,#0b1020_0%,#17213a_100%)] text-[1.72rem] font-black text-white shadow-[0_12px_22px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-[0_16px_28px_rgba(15,23,42,0.24)] md:h-[3.9rem] md:text-[1.9rem]"
-                          >
-                            0
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={apagarUltimoDigitoCpf}
-                            className="flex h-14 items-center justify-center rounded-[1rem] border border-amber-700 bg-[linear-gradient(180deg,#f59e0b_0%,#d97706_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(245,158,11,0.2)] transition hover:-translate-y-0.5 hover:border-amber-800 hover:shadow-[0_16px_26px_rgba(245,158,11,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
-                          >
-                            CORRIGIR
-                          </button>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => void buscarConsultas()}
-                          disabled={loading || normalizarCpf(cpf).length < 11}
-                          className="mt-3 flex h-12 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.84rem] font-black uppercase tracking-[0.05em] text-white shadow-[0_16px_26px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_20px_32px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-13 md:text-[0.88rem]"
-                        >
-                          {loading ? "Buscando..." : "Entrar"}
-                        </button>
-                      </div>
+                      <CpfTecladoNumerico
+                        loading={loading}
+                        cpfPodeBuscar={normalizarCpf(cpf).length >= 11}
+                        onAdicionarDigito={adicionarDigitoCpf}
+                        onLimpar={limparCpfDigitado}
+                        onApagarUltimo={apagarUltimoDigitoCpf}
+                        onBuscar={() => void buscarConsultas()}
+                      />
                     ) : null}
                   </div>
                 </div>
@@ -2212,70 +2171,17 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
             <>
               <section className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
                 <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
-                  <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="min-w-0 flex-1 text-center md:text-left">
-                      <p className="text-[0.98rem] font-black uppercase tracking-[0.18em] text-blue-100/85 md:text-[1.08rem]">
-                        Atendimentos do dia
-                      </p>
-                      <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-                        {pacienteNome || "Benefici\u00e1rio"}
-                      </h2>
-                      <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
-                        {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-end">
-                      <div className="relative w-full sm:w-auto">
-                        <div className="inline-flex min-w-[176px] flex-col items-center justify-center rounded-[1.1rem] border border-white/20 bg-white/10 px-4 py-2 text-center shadow-[0_10px_20px_rgba(15,23,42,0.14)] backdrop-blur">
-                          <span className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-blue-100/90 md:text-[0.62rem]">
-                            {"SESS\u00c3O EXPIRA EM"}
-                          </span>
-                          <span className="mt-1 text-[1rem] font-black tracking-[0.06em] text-white md:text-[1.12rem]">
-                            {formatarTempoSessao(segundosParaExpirarSessao)}
-                          </span>
-                        </div>
-
-                        {mostrarModalInatividade && (
-                          <div className="absolute left-1/2 top-0 z-40 w-[260px] -translate-x-1/2 rounded-[1.4rem] border border-white/25 bg-[linear-gradient(135deg,rgba(0,51,141,0.98)_0%,rgba(29,78,216,0.98)_55%,rgba(56,189,248,0.96)_100%)] p-4 text-center text-white shadow-[0_22px_40px_rgba(15,23,42,0.28)] sm:left-auto sm:right-0 sm:translate-x-0">
-                            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-amber-200/80 bg-white/12 text-[1.2rem] font-black text-amber-200">
-                              !
-                            </div>
-                            <p className="mt-3 text-[1rem] font-black uppercase tracking-[0.04em]">
-                              {"VOC\u00ca T\u00c1 A\u00cd?"}
-                            </p>
-                            <p className="mt-1 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-blue-100/90">
-                              {"ENCERRANDO EM..."}
-                            </p>
-                            <p className="mt-2 text-[2rem] font-black tracking-[0.08em] text-amber-200">
-                              {formatarTempoSessao(segundosRestantesInatividade)}
-                            </p>
-                            <div className="mt-3 grid gap-2">
-                              <button
-                                type="button"
-                                onClick={reiniciarTemporizadorSessao}
-                                className="h-10 rounded-[0.9rem] bg-white px-4 text-[0.8rem] font-black uppercase text-[#00338d] shadow-[0_10px_18px_rgba(255,255,255,0.2)] transition hover:brightness-95"
-                              >
-                                CONTINUAR
-                              </button>
-                              <button
-                                type="button"
-                                onClick={encerrarSessaoPorInatividade}
-                                className="h-10 rounded-[0.9rem] border border-white/30 bg-white/10 px-4 text-[0.76rem] font-black uppercase text-white transition hover:bg-white/15"
-                              >
-                                ENCERRAR AGORA
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => void confirmarEncerramentoAutoAtendimento()}
-                        className="h-12 min-w-[190px] rounded-2xl border border-red-300/35 bg-red-500/90 px-7 text-[0.9rem] font-bold text-white shadow-[0_10px_22px_rgba(127,29,29,0.18)] transition hover:bg-red-600 md:px-8 md:text-[0.96rem]"
-                      >
-                        SAIR
-                      </button>
-                    </div>
-                  </div>
+                  <ConsultasHeader
+                    pacienteNome={pacienteNome}
+                    dataConsultasCabecalho={dataConsultasCabecalho}
+                    segundosParaExpirarSessao={segundosParaExpirarSessao}
+                    segundosRestantesInatividade={segundosRestantesInatividade}
+                    mostrarModalInatividade={mostrarModalInatividade}
+                    formatarTempoSessao={formatarTempoSessao}
+                    onContinuarSessao={reiniciarTemporizadorSessao}
+                    onEncerrarSessao={encerrarSessaoPorInatividade}
+                    onSair={() => void confirmarEncerramentoAutoAtendimento()}
+                  />
                 </div>
 
                 <div className="flex-1 overflow-hidden px-3 pb-3 pt-2 md:px-6 md:pb-4 md:pt-3">
@@ -2381,212 +2287,52 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                       )}
 
                                       {tokenInlineVisivel ? null : (
-                                        <div
-                                          className={`border px-4 py-5 text-center ${
-                                            autorizacaoConcluida
-                                              ? "border-emerald-100 bg-white/80"
-                                              : "border-slate-100 bg-slate-50"
-                                          }`}
-                                        >
-                                          <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.7rem]">
-                                            {consulta.profissionalNome}
-                                          </p>
-                                          <p className="mt-3 text-[1.16rem] font-black uppercase tracking-[0.08em] text-slate-900 md:text-[1.32rem]">
-                                            {consulta.especialidadeNome}
-                                          </p>
-                                        </div>
+                                        <ConsultaProfissionalResumoCard
+                                          profissionalNome={consulta.profissionalNome}
+                                          especialidadeNome={consulta.especialidadeNome}
+                                          autorizacaoConcluida={autorizacaoConcluida}
+                                        />
                                       )}
 
                                     
                                     </div>
                                     {autorizacaoConcluida ? null : processandoSenha ? (
-                                      <div className="mt-2 rounded-[1rem] border border-blue-200 bg-[linear-gradient(135deg,rgba(219,234,254,0.82)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-center shadow-[0_14px_28px_rgba(59,130,246,0.14)]">
-                                        <div className="mx-auto max-w-3xl rounded-[0.95rem] border border-slate-200 bg-white/75 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-                                          <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#00338d] md:text-[0.72rem]">
-                                            Atendimento selecionado
-                                          </p>
-                                          <p className="mt-1 text-[1rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.08rem]">
-                                            {consulta.profissionalNome}
-                                          </p>
-                                          <p className="mt-0.5 text-[0.8rem] font-bold uppercase tracking-[0.05em] text-slate-600 md:text-[0.86rem]">
-                                            {consulta.especialidadeNome}
-                                          </p>
-                                        </div>
-                                        <div className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#00338d]/10">
-                                          <span className="h-7 w-7 rounded-full border-[3px] border-[#00338d]/20 border-t-[#00338d] animate-spin" />
-                                        </div>
-                                        <p className="mt-3 text-[1.04rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.12rem]">
-                                          {"Preparando autoriza\u00e7\u00e3o"}
-                                        </p>
-                                        <p className="mt-2 text-[0.9rem] text-slate-600 md:text-[0.96rem]">
-                                          {"Aguarde um instante. O token ser\u00e1 enviado e a valida\u00e7\u00e3o vai aparecer aqui na mesma tela."}
-                                        </p>
-                                      </div>
+                                      <AutorizacaoPreparandoCard
+                                        profissionalNome={consulta.profissionalNome}
+                                        especialidadeNome={consulta.especialidadeNome}
+                                      />
                                     ) : tokenInlineVisivel ? (
-                                      <div className="mt-2 rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-3 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-4 md:px-4 md:py-3">
-                                        <div className="mx-auto flex w-full max-w-4xl flex-col gap-2.5 text-center">
-                                          <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50/85 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                                            <p className="text-[0.66rem] font-black uppercase tracking-[0.14em] text-[#00338d] md:text-[0.72rem]">
-                                              Atendimento selecionado
-                                            </p>
-                                            <p className="mt-1 text-[1.02rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.12rem]">
-                                              {consulta.profissionalNome}
-                                            </p>
-                                            <p className="mt-0.5 text-[0.8rem] font-bold uppercase tracking-[0.05em] text-slate-600 md:text-[0.88rem]">
-                                              {consulta.especialidadeNome}
-                                            </p>
-                                          </div>
-
-                                          <div>
-                                            <p className="text-[0.84rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.80rem]">
-                                              {"Digite os 4 dígitos do token."}
-                                            </p>                                           
-                                          </div>
-
-                                          <div className="flex flex-wrap items-center justify-center gap-2">
-                                            {Array.from({ length: 4 }).map((_, indiceToken) => (
-                                              <input
-                                                key={`token-${consulta.idEvento}-${indiceToken}`}
-                                                id={`token-inline-${consulta.idEvento}-${indiceToken}`}
-                                                type="text"
-                                                inputMode="numeric"
-                                                maxLength={1}
-                                                value={tokenDigitado[indiceToken] || ""}
-                                                onChange={(event) =>
-                                                  atualizarTokenDigitadoInline(
-                                                    consulta.idEvento,
-                                                    indiceToken,
-                                                    event.target.value,
-                                                  )
-                                                }
-                                                onKeyDown={(event) =>
-                                                  handleTokenInlineKeyDown(
-                                                    consulta.idEvento,
-                                                    indiceToken,
-                                                    event,
-                                                  )
-                                                }
-                                                onPaste={(event) =>
-                                                  handleTokenInlinePaste(consulta.idEvento, event)
-                                                }
-                                                onFocus={() => abrirTecladoTokenInline(consulta.idEvento, indiceToken)}
-                                                onClick={() => abrirTecladoTokenInline(consulta.idEvento, indiceToken)}
-                                                readOnly
-                                                className="h-12 w-11 rounded-[0.9rem] border border-slate-300 bg-white text-center text-[1.15rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[3.4rem] md:w-[3.1rem] md:text-[1.3rem]"
-                                              />
-                                            ))}
-                                          </div>
-
-                                          {tecladoTokenAberto ? (
-                                            <div className="pointer-events-none absolute right-3 top-[4.8rem] z-20 w-[17rem] sm:w-[18rem] md:right-4 md:top-[4.5rem] md:w-[19rem]">
-                                              <div className="pointer-events-auto rounded-[1rem] border border-slate-200 bg-white/98 p-3 shadow-[0_18px_38px_rgba(15,23,42,0.18)] backdrop-blur">
-                                                <div className="mb-2 flex items-center justify-between gap-2">
-                                                  <p className="text-[0.72rem] font-black uppercase tracking-[0.12em] text-slate-600">
-                                                    TECLADO NUMÉRICO
-                                                  </p>
-                                                  <button
-                                                    type="button"
-                                                    onClick={fecharTecladoTokenInline}
-                                                    className="text-[0.72rem] font-black uppercase tracking-[0.08em] text-slate-400 transition hover:text-slate-700"
-                                                  >
-                                                    FECHAR
-                                                  </button>
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                  {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digito) => (
-                                                    <button
-                                                      key={consulta.idEvento + "-teclado-" + digito}
-                                                      type="button"
-                                                      onClick={() => preencherTokenViaTecladoInline(consulta, digito)}
-                                                      className="h-12 rounded-[0.85rem] bg-slate-900 text-[1.2rem] font-black text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
-                                                    >
-                                                      {digito}
-                                                    </button>
-                                                  ))}
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => limparTokenViaTecladoInline(consulta.idEvento)}
-                                                    className="h-12 rounded-[0.85rem] bg-red-500 text-[0.82rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(239,68,68,0.22)] transition hover:bg-red-600"
-                                                  >
-                                                    LIMPAR
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => preencherTokenViaTecladoInline(consulta, "0")}
-                                                    className="h-12 rounded-[0.85rem] bg-slate-900 text-[1.2rem] font-black text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
-                                                  >
-                                                    0
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => apagarUltimoDigitoViaTecladoInline(consulta.idEvento)}
-                                                    className="h-12 rounded-[0.85rem] bg-amber-500 text-[0.78rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
-                                                  >
-                                                    APAGAR
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ) : null}
-
-                                          {tokenErro ? (
-                                            <div className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-center shadow-sm">
-                                              <p className="text-[0.9rem] font-black uppercase tracking-[0.04em] text-red-700 md:text-[1rem]">
-                                                ATENÇÃO
-                                              </p>
-                                              <p className="mt-1 text-[0.82rem] font-bold text-red-700 md:text-[0.92rem]">
-                                                {tokenErro}
-                                              </p>
-                                            </div>
-                                          ) : tokenFeedback ? (
-                                            <div
-                                              className={`rounded-[1rem] border px-4 py-3 text-center shadow-sm ${
-                                                tokenFeedback.tipo === "success"
-                                                  ? "border-emerald-300 bg-emerald-100 text-emerald-900"
-                                                  : tokenFeedback.tipo === "error"
-                                                    ? "border-red-200 bg-red-50 text-red-700"
-                                                    : "border-sky-200 bg-sky-50 text-sky-700"
-                                              }`}
-                                            >
-                                              {tokenFeedback.tipo === "success" ? (
-                                                <div className="space-y-1">
-                                                  <p className="text-[0.95rem] font-black uppercase tracking-[0.04em] md:text-[1.05rem]">
-                                                    TOKEN REENVIADO
-                                                  </p>
-                                                  <p className="text-[0.82rem] font-bold md:text-[0.92rem]">
-                                                    {tokenFeedback.mensagem}
-                                                  </p>
-                                                </div>
-                                              ) : (
-                                                tokenFeedback.mensagem
-                                              )}
-                                            </div>
-                                          ) : (
-                                            <div className="rounded-[0.85rem] border border-sky-100 bg-sky-50/70 px-3 py-1.5 text-[0.74rem] text-sky-800">
-                                              {"N\u00e3o recebeu? Toque em reenviar token."}
-                                            </div>
-                                          )}
-
-                                          <div className="grid gap-2 sm:grid-cols-2">
-                                            <button
-                                              type="button"
-                                              onClick={() => void reenviarTokenInline(consulta)}
-                                              disabled={reenviandoToken || validandoToken}
-                                              className="h-9 rounded-[0.85rem] border border-orange-600 bg-orange-500 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
-                                            >
-                                              {reenviandoToken ? "REENVIANDO..." : "REENVIAR TOKEN"}
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={() => void validarTokenInline(consulta)}
-                                              disabled={validandoToken || reenviandoToken}
-                                              className="h-9 rounded-[0.85rem] bg-emerald-600 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
-                                            >
-                                              {validandoToken ? "VALIDANDO..." : "CONFIRMAR TOKEN"}
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
+                                      <TokenInlinePanel
+                                        consulta={consulta}
+                                        tokenDigitado={tokenDigitado}
+                                        tokenErro={tokenErro}
+                                        tokenFeedback={tokenFeedback}
+                                        tecladoTokenAberto={tecladoTokenAberto}
+                                        reenviandoToken={reenviandoToken}
+                                        validandoToken={validandoToken}
+                                        onTokenChange={(indiceToken, valor) =>
+                                          atualizarTokenDigitadoInline(consulta.idEvento, indiceToken, valor)
+                                        }
+                                        onTokenKeyDown={(indiceToken, event) =>
+                                          handleTokenInlineKeyDown(consulta.idEvento, indiceToken, event)
+                                        }
+                                        onTokenPaste={(event) =>
+                                          handleTokenInlinePaste(consulta.idEvento, event)
+                                        }
+                                        onAbrirTeclado={(indiceToken) =>
+                                          abrirTecladoTokenInline(consulta.idEvento, indiceToken)
+                                        }
+                                        onFecharTeclado={fecharTecladoTokenInline}
+                                        onPreencherDigito={(digito) =>
+                                          preencherTokenViaTecladoInline(consulta, digito)
+                                        }
+                                        onLimparToken={() => limparTokenViaTecladoInline(consulta.idEvento)}
+                                        onApagarUltimoDigito={() =>
+                                          apagarUltimoDigitoViaTecladoInline(consulta.idEvento)
+                                        }
+                                        onReenviar={() => void reenviarTokenInline(consulta)}
+                                        onValidar={() => void validarTokenInline(consulta)}
+                                      />
                                     ) : podeSeguir ? (
                                       <button
                                         onClick={() => void abrirEtapaSenha(consulta)}
@@ -2611,38 +2357,14 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                       </div>
                     </div>
 
-                    <div className="shrink-0 px-3 py-1.5 md:px-5">
-                      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
-                          disabled={indiceConsultaAtual === 0}
-                          className={`min-w-[144px] rounded-[1rem] border px-4 py-2 text-[0.82rem] font-black uppercase transition ${
-                            indiceConsultaAtual === 0
-                              ? "border-slate-300 bg-white text-slate-400"
-                              : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
-                          } disabled:cursor-not-allowed disabled:shadow-none`}
-                        >
-                          Voltar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setIndiceConsultaAtual((valorAtual) =>
-                              Math.min(valorAtual + 1, indiceMaximoLiberado),
-                            )
-                          }
-                          disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                          className={`min-w-[144px] rounded-[1rem] border px-4 py-2 text-[0.82rem] font-black uppercase transition ${
-                            indiceConsultaAtual >= indiceMaximoLiberado
-                              ? "border-slate-300 bg-white text-slate-400"
-                              : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
-                          } disabled:cursor-not-allowed disabled:shadow-none`}
-                        >
-                          {"Pr\u00f3ximo"}
-                        </button>
-                      </div>
-                    </div>
+                    <ConsultaFluxoNavegacao
+                      podeVoltar={indiceConsultaAtual > 0}
+                      podeAvancar={indiceConsultaAtual < indiceMaximoLiberado}
+                      onVoltar={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
+                      onAvancar={() =>
+                        setIndiceConsultaAtual((valorAtual) => Math.min(valorAtual + 1, indiceMaximoLiberado))
+                      }
+                    />
                   </div>
                 </div>
               </section>
@@ -2681,36 +2403,14 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                     }
                   />
 
-                  <div className="flex min-h-0 h-full flex-col gap-3">
-                    {!consultaSelecionada.autorizado && !consultaSelecionada.tokenValidado && (
-                      <button
-                        onClick={() => void vincularSenhaPainel(consultaSelecionada)}
-                        className="h-16 bg-[#00338d] px-5 text-[0.95rem] font-black text-white transition hover:bg-[#00286f]"
-                      >
-                        {consultaSelecionada.senhaPainel ? "SEGUIR ATENDIMENTO" : "VINCULAR SENHA"}
-                      </button>
-                    )}
-
-                    {consultaSelecionada.autorizado && !consultaSelecionada.tokenValidado ? (
-                      <button
-                        onClick={() => void abrirValidacaoTokenDireta(consultaSelecionada)}
-                        className="h-14 border border-amber-500 bg-amber-100 px-5 text-[0.9rem] font-black text-amber-900 shadow-[0_10px_24px_rgba(217,119,6,0.18)] transition hover:bg-amber-200"
-                      >
-                        CONFIRMAR TOKEN
-                      </button>
-                    ) : consultaSelecionada.autorizado && consultaSelecionada.tokenValidado ? (
-                      <div className="flex h-14 items-center justify-center bg-emerald-600 px-5 text-[0.9rem] font-black text-white">
-                        {"AUTORIZA\u00c7\u00c3O CONCLU\u00cdDA"}
-                      </div>
-                    ) : null}
-
-                    <button
-                      onClick={voltarParaConsultas}
-                      className="h-14 border border-red-200 bg-red-50 px-5 text-[0.88rem] font-black text-red-700 transition hover:border-red-300 hover:bg-red-100 hover:text-red-800"
-                    >
-                      SAIR
-                    </button>
-                  </div>
+                  <SenhaAutorizacaoAcoes
+                    autorizado={consultaSelecionada.autorizado}
+                    tokenValidado={consultaSelecionada.tokenValidado}
+                    senhaPainel={consultaSelecionada.senhaPainel}
+                    onVincularSenha={() => void vincularSenhaPainel(consultaSelecionada)}
+                    onConfirmarToken={() => void abrirValidacaoTokenDireta(consultaSelecionada)}
+                    onSair={voltarParaConsultas}
+                  />
                 </div>
               </div>
             </section>
