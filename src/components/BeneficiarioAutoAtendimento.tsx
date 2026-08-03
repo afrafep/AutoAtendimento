@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -136,7 +136,7 @@ const formatarHora = (hora?: string) => String(hora || "").slice(0, 5) || "--:--
 
 const formatarStatus = (status?: string) => {
   const statusSeguro = String(status || "").trim();
-  return statusSeguro || "NÃO INFORMADO";
+  return statusSeguro || "N\u00c3O INFORMADO";
 };
 
 const formatarData = (data?: string) => {
@@ -206,7 +206,7 @@ const obterDescricaoProcedimentoConsulta = (consulta: ConsultaAutoAtendimento) =
   }
 
   return String(
-    consulta.descricaoEvento || consulta.nomeEvento || "Procedimento não informado",
+    consulta.descricaoEvento || consulta.nomeEvento || "Procedimento n\u00e3o informado",
   ).trim();
 };
 
@@ -253,7 +253,7 @@ const obterFaixaHorariosConsultas = (consultas: ConsultaAutoAtendimento[]) => {
   if (!horarioInicial) return "";
   if (!horarioFinal || horarioFinal === horarioInicial) return horarioInicial;
 
-  return `${horarioInicial} até ${horarioFinal}`;
+  return `${horarioInicial} at\u00e9 ${horarioFinal}`;
 };
 
 const criarEventoBaseDaConsulta = (
@@ -348,8 +348,8 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
   const iniciarFluxoAgenda = async (mostrarAvisoCarregando = true) => {
     if (!consulta.idProfissional) {
       await Swal.fire(
-        "Atenção",
-        "Não foi possível identificar o profissional desse atendimento.",
+        "Aten\u00e7\u00e3o",
+        "N\u00e3o foi poss\u00edvel identificar o profissional desse atendimento.",
         "warning",
       );
       return;
@@ -394,7 +394,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
     if (!eventoParaFluxo) {
       await Swal.fire(
         "Carregando dados",
-        "Aguarde a agenda completa carregar antes de iniciar a autorização.",
+        "Aguarde a agenda completa carregar antes de iniciar a autoriza\u00e7\u00e3o.",
         "info",
       );
       return;
@@ -408,6 +408,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
         pularConfirmacaoInicial: true,
         abrirTokenDiretoAposEnvio:
           iniciarAutomaticamente && !abrirTokenInlineAposEnvio,
+        usarFluxoTokenInline: abrirTokenInlineAposEnvio,
         tipoAutorizacao: "tiss-sadt",
       });
     } finally {
@@ -441,7 +442,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
             <div className="text-pink-300">
               <FaClipboardList size={28} />
             </div>
-            <h2 className="text-[1.45rem] font-black tracking-tight">{"Autorização TISS SADT"}</h2>
+            <h2 className="text-[1.45rem] font-black tracking-tight">{"Autoriza\u00e7\u00e3o TISS SADT"}</h2>
           </div>
 
           <div className="mb-4 rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-600/20 to-purple-600/20 p-4">
@@ -454,7 +455,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
                   {consulta.pacienteNome}
                 </h3>
                 <div className="mt-1 text-[0.72rem] text-blue-200">
-                  {"Carteira: "}{consulta.nrCarteiraPlano || "Não informada"}
+                  {"Carteira: "}{consulta.nrCarteiraPlano || "N\u00e3o informada"}
                 </div>
               </div>
             </div>
@@ -488,7 +489,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
               disabled={loading}
               className="rounded-xl bg-indigo-500 px-5 py-2.5 text-[0.82rem] font-bold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Carregando agenda..." : "Iniciar Autorização"}
+              {loading ? "Carregando agenda..." : "Iniciar Autoriza\u00e7\u00e3o"}
             </button>
             <button
               onClick={onClose}
@@ -608,12 +609,11 @@ const normalizarMensagemTokenInline = (mensagem?: string) => {
 
   if (
     textoLower.includes("token invalido") ||
-    textoLower.includes("token inv?lido") ||
+    textoLower.includes("token inv\u00e1lido") ||
     textoLower.includes("ora-20400")
   ) {
-    return "Token inv?lido";
+    return "Token inv\u00e1lido";
   }
-
   return texto;
 };
 
@@ -980,9 +980,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     if (!senhaGuia) {
       setTokenErroPorConsulta((prev) => ({
         ...prev,
-        [consulta.idEvento]: "Nao encontramos a senha da guia para reenviar o token.",
+        [consulta.idEvento]: "N\u00e3o encontramos a senha da guia para reenviar o token.",
       }));
-      return;
+      await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o encontramos a senha da guia para reenviar o token.");
     }
 
     limparMensagemTokenInline(consulta.idEvento);
@@ -1002,106 +1002,141 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       if (reenviado === false) {
         setTokenErroPorConsulta((prev) => ({
           ...prev,
-          [consulta.idEvento]: "Nao foi possivel reenviar o token agora.",
+          [consulta.idEvento]: "N\u00e3o foi poss\u00edvel reenviar o token agora.",
         }));
-        return;
+        await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o foi poss\u00edvel reenviar o token agora.");
       }
 
       atualizarFeedbackTokenInline(
         consulta.idEvento,
         "success",
-        "Novo token enviado. Digite o codigo recebido no celular.",
+        "Novo token enviado. Digite o c\u00f3digo recebido no celular.",
       );
     } catch (_error) {
       setTokenErroPorConsulta((prev) => ({
         ...prev,
-        [consulta.idEvento]: "Nao foi possivel reenviar o token agora.",
+        [consulta.idEvento]: "N\u00e3o foi poss\u00edvel reenviar o token agora.",
       }));
-    } finally {
+      await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o foi poss\u00edvel reenviar o token agora.");
       setConsultaReenviandoTokenId(null);
     }
   };
 
-  const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
-    const token = String(tokenDigitadoPorConsulta[consulta.idEvento] || "").replace(/\D/g, "");
-    const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
-    const numeroGuiaOperadora = resolveNumeroGuiaOperadoraInline(
-      senhaGuia,
-      consulta.numeroGuiaOperadora,
+  const exibirModalErroTokenInline = async (
+  idEvento: number,
+  mensagem: string,
+) => {
+  const mensagemNormalizada = String(mensagem || "").trim();
+  const titulo =
+    mensagemNormalizada.toLowerCase() === "token inv\u00e1lido" ||
+    mensagemNormalizada.toLowerCase() === "token invalido"
+      ? "TOKEN INV\u00c1LIDO"
+      : "ERRO AO VALIDAR TOKEN";
+
+  await Swal.fire({
+    title: titulo,
+    text:
+      titulo === "TOKEN INV\u00c1LIDO"
+        ? "O c\u00f3digo digitado est\u00e1 incorreto. Feche esta mensagem e digite novamente o c\u00f3digo que chegou no seu celular, pelo aplicativo ou por SMS."
+        : mensagemNormalizada || "N\u00e3o foi poss\u00edvel validar o token.",
+    icon: "error",
+    confirmButtonText: "FECHAR",
+    allowOutsideClick: false,
+    background: "#ffffff",
+    color: "#0f172a",
+    customClass: {
+      popup: "!rounded-[1.2rem] !px-6 !py-5",
+      title: "!text-[1.4rem] !font-black !text-red-700",
+      confirmButton:
+        "!bg-red-600 !text-white !font-black !rounded-[0.9rem] !px-6 !py-3",
+    },
+  });
+
+  setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
+};
+
+const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
+  const token = String(tokenDigitadoPorConsulta[consulta.idEvento] || "").replace(/\D/g, "");
+  const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
+  const numeroGuiaOperadora = resolveNumeroGuiaOperadoraInline(
+    senhaGuia,
+    consulta.numeroGuiaOperadora,
+  );
+
+  if (token.length !== 4) {
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: "Digite os 4 d\u00edgitos do token.",
+    }));
+    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 d\u00edgitos do token.");
+    return;
+  }
+  if (!senhaGuia) {
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: "N\u00e3o encontramos a senha da guia para validar o token.",
+    }));
+    await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o encontramos a senha da guia para validar o token.");
+    return;
+  }
+  limparMensagemTokenInline(consulta.idEvento);
+  setConsultaValidandoTokenId(consulta.idEvento);
+
+  try {
+    const response = await api.post("/sisclinic/token/validar", {
+      token: toSafeTokenString(token),
+      cdBeneficiario: toSafeTokenString(consulta.nrCarteiraPlano),
+      numeroGuiaOperadora,
+    });
+
+    const retornoApi = extrairRetornoApiToken(response.data);
+    const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
+    const mensagemLower = mensagem.toLowerCase();
+    const tokenValidado =
+      mensagemLower.includes("token validado com sucesso") ||
+      mensagemLower.includes("senha ja validada com envio de token");
+
+    if (!tokenValidado) {
+      const mensagemErro = mensagem || "N\u00e3o foi poss\u00edvel validar o token informado.";
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: mensagemErro,
+      }));
+      await exibirModalErroTokenInline(consulta.idEvento, mensagemErro);
+      return;
+    }
+
+    await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
+      tokenValidado: true,
+    });
+
+    setTokenDigitadoPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: "",
+    }));
+    atualizarFeedbackTokenInline(
+      consulta.idEvento,
+      "success",
+      "Token validado com sucesso. Atendimento liberado.",
     );
+    setConsultaTokenAbertaId(null);
+    await buscarConsultas();
+  } catch (error: any) {
+    const retornoApi = extrairRetornoApiToken(error?.response?.data);
+    const mensagem = normalizarMensagemTokenInline(
+      retornoApi.mensagem || error?.message || "Erro ao validar token",
+    );
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: mensagem,
+    }));
+    await exibirModalErroTokenInline(consulta.idEvento, mensagem);
+  } finally {
+    setConsultaValidandoTokenId(null);
+  }
+};
 
-    if (token.length !== 4) {
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: "Digite os 4 digitos do token.",
-      }));
-      return;
-    }
-
-    if (!senhaGuia) {
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: "Nao encontramos a senha da guia para validar o token.",
-      }));
-      return;
-    }
-
-    limparMensagemTokenInline(consulta.idEvento);
-    setConsultaValidandoTokenId(consulta.idEvento);
-
-    try {
-      const response = await api.post("/sisclinic/token/validar", {
-        token: toSafeTokenString(token),
-        cdBeneficiario: toSafeTokenString(consulta.nrCarteiraPlano),
-        numeroGuiaOperadora,
-      });
-
-      const retornoApi = extrairRetornoApiToken(response.data);
-      const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
-      const mensagemLower = mensagem.toLowerCase();
-      const tokenValidado =
-        mensagemLower.includes("token validado com sucesso") ||
-        mensagemLower.includes("senha ja validada com envio de token");
-
-      if (!tokenValidado) {
-        setTokenErroPorConsulta((prev) => ({
-          ...prev,
-          [consulta.idEvento]:
-            mensagem || "Nao foi possivel validar o token informado.",
-        }));
-        return;
-      }
-
-      await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
-        tokenValidado: true,
-      });
-
-      setTokenDigitadoPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: "",
-      }));
-      atualizarFeedbackTokenInline(
-        consulta.idEvento,
-        "success",
-        "Token validado com sucesso. Atendimento liberado.",
-      );
-      setConsultaTokenAbertaId(null);
-      await buscarConsultas();
-    } catch (error: any) {
-      const retornoApi = extrairRetornoApiToken(error?.response?.data);
-      const mensagem = normalizarMensagemTokenInline(
-        retornoApi.mensagem || error?.message || "Erro ao validar token",
-      );
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: mensagem,
-      }));
-    } finally {
-      setConsultaValidandoTokenId(null);
-    }
-  };
-
-  const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
+const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
     setConsultaTokenAbertaId(consulta.idEvento);
     limparMensagemTokenInline(consulta.idEvento);
 
@@ -1130,7 +1165,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       console.error("Erro ao gerar senha do painel:", error);
       await Swal.fire(
         "Erro",
-        "Nao foi possivel gerar e vincular a senha deste atendimento.",
+        "N\u00e3o foi poss\u00edvel gerar e vincular a senha deste atendimento.",
         "error",
       );
       setConsultaProcessandoSenhaId(null);
@@ -1263,7 +1298,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consulta: ConsultaAutoAtendimento,
   ) => {
     if (!consulta.idProfissional) {
-      return String(consulta.localidadePainel || "Não informado").trim() || null;
+      return String(consulta.localidadePainel || "N\u00e3o informado").trim() || null;
     }
 
     try {
@@ -1298,12 +1333,12 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
       return (
         localCompleto ||
-        String(consulta.localidadePainel || "Não informado").trim() ||
+        String(consulta.localidadePainel || "N\u00e3o informado").trim() ||
         null
       );
     } catch (error) {
-      console.warn("Não foi possível consultar o local do profissional:", error);
-      return String(consulta.localidadePainel || "Não informado").trim() || null;
+      console.warn("N\u00e3o foi poss\u00edvel consultar o local do profissional:", error);
+      return String(consulta.localidadePainel || "N\u00e3o informado").trim() || null;
     }
   };
 
@@ -1359,7 +1394,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
             localidadePainel: localCompleto,
           };
         } catch (error) {
-          console.warn("Não foi possível carregar o local do profissional:", error);
+          console.warn("N\u00e3o foi poss\u00edvel carregar o local do profissional:", error);
           return consulta;
         }
       }),
@@ -1396,7 +1431,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     const idTipoAtendimento = String(tipoCompativel?.id || "").trim();
 
     if (!idTipoAtendimento) {
-      throw new Error("Tipo de atendimento Intelite inválido para emissão.");
+      throw new Error("Tipo de atendimento Intelite inv\u00e1lido para emiss\u00e3o.");
     }
 
     return idTipoAtendimento;
@@ -1416,7 +1451,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       .toUpperCase();
 
     if (!senhaGerada) {
-      throw new Error("A Intelite não retornou a senha emitida.");
+      throw new Error("A Intelite n\u00e3o retornou a senha emitida.");
     }
 
     return senhaGerada;
@@ -1440,7 +1475,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       .toUpperCase();
     const senhaPainel = senhaPainelInformada || senhaPainelAtual;
     const localidadePainel =
-      (await buscarLocalidadePainelDoProfissional(consulta)) || "Não informado";
+      (await buscarLocalidadePainelDoProfissional(consulta)) || "N\u00e3o informado";
 
     if (!senhaPainel) {
       setConsultaProcessandoSenhaId(null);
@@ -1535,8 +1570,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           [consulta.idEvento]: "",
         }));
         await Swal.fire(
-          "Atenção",
-          "O backend respondeu, mas a senha não apareceu salva na agenda. Tente atualizar e verificar novamente.",
+          "Aten\u00e7\u00e3o",
+          "O backend respondeu, mas a senha n\u00e3o apareceu salva na agenda. Tente atualizar e verificar novamente.",
           "warning",
         );
         return;
@@ -1604,7 +1639,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       console.error("Erro ao vincular senha do painel:", error);
       await Swal.fire(
         "Erro",
-        "Não foi possível vincular a senha deste atendimento.",
+        "N\u00e3o foi poss\u00edvel vincular a senha deste atendimento.",
         "error",
       );
     }
@@ -1617,8 +1652,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
     if (!senhaGuia) {
       await Swal.fire(
-        "Atenção",
-        "Não encontramos a senha da guia para validar o token.",
+        "Aten\u00e7\u00e3o",
+        "N\u00e3o encontramos a senha da guia para validar o token.",
         "warning",
       );
       return;
@@ -1668,8 +1703,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
     if (!validarCpf(cpfLimpo)) {
       await Swal.fire({
-        title: "Atenção",
-        html: "Digite um CPF válido.<br />Sequências como Ex: 111.111.111-11 não são permitidas.",
+        title: "Aten\u00e7\u00e3o",
+        html: "Digite um CPF v\u00e1lido.<br />Sequ\u00eancias como Ex: 111.111.111-11 n\u00e3o s\u00e3o permitidas.",
         icon: "warning",
       });
       return;
@@ -1702,11 +1737,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
             horaInicio: String(item.horaInicio || ""),
             statusAgendamento: String(item.statusAgendamento || "AGENDADO"),
             profissionalNome:
-              item.profissional?.nmProfissional || "Profissional não informado",
+              item.profissional?.nmProfissional || "Profissional n\u00e3o informado",
             especialidadeNome:
               item.profissional?.especialidade?.dsEspecialidade ||
-              "Especialidade não informada",
-            pacienteNome: item.paciente?.nmPaciente || "Beneficiário não informado",
+              "Especialidade n\u00e3o informada",
+            pacienteNome: item.paciente?.nmPaciente || "Benefici\u00e1rio n\u00e3o informado",
             nuCpf: item.paciente?.nuCpf || item.nuCpf || cpfLimpo,
             nrCarteiraPlano: String(
               item.paciente?.nrCarteiraPlano || item.nrCarteiraPlano || "",
@@ -1751,7 +1786,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         limparEstadoTelaPersistido();
         await Swal.fire(
           "Nenhum atendimento",
-          "Não encontramos consulta para hoje com esse CPF.",
+          "N\u00e3o encontramos consulta para hoje com esse CPF.",
           "info",
         );
         resetarTelaCpf();
@@ -1759,7 +1794,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       }
 
       const nomeBeneficiario =
-        consultasOrdenadas[0]?.pacienteNome || "Beneficiário";
+        consultasOrdenadas[0]?.pacienteNome || "Benefici\u00e1rio";
       setCpf(formatarCpf(cpfLimpo));
       setConsultas(consultasOrdenadas);
       setPacienteNome(nomeBeneficiario);
@@ -1769,10 +1804,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       return;
 
     } catch (error) {
-      console.error("Erro ao buscar consultas do beneficiário:", error);
+      console.error("Erro ao buscar consultas do benefici\u00e1rio:", error);
       await Swal.fire(
         "Erro",
-        "Não foi possível localizar os atendimentos de hoje.",
+        "N\u00e3o foi poss\u00edvel localizar os atendimentos de hoje.",
         "error",
       );
     } finally {
@@ -1812,7 +1847,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       await Swal.fire("Sucesso", "Comparecimento registrado com sucesso.", "success");
     } catch (error) {
       console.error("Erro ao marcar compareceu:", error);
-      await Swal.fire("Erro", "Não foi possível atualizar o comparecimento.", "error");
+      await Swal.fire("Erro", "N\u00e3o foi poss\u00edvel atualizar o comparecimento.", "error");
     }
   };
 
@@ -1833,10 +1868,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           statusAgendamento: "COMPARECEU",
         });
       } catch (error) {
-        console.error("Erro ao atualizar comparecimento antes da autorização:", error);
+        console.error("Erro ao atualizar comparecimento antes da autoriza\u00e7\u00e3o:", error);
         await Swal.fire(
           "Erro",
-          "Não foi possível atualizar o comparecimento antes da autorização.",
+          "N\u00e3o foi poss\u00edvel atualizar o comparecimento antes da autoriza\u00e7\u00e3o.",
           "error",
         );
         return;
@@ -1866,7 +1901,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="text-center md:text-left">
                       <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
-                        Digite o CPF do beneficiário
+                        {"Digite o CPF do benefici\u00e1rio"}
                       </h2>
                       <p className="mt-3 max-w-136 text-[1.6rem] text-blue-100">
                         Localize os agendamentos de hoje.
@@ -1875,10 +1910,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <div className="flex justify-center md:justify-end">
                       <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
                         <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
-                          {`JOÃO PESSOA - ${dataCabecalhoAtual}`}
+                          {`JO\u00c3O PESSOA - ${dataCabecalhoAtual}`}
                         </p>
                         <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
-                          {`Horário Atual: ${horaCabecalhoAtual}`}
+                          {`Hor\u00e1rio Atual: ${horaCabecalhoAtual}`}
                         </p>
                       </div>
                     </div>
@@ -1918,7 +1953,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_22px_36px_rgba(15,23,42,0.12)] md:p-4">
                         <div className="mb-3 flex items-center justify-between px-1">
                           <p className="text-[0.7rem] font-black uppercase tracking-[0.16em] text-slate-600">
-                            Teclado numérico
+                            {"Teclado num\u00e9rico"}
                           </p>
                           <p className="text-[0.76rem] font-semibold text-slate-400">
                             Toque para digitar
@@ -1988,7 +2023,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                         Atendimentos do dia
                       </p>
                       <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-                        {pacienteNome || "Beneficiário"}
+                        {pacienteNome || "Benefici\u00e1rio"}
                       </h2>
                       <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
                         {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
@@ -2011,8 +2046,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       <div className="mb-2 flex items-start justify-between gap-3">
                         <p className="text-[0.94rem] font-bold leading-[1.3] text-slate-700 md:text-[1.05rem]">
                           {consultaFluxoAtual?.autorizacaoConcluida
-                            ? "Autorizado. Próximo horário liberado."
-                            : "Finalize o autoatendimento para liberar o próximo horário."}
+                            ? "Autorizado. Pr\u00f3ximo hor\u00e1rio liberado."
+                            : "Finalize o autoatendimento para liberar o pr\u00f3ximo hor\u00e1rio."}
                         </p>
                         <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-[0.88rem] font-black uppercase tracking-[0.05em] text-[#00338d] md:text-[0.96rem]">
                           {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total}` : "0 de 0"}
@@ -2083,13 +2118,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                             aria-hidden="true"
                                             className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
                                           >
-                                            ✓
+                                            {"\u2713"}
                                           </span>
                                         ) : null}
                                         {faltouConsulta
-                                          ? "Consulta não realizada"
+                                          ? "Consulta n\u00e3o realizada"
                                           : tokenEnviado && !autorizacaoConcluida
-                                            ? "Digite o código do celular para concluir"
+                                            ? "Digite o c\u00f3digo recebido no aplicativo ou por SMS no celular"
                                             : autorizacaoConcluida
                                               ? "Atendimento liberado"
                                               : formatarStatus(consulta.statusAgendamento)}
@@ -2099,7 +2134,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-2 pb-1" : "gap-5 pb-2"}`}>
                                       {cardConsulta.agrupadoUltrassom ? (
                                         <p className={`${tokenInlineVisivel ? "text-[1.55rem] md:text-[1.8rem]" : "text-[2rem] md:text-[2.4rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
-                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
+                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Hor\u00e1rios do dia"}
                                         </p>
                                       ) : (
                                         <p className={`${tokenInlineVisivel ? "text-[2.45rem] md:text-[2.9rem]" : "text-[4.2rem] md:text-[5rem]"} font-black tracking-tight text-[#00338d]`}>
@@ -2128,14 +2163,25 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     </div>
                                     {autorizacaoConcluida ? null : processandoSenha ? (
                                       <div className="mt-2 rounded-[1rem] border border-blue-200 bg-[linear-gradient(135deg,rgba(219,234,254,0.82)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-center shadow-[0_14px_28px_rgba(59,130,246,0.14)]">
-                                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#00338d]/10">
+                                        <div className="mx-auto max-w-3xl rounded-[0.95rem] border border-slate-200 bg-white/75 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                                          <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#00338d] md:text-[0.72rem]">
+                                            Atendimento selecionado
+                                          </p>
+                                          <p className="mt-1 text-[1rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.08rem]">
+                                            {consulta.profissionalNome}
+                                          </p>
+                                          <p className="mt-0.5 text-[0.8rem] font-bold uppercase tracking-[0.05em] text-slate-600 md:text-[0.86rem]">
+                                            {consulta.especialidadeNome}
+                                          </p>
+                                        </div>
+                                        <div className="mx-auto mt-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#00338d]/10">
                                           <span className="h-7 w-7 rounded-full border-[3px] border-[#00338d]/20 border-t-[#00338d] animate-spin" />
                                         </div>
-                                        <p className="mt-4 text-[1.04rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.12rem]">
-                                          Preparando autorizacao
+                                        <p className="mt-3 text-[1.04rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.12rem]">
+                                          {"Preparando autoriza\u00e7\u00e3o"}
                                         </p>
-                                        <p className="mt-2 text-[0.94rem] text-slate-600 md:text-[1rem]">
-                                          Aguarde um instante. O token sera enviado e a validacao vai aparecer aqui na mesma tela.
+                                        <p className="mt-2 text-[0.9rem] text-slate-600 md:text-[0.96rem]">
+                                          {"Aguarde um instante. O token ser\u00e1 enviado e a valida\u00e7\u00e3o vai aparecer aqui na mesma tela."}
                                         </p>
                                       </div>
                                     ) : tokenInlineVisivel ? (
@@ -2155,7 +2201,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
                                           <div>
                                             <p className="text-[0.84rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.80rem]">
-                                              Digite o seu token de 4 digitos, que chegou no Aplicativo ou por SMS, para liberar o atendimento.
+                                              {"Digite o seu token de 4 d\u00edgitos, que chegou no aplicativo ou por SMS no celular, para liberar o atendimento."}
                                             </p>                                           
                                           </div>
 
@@ -2191,8 +2237,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                           </div>
 
                                           {tokenErro ? (
-                                            <div className="rounded-[0.85rem] border border-red-200 bg-red-50 px-3 py-1.5 text-[0.78rem] font-semibold text-red-700">
-                                              {tokenErro}
+                                            <div className="rounded-[0.85rem] px-3 py-1.5 text-[0.78rem] font-semibold text-red-700">
                                             </div>
                                           ) : tokenFeedback ? (
                                             <div
@@ -2208,7 +2253,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                             </div>
                                           ) : (
                                             <div className="rounded-[0.85rem] border border-sky-100 bg-sky-50/70 px-3 py-1.5 text-[0.74rem] text-sky-800">
-                                              Se nao recebeu o codigo, toque em reenviar token.
+                                              {"Se n\u00e3o recebeu o c\u00f3digo no aplicativo ou por SMS no celular, toque em reenviar token."}
                                             </div>
                                           )}
 
@@ -2245,7 +2290,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponivel"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indispon\u00edvel"}
                                       </div>
                                     )}
                                   </div>
@@ -2284,7 +2329,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
                           } disabled:cursor-not-allowed disabled:shadow-none`}
                         >
-                          Próximo
+                          {"Pr\u00f3ximo"}
                         </button>
                       </div>
                     </div>
@@ -2299,10 +2344,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                 <div className="mx-auto max-w-6xl text-center md:text-left">
                   <div className="text-center md:text-left">
                     <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-                      AUTORIZAÇÃO
+                      {"AUTORIZA\u00c7\u00c3O"}
                     </h2>                    
                     <p className="mt-2 text-[0.95rem] text-blue-100">
-                      Confira o atendimento. A senha do painel será gerada e vinculada automaticamente antes de seguir, para autorização.
+                      {"Confira o atendimento. A senha do painel ser\u00e1 gerada e vinculada automaticamente antes de seguir, para autoriza\u00e7\u00e3o."}
                     </p>
                        <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
                         {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
@@ -2345,7 +2390,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </button>
                     ) : consultaSelecionada.autorizado && consultaSelecionada.tokenValidado ? (
                       <div className="flex h-14 items-center justify-center bg-emerald-600 px-5 text-[0.9rem] font-black text-white">
-                        AUTORIZAÇÃO CONCLUÍDA
+                        {"AUTORIZA\u00c7\u00c3O CONCLU\u00cdDA"}
                       </div>
                     ) : null}
 
@@ -2382,6 +2427,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 

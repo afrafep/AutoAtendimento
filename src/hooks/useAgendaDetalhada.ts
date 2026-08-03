@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../config/configApi";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
@@ -557,6 +557,7 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
       pularEscolhaTipo?: boolean;
       pularConfirmacaoInicial?: boolean;
       abrirTokenDiretoAposEnvio?: boolean;
+      usarFluxoTokenInline?: boolean;
       tipoAutorizacao?: "tiss-sadt" | "aptos";
     },
   ) => {
@@ -1559,9 +1560,10 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
     if (!confirmacaoInicial) return;
 
     let progress = 0;
-    Swal.fire({
-      title: "Processando Autorização",
-      html: `
+    if (!opcoes?.usarFluxoTokenInline) {
+      Swal.fire({
+        title: "Processando Autoriza\u00e7\u00e3o",
+        html: `
   <div class="space-y-6">
     <div class="relative">
       <div class="w-full bg-gray-700 rounded-full h-3">
@@ -1571,32 +1573,33 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
         <span id="progress-percent">${Math.round(progress)}%</span>
       </div>
     </div>
-    <p id="progress-text" class="text-gray-300 text-center">Iniciando comunicação com TISS...</p>
+    <p id="progress-text" class="text-gray-300 text-center">Iniciando comunica\u00e7\u00e3o com TISS...</p>
     <div class="flex justify-center">
       <div class="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
     </div>
   </div>
 `,
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      background: "#1f2937",
-      color: "#f9fafb",
-      didOpen: () => {
-        const interval = setInterval(() => {
-          progress += Math.random() * 15;
-          if (progress > 90) progress = 90;
-          const progressBar = document.getElementById("progress-bar");
-          const progressPercent = document.getElementById("progress-percent");
-          if (progressBar)
-            (progressBar as HTMLElement).style.width = `${progress}%`;
-          if (progressPercent)
-            (progressPercent as HTMLElement).textContent = `${Math.round(
-              progress,
-            )}%`;
-        }, 600);
-        (Swal.getPopup() as any).progressInterval = interval;
-      },
-    });
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        background: "#1f2937",
+        color: "#f9fafb",
+        didOpen: () => {
+          const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            const progressBar = document.getElementById("progress-bar");
+            const progressPercent = document.getElementById("progress-percent");
+            if (progressBar)
+              (progressBar as HTMLElement).style.width = `${progress}%`;
+            if (progressPercent)
+              (progressPercent as HTMLElement).textContent = `${Math.round(
+                progress,
+              )}%`;
+          }, 600);
+          (Swal.getPopup() as any).progressInterval = interval;
+        },
+      });
+    }
 
     try {
       // USAR OS PROCEDIMENTOS AGRUPADOS DO ULTRASSOM QUANDO APLICÁVEL
@@ -1751,6 +1754,7 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
         numeroGuiaGerado,
         numeroGuiaOperadora,
         isReenvio: false,
+        silencioso: opcoes?.usarFluxoTokenInline === true,
       });
 
       void (async () => {
@@ -2041,6 +2045,10 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
         });
       };
 
+      if (opcoes?.usarFluxoTokenInline) {
+        return;
+      }
+
       if (opcoes?.abrirTokenDiretoAposEnvio) {
         await validarTokenDiretamente();
         return;
@@ -2317,6 +2325,7 @@ export const useAgendaDetalhada = ({ location }: UseAgendaDetalhadaProps) => {
     handleSalvarObservacao,
   };
 };
+
 
 
 
