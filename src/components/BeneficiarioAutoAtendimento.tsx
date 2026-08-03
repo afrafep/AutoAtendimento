@@ -161,6 +161,9 @@ const formatarHoraAtual = () => {
   return `${horas}:${minutos}`;
 };
 
+const TEMPO_INATIVIDADE_MS = 1 * 60 * 1000;
+const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 30;
+
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
     String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
@@ -647,6 +650,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [consultaReenviandoTokenId, setConsultaReenviandoTokenId] = useState<number | null>(null);
   const [consultaValidandoTokenId, setConsultaValidandoTokenId] = useState<number | null>(null);
   const [consultaTecladoTokenId, setConsultaTecladoTokenId] = useState<number | null>(null);
+  const [mostrarModalInatividade, setMostrarModalInatividade] = useState(false);
+  const [segundosParaExpirarSessao, setSegundosParaExpirarSessao] = useState(
+    Math.floor(TEMPO_INATIVIDADE_MS / 1000),
+  );
+  const [segundosRestantesInatividade, setSegundosRestantesInatividade] = useState(
+    CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
+  );
+  const timeoutInatividadeRef = useRef<number | null>(null);
+  const intervaloSessaoRef = useRef<number | null>(null);
+  const intervaloModalInatividadeRef = useRef<number | null>(null);
+  const expiracaoSessaoRef = useRef(Date.now() + TEMPO_INATIVIDADE_MS);
 
   const consultaSelecionada =
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) || null;
@@ -770,6 +784,74 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   );
   const dataCabecalhoAtual = useMemo(() => formatarDataAtual(), []);
 
+  const formatarTempoSessao = (segundos: number) => {
+    const totalSegundos = Math.max(0, segundos);
+    const minutos = String(Math.floor(totalSegundos / 60)).padStart(2, "0");
+    const segundosRestantes = String(totalSegundos % 60).padStart(2, "0");
+    return `${minutos}:${segundosRestantes}`;
+  };
+
+  const limparTemporizadoresSessao = () => {
+    if (timeoutInatividadeRef.current) {
+      window.clearTimeout(timeoutInatividadeRef.current);
+      timeoutInatividadeRef.current = null;
+    }
+
+    if (intervaloSessaoRef.current) {
+      window.clearInterval(intervaloSessaoRef.current);
+      intervaloSessaoRef.current = null;
+    }
+
+    if (intervaloModalInatividadeRef.current) {
+      window.clearInterval(intervaloModalInatividadeRef.current);
+      intervaloModalInatividadeRef.current = null;
+    }
+  };
+
+  const encerrarSessaoPorInatividade = () => {
+    limparTemporizadoresSessao();
+    setMostrarModalInatividade(false);
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+    setSegundosParaExpirarSessao(Math.floor(TEMPO_INATIVIDADE_MS / 1000));
+    resetarTelaCpf();
+  };
+
+  const reiniciarTemporizadorSessao = () => {
+    if (!hidratado) return;
+
+    limparTemporizadoresSessao();
+    setMostrarModalInatividade(false);
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+
+    expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
+    setSegundosParaExpirarSessao(Math.floor(TEMPO_INATIVIDADE_MS / 1000));
+
+    intervaloSessaoRef.current = window.setInterval(() => {
+      const restante = Math.max(0, Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000));
+      setSegundosParaExpirarSessao(restante);
+    }, 1000);
+
+    timeoutInatividadeRef.current = window.setTimeout(() => {
+      setMostrarModalInatividade(true);
+      setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+
+      intervaloModalInatividadeRef.current = window.setInterval(() => {
+        setSegundosRestantesInatividade((atual) => {
+          if (atual <= 1) {
+            if (intervaloModalInatividadeRef.current) {
+              window.clearInterval(intervaloModalInatividadeRef.current);
+              intervaloModalInatividadeRef.current = null;
+            }
+            encerrarSessaoPorInatividade();
+            return 0;
+          }
+
+          return atual - 1;
+        });
+      }, 1000);
+    }, Math.max(0, TEMPO_INATIVIDADE_MS - CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS * 1000));
+  };
+
   useEffect(() => {
     setHoraCabecalhoAtual(formatarHoraAtual());
     const intervaloHora = window.setInterval(() => {
@@ -816,6 +898,27 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }
   }, [cardsConsultasFluxo, indiceConsultaAtual, indiceMaximoLiberado]);
 
+  useEffect(() => {
+    if (!hidratado) return;
+
+    reiniciarTemporizadorSessao();
+
+    const handleAtividadeUsuario = () => {
+      reiniciarTemporizadorSessao();
+    };
+
+    window.addEventListener("pointerdown", handleAtividadeUsuario);
+    window.addEventListener("touchstart", handleAtividadeUsuario);
+    window.addEventListener("keydown", handleAtividadeUsuario);
+
+    return () => {
+      window.removeEventListener("pointerdown", handleAtividadeUsuario);
+      window.removeEventListener("touchstart", handleAtividadeUsuario);
+      window.removeEventListener("keydown", handleAtividadeUsuario);
+      limparTemporizadoresSessao();
+    };
+  }, [hidratado, etapaTela, indiceConsultaAtual, consultaTokenAbertaId, consultaProcessandoSenhaId, consultaTecladoTokenId]);
+
   if (!hidratado) {
     return null;
   }
@@ -831,6 +934,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   };
 
   const resetarTelaCpf = () => {
+    limparTemporizadoresSessao();
+    setMostrarModalInatividade(false);
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+    setSegundosParaExpirarSessao(Math.floor(TEMPO_INATIVIDADE_MS / 1000));
     setCpf("");
     setPacienteNome("");
     setConsultas([]);
@@ -840,6 +947,14 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setIndiceConsultaAtual(0);
     setSenhasPainelDigitadas({});
     setMostrarTecladoCpf(false);
+    setConsultaTokenAbertaId(null);
+    setConsultaProcessandoSenhaId(null);
+    setConsultaReenviandoTokenId(null);
+    setConsultaValidandoTokenId(null);
+    setConsultaTecladoTokenId(null);
+    setTokenDigitadoPorConsulta({});
+    setTokenErroPorConsulta({});
+    setTokenFeedbackPorConsulta({});
     setEtapaTela("cpf");
     limparEstadoTelaPersistido();
   };
@@ -2103,8 +2218,8 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
             <>
               <section className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
                 <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
-                  <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-[minmax(0,1fr)_210px] md:items-center">
-                    <div className="min-w-0 text-center md:text-left">
+                  <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0 flex-1 text-center md:text-left">
                       <p className="text-[0.98rem] font-black uppercase tracking-[0.18em] text-blue-100/85 md:text-[1.08rem]">
                         Atendimentos do dia
                       </p>
@@ -2115,10 +2230,53 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                         {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----" ? dataConsultasCabecalho : "Data do atendimento"}
                       </p>
                     </div>
-                    <div className="flex min-h-0 h-full flex-col gap-3">
+                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-end">
+                      <div className="relative w-full sm:w-auto">
+                        <div className="inline-flex min-w-[176px] flex-col items-center justify-center rounded-[1.1rem] border border-white/20 bg-white/10 px-4 py-2 text-center shadow-[0_10px_20px_rgba(15,23,42,0.14)] backdrop-blur">
+                          <span className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-blue-100/90 md:text-[0.62rem]">
+                            {"SESS\u00c3O EXPIRA EM"}
+                          </span>
+                          <span className="mt-1 text-[1rem] font-black tracking-[0.06em] text-white md:text-[1.12rem]">
+                            {formatarTempoSessao(segundosParaExpirarSessao)}
+                          </span>
+                        </div>
+
+                        {mostrarModalInatividade && (
+                          <div className="absolute left-1/2 top-0 z-40 w-[260px] -translate-x-1/2 rounded-[1.4rem] border border-white/25 bg-[linear-gradient(135deg,rgba(0,51,141,0.98)_0%,rgba(29,78,216,0.98)_55%,rgba(56,189,248,0.96)_100%)] p-4 text-center text-white shadow-[0_22px_40px_rgba(15,23,42,0.28)] sm:left-auto sm:right-0 sm:translate-x-0">
+                            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-amber-200/80 bg-white/12 text-[1.2rem] font-black text-amber-200">
+                              !
+                            </div>
+                            <p className="mt-3 text-[1rem] font-black uppercase tracking-[0.04em]">
+                              {"VOC\u00ca T\u00c1 A\u00cd?"}
+                            </p>
+                            <p className="mt-1 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-blue-100/90">
+                              {"ENCERRANDO EM..."}
+                            </p>
+                            <p className="mt-2 text-[2rem] font-black tracking-[0.08em] text-amber-200">
+                              {formatarTempoSessao(segundosRestantesInatividade)}
+                            </p>
+                            <div className="mt-3 grid gap-2">
+                              <button
+                                type="button"
+                                onClick={reiniciarTemporizadorSessao}
+                                className="h-10 rounded-[0.9rem] bg-white px-4 text-[0.8rem] font-black uppercase text-[#00338d] shadow-[0_10px_18px_rgba(255,255,255,0.2)] transition hover:brightness-95"
+                              >
+                                CONTINUAR
+                              </button>
+                              <button
+                                type="button"
+                                onClick={encerrarSessaoPorInatividade}
+                                className="h-10 rounded-[0.9rem] border border-white/30 bg-white/10 px-4 text-[0.76rem] font-black uppercase text-white transition hover:bg-white/15"
+                              >
+                                ENCERRAR AGORA
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={() => void confirmarEncerramentoAutoAtendimento()}
-                        className="h-12 rounded-2xl border border-red-300/35 bg-red-500/90 px-7 text-[0.9rem] font-bold text-white shadow-[0_10px_22px_rgba(127,29,29,0.18)] transition hover:bg-red-600 md:h-13 md:px-8 md:text-[0.96rem]"
+                        className="h-12 min-w-[190px] rounded-2xl border border-red-300/35 bg-red-500/90 px-7 text-[0.9rem] font-bold text-white shadow-[0_10px_22px_rgba(127,29,29,0.18)] transition hover:bg-red-600 md:px-8 md:text-[0.96rem]"
                       >
                         SAIR
                       </button>
@@ -2578,6 +2736,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
             abrirTokenInlineAposEnvio={abrirTokenInlineAposEnvio}
           />
         )}
+
       </main>
 
     </div>
