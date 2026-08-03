@@ -2150,8 +2150,8 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                               const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
                               const processandoSenha = consultaProcessandoSenhaId === consulta.idEvento;
                               const tokenAberto = consultaTokenAbertaId === consulta.idEvento;
-                              const tokenEnviadoNoFluxo = tokenAberto && consulta.autorizado;
-                              const tokenInlineVisivel = !autorizacaoConcluida && (processandoSenha || tokenAberto);
+                              const tokenEnviadoNoFluxo = normalizarBoolean(consulta.autorizado) && !autorizacaoConcluida;
+                              const tokenInlineVisivel = !autorizacaoConcluida && (processandoSenha || tokenAberto || normalizarBoolean(consulta.autorizado));
                               const podeSeguir = podeAutorizar || tokenInlineVisivel || autorizacaoConcluida;
                               const tokenDigitado = tokenDigitadoPorConsulta[consulta.idEvento] || "";
                               const tokenErro = tokenErroPorConsulta[consulta.idEvento] || "";
@@ -2585,6 +2585,8 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
