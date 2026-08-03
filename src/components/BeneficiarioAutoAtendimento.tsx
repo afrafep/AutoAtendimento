@@ -1195,10 +1195,6 @@ const preencherTokenViaTecladoInline = (
 
   setTimeout(() => {
     focarCampoTokenInline(idEvento, proximoToken.length >= 4 ? 3 : proximoToken.length);
-
-    if (proximoToken.length === 4) {
-      void validarTokenInline(consulta);
-    }
   }, 0);
 };
 
