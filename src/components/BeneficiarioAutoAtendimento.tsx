@@ -2237,7 +2237,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                         onClick={() => void abrirEtapaSenha(consulta)}
                                         className="mt-3 h-14 shrink-0 bg-[#00338d] px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f] md:text-[1.08rem]"
                                       >
-                                        SELECIONAR
+                                        INICIAR CONSULTA
                                       </button>
                                     ) : (
                                       <div
