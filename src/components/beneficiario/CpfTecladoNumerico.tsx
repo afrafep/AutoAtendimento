@@ -1,19 +1,15 @@
 interface CpfTecladoNumericoProps {
   loading: boolean;
-  cpfPodeBuscar: boolean;
   onAdicionarDigito: (digito: string) => void;
   onLimpar: () => void;
   onApagarUltimo: () => void;
-  onBuscar: () => void;
 }
 
 export default function CpfTecladoNumerico({
   loading,
-  cpfPodeBuscar,
   onAdicionarDigito,
   onLimpar,
   onApagarUltimo,
-  onBuscar,
 }: CpfTecladoNumericoProps) {
   return (
     <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_22px_36px_rgba(15,23,42,0.12)] md:p-4">
@@ -63,14 +59,11 @@ export default function CpfTecladoNumerico({
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={onBuscar}
-        disabled={loading || !cpfPodeBuscar}
-        className="mt-3 flex h-12 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.84rem] font-black uppercase tracking-[0.05em] text-white shadow-[0_16px_26px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-[0_20px_32px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[linear-gradient(135deg,#e5e7eb_0%,#cbd5e1_100%)] disabled:text-slate-600 disabled:shadow-none md:h-13 md:text-[0.88rem]"
-      >
-        {loading ? "Buscando..." : "Entrar"}
-      </button>
+      {loading ? (
+        <div className="mt-3 flex h-12 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.84rem] font-black uppercase tracking-[0.05em] text-white shadow-[0_16px_26px_rgba(37,99,235,0.22)] md:h-13 md:text-[0.88rem]">
+          Entrando...
+        </div>
+      ) : null}
     </div>
   );
 }

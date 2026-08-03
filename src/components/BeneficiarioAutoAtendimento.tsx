@@ -2154,11 +2154,9 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                     {mostrarTecladoCpf ? (
                       <CpfTecladoNumerico
                         loading={loading}
-                        cpfPodeBuscar={normalizarCpf(cpf).length >= 11}
                         onAdicionarDigito={adicionarDigitoCpf}
                         onLimpar={limparCpfDigitado}
                         onApagarUltimo={apagarUltimoDigitoCpf}
-                        onBuscar={() => void buscarConsultas()}
                       />
                     ) : null}
                   </div>
