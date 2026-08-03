@@ -162,7 +162,8 @@ const formatarHoraAtual = () => {
 };
 
 const TEMPO_INATIVIDADE_MS = 1 * 60 * 1000;
-const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 30;
+const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
+const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 15;
 
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
@@ -828,28 +829,21 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
     intervaloSessaoRef.current = window.setInterval(() => {
       const restante = Math.max(0, Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000));
+
       setSegundosParaExpirarSessao(restante);
+
+      if (restante <= CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS) {
+        setMostrarModalInatividade(true);
+        setSegundosRestantesInatividade(restante);
+      } else {
+        setMostrarModalInatividade(false);
+        setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+      }
+
+      if (restante <= CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS) {
+        encerrarSessaoPorInatividade();
+      }
     }, 1000);
-
-    timeoutInatividadeRef.current = window.setTimeout(() => {
-      setMostrarModalInatividade(true);
-      setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
-
-      intervaloModalInatividadeRef.current = window.setInterval(() => {
-        setSegundosRestantesInatividade((atual) => {
-          if (atual <= 1) {
-            if (intervaloModalInatividadeRef.current) {
-              window.clearInterval(intervaloModalInatividadeRef.current);
-              intervaloModalInatividadeRef.current = null;
-            }
-            encerrarSessaoPorInatividade();
-            return 0;
-          }
-
-          return atual - 1;
-        });
-      }, 1000);
-    }, Math.max(0, TEMPO_INATIVIDADE_MS - CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS * 1000));
   };
 
   useEffect(() => {
