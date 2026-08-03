@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -2143,17 +2143,16 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         {consultaFluxoAtual
                           ? (() => {
-                              const { cardConsulta, consulta, tokenEnviado, autorizacaoConcluida } = consultaFluxoAtual;
+                              const { cardConsulta, consulta, autorizacaoConcluida } = consultaFluxoAtual;
                               const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
                               const faltouConsulta = statusAtual === "FALTOU";
                               const compareceuConsulta = statusAtual === "COMPARECEU";
                               const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
-                              const podeSeguir = podeAutorizar || tokenEnviado || autorizacaoConcluida;
                               const processandoSenha = consultaProcessandoSenhaId === consulta.idEvento;
                               const tokenAberto = consultaTokenAbertaId === consulta.idEvento;
-                              const tokenInlineVisivel =
-                                !autorizacaoConcluida &&
-                                (processandoSenha || tokenEnviado || (tokenAberto && consulta.autorizado));
+                              const tokenEnviadoNoFluxo = tokenAberto && consulta.autorizado;
+                              const tokenInlineVisivel = !autorizacaoConcluida && (processandoSenha || tokenAberto);
+                              const podeSeguir = podeAutorizar || tokenInlineVisivel || autorizacaoConcluida;
                               const tokenDigitado = tokenDigitadoPorConsulta[consulta.idEvento] || "";
                               const tokenErro = tokenErroPorConsulta[consulta.idEvento] || "";
                               const tokenFeedback = tokenFeedbackPorConsulta[consulta.idEvento];
@@ -2177,7 +2176,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                         className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
                                           faltouConsulta
                                             ? "border-red-200 bg-red-50 text-red-700"
-                                            : tokenEnviado && !autorizacaoConcluida
+                                            : tokenEnviadoNoFluxo && !autorizacaoConcluida
                                               ? "border-amber-200 bg-amber-50 text-amber-800"
                                               : compareceuConsulta
                                                 ? "border-orange-200 bg-orange-50 text-orange-700"
@@ -2192,7 +2191,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                             className={`inline-flex h-2.5 w-2.5 rounded-full ${
                                               faltouConsulta
                                                 ? "bg-red-500"
-                                                : tokenEnviado
+                                                : tokenEnviadoNoFluxo
                                                   ? "bg-amber-500"
                                                   : compareceuConsulta
                                                     ? "bg-orange-500"
@@ -2210,7 +2209,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                         ) : null}
                                         {faltouConsulta
                                           ? "Consulta n\u00e3o realizada"
-                                          : tokenEnviado && !autorizacaoConcluida
+                                          : tokenEnviadoNoFluxo && !autorizacaoConcluida
                                             ? "AGUARDANDO SEU TOKEN"
                                             : autorizacaoConcluida
                                               ? "Atendimento liberado"
@@ -2536,7 +2535,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                         onClick={() => void vincularSenhaPainel(consultaSelecionada)}
                         className="h-16 bg-[#00338d] px-5 text-[0.95rem] font-black text-white transition hover:bg-[#00286f]"
                       >
-                        {consultaSelecionada.senhaPainel ? "SEGUIR ATENÇÃO" : "VINCULAR SENHA"}
+                        {consultaSelecionada.senhaPainel ? "SEGUIR ATENDIMENTO" : "VINCULAR SENHA"}
                       </button>
                     )}
 
@@ -2586,6 +2585,11 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
+
+
 
 
 

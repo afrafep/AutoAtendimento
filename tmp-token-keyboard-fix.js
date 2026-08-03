@@ -126,8 +126,8 @@ s = s.replace(
   "                                                onPaste={(event) =>\n                                                  handleTokenInlinePaste(consulta.idEvento, event)\n                                                }\n                                                onFocus={() => abrirTecladoTokenInline(consulta.idEvento, indiceToken)}\n                                                onClick={() => abrirTecladoTokenInline(consulta.idEvento, indiceToken)}\n                                                readOnly\n                                                className=\"h-12 w-11 rounded-[0.9rem] border border-slate-300 bg-white text-center text-[1.15rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[3.4rem] md:w-[3.1rem] md:text-[1.3rem]\"",
 );
 
-s = s.replace("ATENÃ‡ÃƒO", "ATENÇÃO");
-s = s.replace("Atendimento indisponÃƒÆ’Ã‚Â­vel", "Atendimento indisponível");
+s = s.replace("ATENÇÃO", "ATENÇÃO");
+s = s.replace("Atendimento indisponível", "Atendimento indisponível");
 
 s = s.replace(
   "                                          </div>\n\n                                          {tokenErro ? (",
