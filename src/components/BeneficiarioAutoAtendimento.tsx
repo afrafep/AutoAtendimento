@@ -646,6 +646,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   >({});
   const [consultaReenviandoTokenId, setConsultaReenviandoTokenId] = useState<number | null>(null);
   const [consultaValidandoTokenId, setConsultaValidandoTokenId] = useState<number | null>(null);
+  const [consultaTecladoTokenId, setConsultaTecladoTokenId] = useState<number | null>(null);
 
   const consultaSelecionada =
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) || null;
@@ -884,6 +885,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     target?.select();
   };
 
+  const abrirTecladoTokenInline = (idEvento: number, indice = 0) => {
+    setConsultaTecladoTokenId(idEvento);
+    setTimeout(() => focarCampoTokenInline(idEvento, indice), 0);
+  };
+
+  const fecharTecladoTokenInline = () => {
+    setConsultaTecladoTokenId(null);
+  };
+
   const atualizarTokenDigitadoInline = (
     idEvento: number,
     indice: number,
@@ -1083,9 +1093,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   if (token.length !== 4) {
     setTokenErroPorConsulta((prev) => ({
       ...prev,
-      [consulta.idEvento]: "Digite os 4 d\u00edgitos do token.",
+      [consulta.idEvento]: "Digite os 4 dígitos do token.",
     }));
-    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 d\u00edgitos do token.");
+    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 dígitos do token.");
     return;
   }
   if (!senhaGuia) {
@@ -1137,6 +1147,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       "Token validado com sucesso. Atendimento liberado.",
     );
     setConsultaTokenAbertaId(null);
+    setConsultaTecladoTokenId(null);
     await buscarConsultas();
   } catch (error: any) {
     const retornoApi = extrairRetornoApiToken(error?.response?.data);
@@ -1151,6 +1162,68 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   } finally {
     setConsultaValidandoTokenId(null);
   }
+};
+
+const preencherTokenViaTecladoInline = (
+  consulta: ConsultaAutoAtendimento,
+  digito: string,
+) => {
+  const idEvento = consulta.idEvento;
+  const numero = String(digito).replace(/\D/g, "").slice(-1);
+
+  if (!numero) {
+    return;
+  }
+
+  let proximoToken = "";
+
+  setTokenDigitadoPorConsulta((prev) => {
+    const tokenAtual = String(prev[idEvento] || "").replace(/\D/g, "").slice(0, 4);
+    if (tokenAtual.length >= 4) {
+      proximoToken = tokenAtual;
+      return prev;
+    }
+
+    proximoToken = tokenAtual + numero;
+    return {
+      ...prev,
+      [idEvento]: proximoToken,
+    };
+  });
+
+  limparMensagemTokenInline(idEvento);
+
+  setTimeout(() => {
+    focarCampoTokenInline(idEvento, proximoToken.length >= 4 ? 3 : proximoToken.length);
+
+    if (proximoToken.length === 4) {
+      void validarTokenInline(consulta);
+    }
+  }, 0);
+};
+
+const apagarUltimoDigitoViaTecladoInline = (idEvento: number) => {
+  let proximoToken = "";
+
+  setTokenDigitadoPorConsulta((prev) => {
+    proximoToken = String(prev[idEvento] || "").slice(0, -1);
+    return {
+      ...prev,
+      [idEvento]: proximoToken,
+    };
+  });
+
+  limparMensagemTokenInline(idEvento);
+  setTimeout(() => focarCampoTokenInline(idEvento, Math.min(proximoToken.length, 3)), 0);
+};
+
+const limparTokenViaTecladoInline = (idEvento: number) => {
+  setTokenDigitadoPorConsulta((prev) => ({
+    ...prev,
+    [idEvento]: "",
+  }));
+  limparMensagemTokenInline(idEvento);
+  setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
 };
 
 const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
@@ -2090,11 +2163,12 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                               const tokenFeedback = tokenFeedbackPorConsulta[consulta.idEvento];
                               const reenviandoToken = consultaReenviandoTokenId === consulta.idEvento;
                               const validandoToken = consultaValidandoTokenId === consulta.idEvento;
+                              const tecladoTokenAberto = consultaTecladoTokenId === consulta.idEvento;
 
                               return (
                                 <article
                                   key={cardConsulta.chave}
-                                  className={`flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2.5" : "p-3"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                                  className={`relative flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2.5" : "p-3"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
                                     autorizacaoConcluida
                                       ? "border-emerald-200 bg-emerald-50/55 opacity-75"
                                       : "border-slate-200 bg-white"
@@ -2218,7 +2292,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 
                                           <div>
                                             <p className="text-[0.84rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.80rem]">
-                                              {"Digite o seu token de 4 d\u00edgitos, que chegou no seu celular, pelo aplicativo ou por SMS, para liberar o atendimento."}
+                                              {"Digite os 4 dígitos do token."}
                                             </p>                                           
                                           </div>
 
@@ -2248,10 +2322,65 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                                 onPaste={(event) =>
                                                   handleTokenInlinePaste(consulta.idEvento, event)
                                                 }
+                                                onFocus={() => abrirTecladoTokenInline(consulta.idEvento, indiceToken)}
+                                                onClick={() => abrirTecladoTokenInline(consulta.idEvento, indiceToken)}
+                                                readOnly
                                                 className="h-12 w-11 rounded-[0.9rem] border border-slate-300 bg-white text-center text-[1.15rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[3.4rem] md:w-[3.1rem] md:text-[1.3rem]"
                                               />
                                             ))}
                                           </div>
+
+                                          {tecladoTokenAberto ? (
+                                            <div className="pointer-events-none absolute right-3 top-[4.8rem] z-20 w-[17rem] sm:w-[18rem] md:right-4 md:top-[4.5rem] md:w-[19rem]">
+                                              <div className="pointer-events-auto rounded-[1rem] border border-slate-200 bg-white/98 p-3 shadow-[0_18px_38px_rgba(15,23,42,0.18)] backdrop-blur">
+                                                <div className="mb-2 flex items-center justify-between gap-2">
+                                                  <p className="text-[0.72rem] font-black uppercase tracking-[0.12em] text-slate-600">
+                                                    TECLADO NUMÉRICO
+                                                  </p>
+                                                  <button
+                                                    type="button"
+                                                    onClick={fecharTecladoTokenInline}
+                                                    className="text-[0.72rem] font-black uppercase tracking-[0.08em] text-slate-400 transition hover:text-slate-700"
+                                                  >
+                                                    FECHAR
+                                                  </button>
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                  {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digito) => (
+                                                    <button
+                                                      key={consulta.idEvento + "-teclado-" + digito}
+                                                      type="button"
+                                                      onClick={() => preencherTokenViaTecladoInline(consulta, digito)}
+                                                      className="h-12 rounded-[0.85rem] bg-slate-900 text-[1.2rem] font-black text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
+                                                    >
+                                                      {digito}
+                                                    </button>
+                                                  ))}
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => limparTokenViaTecladoInline(consulta.idEvento)}
+                                                    className="h-12 rounded-[0.85rem] bg-red-500 text-[0.82rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(239,68,68,0.22)] transition hover:bg-red-600"
+                                                  >
+                                                    LIMPAR
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => preencherTokenViaTecladoInline(consulta, "0")}
+                                                    className="h-12 rounded-[0.85rem] bg-slate-900 text-[1.2rem] font-black text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
+                                                  >
+                                                    0
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => apagarUltimoDigitoViaTecladoInline(consulta.idEvento)}
+                                                    className="h-12 rounded-[0.85rem] bg-amber-500 text-[0.78rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
+                                                  >
+                                                    APAGAR
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ) : null}
 
                                           {tokenErro ? (
                                             <div className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-center shadow-sm">
@@ -2324,7 +2453,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponÃƒÂ­vel"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
                                       </div>
                                     )}
                                   </div>
@@ -2411,7 +2540,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                         onClick={() => void vincularSenhaPainel(consultaSelecionada)}
                         className="h-16 bg-[#00338d] px-5 text-[0.95rem] font-black text-white transition hover:bg-[#00286f]"
                       >
-                        {consultaSelecionada.senhaPainel ? "SEGUIR ATENDIMENTO" : "VINCULAR SENHA"}
+                        {consultaSelecionada.senhaPainel ? "SEGUIR ATENÇÃO" : "VINCULAR SENHA"}
                       </button>
                     )}
 
