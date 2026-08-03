@@ -304,6 +304,7 @@ interface ModalAutorizacaoProps {
   onClose: () => void;
   onAfterFlow: () => Promise<void>;
   iniciarAutomaticamente?: boolean;
+  abrirTokenInlineAposEnvio?: boolean;
 }
 
 
@@ -312,6 +313,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
   onClose,
   onAfterFlow,
   iniciarAutomaticamente = false,
+  abrirTokenInlineAposEnvio = false,
 }) => {
   const iniciouFluxoAutomaticoRef = useRef(false);
   const [etapa] = useState<"tipo" | "confirmacao">("confirmacao");
@@ -404,7 +406,8 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
       await marcarAutorizacao(eventoParaFluxo, {
         pularEscolhaTipo: true,
         pularConfirmacaoInicial: true,
-        abrirTokenDiretoAposEnvio: iniciarAutomaticamente,
+        abrirTokenDiretoAposEnvio:
+          iniciarAutomaticamente && !abrirTokenInlineAposEnvio,
         tipoAutorizacao: "tiss-sadt",
       });
     } finally {
@@ -463,7 +466,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
               <h3 className="text-[1.02rem] font-bold">Detalhes do Profissional</h3>
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl bg-slate-700/60 p-3.5">
                 <div className="text-[0.72rem] text-slate-300">Profissional</div>
                 <div className="mt-1 text-[1.08rem] font-bold text-white">
@@ -522,6 +525,11 @@ type LocalProfissionalDia = {
   periodo?: string;
 };
 
+type TokenFeedbackInline = {
+  tipo: "info" | "success" | "error";
+  mensagem: string;
+};
+
 const lerEstadoTelaPersistido = (): EstadoTelaPersistido | null => {
   try {
     if (typeof window === "undefined") return null;
@@ -559,6 +567,56 @@ const limparEstadoTelaPersistido = () => {
   } catch {}
 };
 
+const toSafeTokenString = (value: unknown) => {
+  if (value == null) return "";
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return String(
+      obj.value ?? obj.codigo ?? obj.id ?? obj.numero ?? obj.sigla ?? "",
+    ).trim();
+  }
+  return String(value).trim();
+};
+
+const toSafeTokenNumber = (value: unknown) => {
+  const normalized = toSafeTokenString(value);
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const resolveNumeroGuiaOperadoraInline = (
+  senhaGuia: unknown,
+  numeroGuiaOperadora: unknown,
+) => {
+  const numeroDireto = toSafeTokenNumber(numeroGuiaOperadora);
+  if (numeroDireto > 0) return numeroDireto;
+
+  const senhaComoNumero = toSafeTokenNumber(senhaGuia);
+  if (senhaComoNumero > 0) return senhaComoNumero;
+
+  return 0;
+};
+
+const extrairRetornoApiToken = (data: any) => ({
+  status: toSafeTokenString(data?.status),
+  mensagem: toSafeTokenString(data?.mensagem || data?.message || data?.error),
+});
+
+const normalizarMensagemTokenInline = (mensagem?: string) => {
+  const texto = toSafeTokenString(mensagem);
+  const textoLower = texto.toLowerCase();
+
+  if (
+    textoLower.includes("token invalido") ||
+    textoLower.includes("token inv?lido") ||
+    textoLower.includes("ora-20400")
+  ) {
+    return "Token inv?lido";
+  }
+
+  return texto;
+};
+
 const BeneficiarioAutoAtendimento: React.FC = () => {
   const locaisProfissionaisPorDataCacheRef = useRef<
     Record<string, Promise<LocalProfissionalDia[]>>
@@ -579,6 +637,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [etapaTela, setEtapaTela] = useState<EtapaTelaAutoAtendimento>("cpf");
   const [mostrarTecladoCpf, setMostrarTecladoCpf] = useState(false);
   const [horaCabecalhoAtual, setHoraCabecalhoAtual] = useState(() => formatarHoraAtual());
+  const [abrirTokenInlineAposEnvio, setAbrirTokenInlineAposEnvio] = useState(false);
+  const [consultaTokenAbertaId, setConsultaTokenAbertaId] = useState<number | null>(null);
+  const [tokenDigitadoPorConsulta, setTokenDigitadoPorConsulta] = useState<Record<number, string>>({});
+  const [tokenErroPorConsulta, setTokenErroPorConsulta] = useState<Record<number, string>>({});
+  const [tokenFeedbackPorConsulta, setTokenFeedbackPorConsulta] = useState<
+    Record<number, TokenFeedbackInline | undefined>
+  >({});
+  const [consultaReenviandoTokenId, setConsultaReenviandoTokenId] = useState<number | null>(null);
+  const [consultaValidandoTokenId, setConsultaValidandoTokenId] = useState<number | null>(null);
 
   const consultaSelecionada =
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) || null;
@@ -782,21 +849,274 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }));
   };
 
+  const limparMensagemTokenInline = (idEvento: number) => {
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [idEvento]: "",
+    }));
+    setTokenFeedbackPorConsulta((prev) => ({
+      ...prev,
+      [idEvento]: undefined,
+    }));
+  };
 
-  const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
-    if (String(consulta.senhaPainel || "").trim()) {
-      if (consulta.autorizado && !consulta.tokenValidado) {
-        await abrirValidacaoTokenDireta(consulta);
+  const atualizarFeedbackTokenInline = (
+    idEvento: number,
+    tipo: TokenFeedbackInline["tipo"],
+    mensagem: string,
+  ) => {
+    setTokenFeedbackPorConsulta((prev) => ({
+      ...prev,
+      [idEvento]: { tipo, mensagem },
+    }));
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [idEvento]: "",
+    }));
+  };
+
+  const focarCampoTokenInline = (idEvento: number, indice: number) => {
+    if (typeof document === "undefined") return;
+    const target = document.getElementById(
+      `token-inline-${idEvento}-${indice}`,
+    ) as HTMLInputElement | null;
+    target?.focus();
+    target?.select();
+  };
+
+  const atualizarTokenDigitadoInline = (
+    idEvento: number,
+    indice: number,
+    valor: string,
+  ) => {
+    const digito = valor.replace(/\D/g, "").slice(-1);
+
+    setTokenDigitadoPorConsulta((prev) => {
+      const atual = Array.from({ length: 4 }, (_, posicao) => prev[idEvento]?.[posicao] || "");
+      atual[indice] = digito;
+      return {
+        ...prev,
+        [idEvento]: atual.join("").slice(0, 4),
+      };
+    });
+
+    limparMensagemTokenInline(idEvento);
+
+    if (digito && indice < 3) {
+      setTimeout(() => focarCampoTokenInline(idEvento, indice + 1), 0);
+    }
+  };
+
+  const handleTokenInlineKeyDown = (
+    idEvento: number,
+    indice: number,
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === "Backspace") {
+      event.preventDefault();
+      const tokenAtual = tokenDigitadoPorConsulta[idEvento] || "";
+
+      if (tokenAtual[indice]) {
+        atualizarTokenDigitadoInline(idEvento, indice, "");
         return;
       }
 
-      if (!consulta.autorizado) {
-        await abrirAutorizacaoComCompareceu(consulta, true);
+      if (indice > 0) {
+        atualizarTokenDigitadoInline(idEvento, indice - 1, "");
+        setTimeout(() => focarCampoTokenInline(idEvento, indice - 1), 0);
       }
       return;
     }
 
+    if (event.key === "ArrowLeft" && indice > 0) {
+      event.preventDefault();
+      focarCampoTokenInline(idEvento, indice - 1);
+      return;
+    }
+
+    if (event.key === "ArrowRight" && indice < 3) {
+      event.preventDefault();
+      focarCampoTokenInline(idEvento, indice + 1);
+      return;
+    }
+
+    if (event.key === "Tab") {
+      return;
+    }
+
+    if (!/^\d$/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
+  const handleTokenInlinePaste = (
+    idEvento: number,
+    event: React.ClipboardEvent<HTMLInputElement>,
+  ) => {
+    event.preventDefault();
+    const numeros = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+    setTokenDigitadoPorConsulta((prev) => ({
+      ...prev,
+      [idEvento]: numeros,
+    }));
+    limparMensagemTokenInline(idEvento);
+    const ultimoIndice = Math.min(Math.max(numeros.length - 1, 0), 3);
+    setTimeout(() => focarCampoTokenInline(idEvento, ultimoIndice), 0);
+  };
+
+  const finalizarFluxoTokenInline = async (idEvento: number) => {
+    await buscarConsultas();
+    setConsultaProcessandoSenhaId(null);
+    setConsultaTokenAbertaId(idEvento);
+    setAbrirTokenInlineAposEnvio(false);
+  };
+
+  const reenviarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
+    const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
+    const numeroGuiaOperadora = Number(
+      consulta.numeroGuiaOperadora || consulta.senhaAutorizacao || 0,
+    );
+
+    if (!senhaGuia) {
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: "Nao encontramos a senha da guia para reenviar o token.",
+      }));
+      return;
+    }
+
+    limparMensagemTokenInline(consulta.idEvento);
+    setConsultaReenviandoTokenId(consulta.idEvento);
+
+    try {
+      const reenviado = await TokenEnviar({
+        nome: consulta.pacienteNome,
+        nrCarteiraPlano: consulta.nrCarteiraPlano,
+        senhaGuia,
+        numeroGuiaGerado: consulta.numeroGuiaGerado || undefined,
+        numeroGuiaOperadora,
+        isReenvio: true,
+        silencioso: true,
+      });
+
+      if (reenviado === false) {
+        setTokenErroPorConsulta((prev) => ({
+          ...prev,
+          [consulta.idEvento]: "Nao foi possivel reenviar o token agora.",
+        }));
+        return;
+      }
+
+      atualizarFeedbackTokenInline(
+        consulta.idEvento,
+        "success",
+        "Novo token enviado. Digite o codigo recebido no celular.",
+      );
+    } catch (_error) {
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: "Nao foi possivel reenviar o token agora.",
+      }));
+    } finally {
+      setConsultaReenviandoTokenId(null);
+    }
+  };
+
+  const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
+    const token = String(tokenDigitadoPorConsulta[consulta.idEvento] || "").replace(/\D/g, "");
+    const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
+    const numeroGuiaOperadora = resolveNumeroGuiaOperadoraInline(
+      senhaGuia,
+      consulta.numeroGuiaOperadora,
+    );
+
+    if (token.length !== 4) {
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: "Digite os 4 digitos do token.",
+      }));
+      return;
+    }
+
+    if (!senhaGuia) {
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: "Nao encontramos a senha da guia para validar o token.",
+      }));
+      return;
+    }
+
+    limparMensagemTokenInline(consulta.idEvento);
+    setConsultaValidandoTokenId(consulta.idEvento);
+
+    try {
+      const response = await api.post("/sisclinic/token/validar", {
+        token: toSafeTokenString(token),
+        cdBeneficiario: toSafeTokenString(consulta.nrCarteiraPlano),
+        numeroGuiaOperadora,
+      });
+
+      const retornoApi = extrairRetornoApiToken(response.data);
+      const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
+      const mensagemLower = mensagem.toLowerCase();
+      const tokenValidado =
+        mensagemLower.includes("token validado com sucesso") ||
+        mensagemLower.includes("senha ja validada com envio de token");
+
+      if (!tokenValidado) {
+        setTokenErroPorConsulta((prev) => ({
+          ...prev,
+          [consulta.idEvento]:
+            mensagem || "Nao foi possivel validar o token informado.",
+        }));
+        return;
+      }
+
+      await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
+        tokenValidado: true,
+      });
+
+      setTokenDigitadoPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: "",
+      }));
+      atualizarFeedbackTokenInline(
+        consulta.idEvento,
+        "success",
+        "Token validado com sucesso. Atendimento liberado.",
+      );
+      setConsultaTokenAbertaId(null);
+      await buscarConsultas();
+    } catch (error: any) {
+      const retornoApi = extrairRetornoApiToken(error?.response?.data);
+      const mensagem = normalizarMensagemTokenInline(
+        retornoApi.mensagem || error?.message || "Erro ao validar token",
+      );
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: mensagem,
+      }));
+    } finally {
+      setConsultaValidandoTokenId(null);
+    }
+  };
+
+  const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
+    setConsultaTokenAbertaId(consulta.idEvento);
+    limparMensagemTokenInline(consulta.idEvento);
+
+    if (consulta.autorizado && !consulta.tokenValidado) {
+      return;
+    }
+
     setConsultaProcessandoSenhaId(consulta.idEvento);
+
+    if (String(consulta.senhaPainel || "").trim()) {
+      if (!consulta.autorizado) {
+        await abrirAutorizacaoComCompareceu(consulta, true, true);
+      }
+      return;
+    }
 
     try {
       const senhaGerada = await emitirSenhaPainelAutomaticamente(consulta);
@@ -804,15 +1124,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       await vincularSenhaPainel(consulta, {
         senhaPainelForcada: senhaGerada,
         abrirAutorizacaoAposVinculo: true,
+        abrirTokenInlineAposVinculo: true,
       });
     } catch (error) {
       console.error("Erro ao gerar senha do painel:", error);
       await Swal.fire(
         "Erro",
-        "Não foi possível gerar e vincular a senha deste atendimento.",
+        "Nao foi possivel gerar e vincular a senha deste atendimento.",
         "error",
       );
-    } finally {
       setConsultaProcessandoSenhaId(null);
     }
   };
@@ -1107,6 +1427,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     opcoes?: {
       senhaPainelForcada?: string;
       abrirAutorizacaoAposVinculo?: boolean;
+      abrirTokenInlineAposVinculo?: boolean;
     },
   ) => {
     const senhaPainelInformada = String(
@@ -1122,6 +1443,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       (await buscarLocalidadePainelDoProfissional(consulta)) || "Não informado";
 
     if (!senhaPainel) {
+      setConsultaProcessandoSenhaId(null);
       await Swal.fire(
         "Informe a senha",
         "Digite a senha do painel para vincular este atendimento.",
@@ -1132,7 +1454,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
     if (senhaPainelAtual && senhaPainel === senhaPainelAtual) {
       if (opcoes?.abrirAutorizacaoAposVinculo !== false && !consulta.autorizado) {
-        await abrirAutorizacaoComCompareceu(consulta, true);
+        await abrirAutorizacaoComCompareceu(
+          consulta,
+          true,
+          opcoes?.abrirTokenInlineAposVinculo === true,
+        );
+      } else {
+        setConsultaProcessandoSenhaId(null);
       }
       return;
     }
@@ -1257,6 +1585,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         opcoes?.abrirAutorizacaoAposVinculo !== false && !consultaAtualizada.autorizado;
 
       if (!deveContinuarAutomaticamente) {
+        setConsultaProcessandoSenhaId(null);
         await Swal.fire(
           "Senha vinculada",
           `A senha ${senhaPainel} foi vinculada com sucesso.`, 
@@ -1265,7 +1594,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       }
 
       if (deveContinuarAutomaticamente) {
-        await abrirAutorizacaoComCompareceu(consultaAtualizada, true);
+        await abrirAutorizacaoComCompareceu(
+          consultaAtualizada,
+          true,
+          opcoes?.abrirTokenInlineAposVinculo === true,
+        );
       }
     } catch (error) {
       console.error("Erro ao vincular senha do painel:", error);
@@ -1486,6 +1819,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const abrirAutorizacaoComCompareceu = async (
     consulta: ConsultaAutoAtendimento,
     iniciarAutomaticamente = false,
+    abrirTokenInlineDepoisDoEnvio = false,
   ) => {
     const statusAtual = String(consulta.statusAgendamento || "").toUpperCase();
 
@@ -1510,6 +1844,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }
 
     setIniciarAutorizacaoAutomaticamente(iniciarAutomaticamente);
+    setAbrirTokenInlineAposEnvio(abrirTokenInlineDepoisDoEnvio);
     setConsultaAutorizacaoAberta({
       ...consulta,
       statusAgendamento: "COMPARECEU",
@@ -1670,16 +2005,16 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-hidden px-3 pb-[6.5rem] pt-2 md:px-6 md:pb-[7rem] md:pt-3">
-                  <div className="mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden">
-                    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
-                      <div className="mb-3 flex items-start justify-between gap-4">
-                        <p className="text-[1rem] font-bold leading-[1.35] text-slate-700 md:text-[1.18rem]">
+                <div className="flex-1 overflow-hidden px-3 pb-3 pt-2 md:px-6 md:pb-4 md:pt-3">
+                  <div className="mx-auto flex h-full max-w-6xl flex-col gap-2 overflow-hidden">
+                    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2.5 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-3">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <p className="text-[0.94rem] font-bold leading-[1.3] text-slate-700 md:text-[1.05rem]">
                           {consultaFluxoAtual?.autorizacaoConcluida
                             ? "Autorizado. Próximo horário liberado."
                             : "Finalize o autoatendimento para liberar o próximo horário."}
                         </p>
-                        <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-[0.98rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.08rem]">
+                        <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-[0.88rem] font-black uppercase tracking-[0.05em] text-[#00338d] md:text-[0.96rem]">
                           {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total}` : "0 de 0"}
                         </span>
                       </div>
@@ -1693,11 +2028,21 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               const compareceuConsulta = statusAtual === "COMPARECEU";
                               const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
                               const podeSeguir = podeAutorizar || tokenEnviado || autorizacaoConcluida;
+                              const processandoSenha = consultaProcessandoSenhaId === consulta.idEvento;
+                              const tokenAberto = consultaTokenAbertaId === consulta.idEvento;
+                              const tokenInlineVisivel =
+                                !autorizacaoConcluida &&
+                                (processandoSenha || tokenEnviado || (tokenAberto && consulta.autorizado));
+                              const tokenDigitado = tokenDigitadoPorConsulta[consulta.idEvento] || "";
+                              const tokenErro = tokenErroPorConsulta[consulta.idEvento] || "";
+                              const tokenFeedback = tokenFeedbackPorConsulta[consulta.idEvento];
+                              const reenviandoToken = consultaReenviandoTokenId === consulta.idEvento;
+                              const validandoToken = consultaValidandoTokenId === consulta.idEvento;
 
                               return (
                                 <article
                                   key={cardConsulta.chave}
-                                  className={`flex min-h-0 flex-1 flex-col border p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                                  className={`flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2.5" : "p-3"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
                                     autorizacaoConcluida
                                       ? "border-emerald-200 bg-emerald-50/55 opacity-75"
                                       : "border-slate-200 bg-white"
@@ -1707,7 +2052,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                     <div className="flex items-start justify-between gap-3">
                                       <div />
                                       <p
-                                        className={`inline-flex min-h-9 max-w-full items-center gap-2 rounded-full border px-4 py-1.5 text-center text-[0.76rem] font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] md:text-[0.84rem] ${
+                                        className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
                                           faltouConsulta
                                             ? "border-red-200 bg-red-50 text-red-700"
                                             : tokenEnviado && !autorizacaoConcluida
@@ -1751,73 +2096,151 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                       </p>
                                     </div>
 
-                                    <div className="flex min-h-0 flex-1 flex-col gap-5 pb-2 text-center">
+                                    <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-2 pb-1" : "gap-5 pb-2"}`}>
                                       {cardConsulta.agrupadoUltrassom ? (
-                                        <p className="text-[2rem] font-black uppercase tracking-[0.07em] text-[#00338d] md:text-[2.4rem]">
+                                        <p className={`${tokenInlineVisivel ? "text-[1.55rem] md:text-[1.8rem]" : "text-[2rem] md:text-[2.4rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
                                           {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
                                         </p>
                                       ) : (
-                                        <p className="text-[4.2rem] font-black tracking-tight text-[#00338d] md:text-[5rem]">
+                                        <p className={`${tokenInlineVisivel ? "text-[2.45rem] md:text-[2.9rem]" : "text-[4.2rem] md:text-[5rem]"} font-black tracking-tight text-[#00338d]`}>
                                           {formatarHora(consulta.horaInicio)}
                                         </p>
                                       )}
 
-                                      <div
-                                        className={`border px-4 py-5 text-center ${
-                                          autorizacaoConcluida
-                                            ? "border-emerald-100 bg-white/80"
-                                            : "border-slate-100 bg-slate-50"
-                                        }`}
-                                      >
-                                        <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.7rem]">
-                                          {consulta.profissionalNome}
-                                        </p>
-                                        <p className="mt-3 text-[1.16rem] font-black uppercase tracking-[0.08em] text-slate-900 md:text-[1.32rem]">
-                                          {consulta.especialidadeNome}
-                                        </p>
-                                      </div>
-
-                                      {cardConsulta.agrupadoUltrassom ? (
+                                      {tokenInlineVisivel ? null : (
                                         <div
-                                          className={`min-h-0 flex-1 overflow-y-auto border px-4 py-3 text-left ${
+                                          className={`border px-4 py-5 text-center ${
                                             autorizacaoConcluida
                                               ? "border-emerald-100 bg-white/80"
-                                              : "border-blue-100 bg-blue-50/50"
+                                              : "border-slate-100 bg-slate-50"
                                           }`}
                                         >
-                                          <div className="grid gap-2">
-                                            {agruparProcedimentosRelacionados(cardConsulta.consultasRelacionadas).map((item) => (
-                                              <div
-                                                key={item.chave}
-                                                className="border-b border-blue-100/80 pb-2 last:border-b-0 last:pb-0"
-                                              >
-                                                <p className="text-[1.02rem] leading-[1.45] text-slate-700 md:text-[1.12rem]">
-                                                  <span className="text-[1.08rem] font-black text-[#00338d] md:text-[1.18rem]">
-                                                    {item.horarios.join(" e ")}
-                                                  </span>
-                                                  {" - "}
-                                                  {item.descricao}
-                                                  {item.quantidade > 1 ? ` (${item.quantidade} VEZES)` : ""}
-                                                </p>
-                                              </div>
+                                          <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.7rem]">
+                                            {consulta.profissionalNome}
+                                          </p>
+                                          <p className="mt-3 text-[1.16rem] font-black uppercase tracking-[0.08em] text-slate-900 md:text-[1.32rem]">
+                                            {consulta.especialidadeNome}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                    
+                                    </div>
+                                    {autorizacaoConcluida ? null : processandoSenha ? (
+                                      <div className="mt-2 rounded-[1rem] border border-blue-200 bg-[linear-gradient(135deg,rgba(219,234,254,0.82)_0%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-center shadow-[0_14px_28px_rgba(59,130,246,0.14)]">
+                                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#00338d]/10">
+                                          <span className="h-7 w-7 rounded-full border-[3px] border-[#00338d]/20 border-t-[#00338d] animate-spin" />
+                                        </div>
+                                        <p className="mt-4 text-[1.04rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.12rem]">
+                                          Preparando autorizacao
+                                        </p>
+                                        <p className="mt-2 text-[0.94rem] text-slate-600 md:text-[1rem]">
+                                          Aguarde um instante. O token sera enviado e a validacao vai aparecer aqui na mesma tela.
+                                        </p>
+                                      </div>
+                                    ) : tokenInlineVisivel ? (
+                                      <div className="mt-2 rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-3 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-4 md:px-4 md:py-3">
+                                        <div className="mx-auto flex w-full max-w-4xl flex-col gap-2.5 text-center">
+                                          <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50/85 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                                            <p className="text-[0.66rem] font-black uppercase tracking-[0.14em] text-[#00338d] md:text-[0.72rem]">
+                                              Atendimento selecionado
+                                            </p>
+                                            <p className="mt-1 text-[1.02rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.12rem]">
+                                              {consulta.profissionalNome}
+                                            </p>
+                                            <p className="mt-0.5 text-[0.8rem] font-bold uppercase tracking-[0.05em] text-slate-600 md:text-[0.88rem]">
+                                              {consulta.especialidadeNome}
+                                            </p>
+                                          </div>
+
+                                          <div>
+                                            <p className="text-[0.94rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.98rem]">
+                                              Digite o token de 4 digitos
+                                            </p>
+                                            <p className="mt-0.5 text-[0.78rem] leading-4 text-slate-600 md:text-[0.82rem]">
+                                              O codigo enviado por SMS ou aplicativo aparece aqui sem abrir outro modal.
+                                            </p>
+                                          </div>
+
+                                          <div className="flex flex-wrap items-center justify-center gap-2">
+                                            {Array.from({ length: 4 }).map((_, indiceToken) => (
+                                              <input
+                                                key={`token-${consulta.idEvento}-${indiceToken}`}
+                                                id={`token-inline-${consulta.idEvento}-${indiceToken}`}
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={1}
+                                                value={tokenDigitado[indiceToken] || ""}
+                                                onChange={(event) =>
+                                                  atualizarTokenDigitadoInline(
+                                                    consulta.idEvento,
+                                                    indiceToken,
+                                                    event.target.value,
+                                                  )
+                                                }
+                                                onKeyDown={(event) =>
+                                                  handleTokenInlineKeyDown(
+                                                    consulta.idEvento,
+                                                    indiceToken,
+                                                    event,
+                                                  )
+                                                }
+                                                onPaste={(event) =>
+                                                  handleTokenInlinePaste(consulta.idEvento, event)
+                                                }
+                                                className="h-12 w-11 rounded-[0.9rem] border border-slate-300 bg-white text-center text-[1.15rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[3.4rem] md:w-[3.1rem] md:text-[1.3rem]"
+                                              />
                                             ))}
                                           </div>
-                                        </div>
-                                      ) : (
-                                        <div className="flex min-h-[12rem] flex-1 items-stretch md:min-h-[13rem]" />
-                                      )}
-                                    </div>
 
-                                    {autorizacaoConcluida ? null : podeSeguir ? (
+                                          {tokenErro ? (
+                                            <div className="rounded-[0.85rem] border border-red-200 bg-red-50 px-3 py-1.5 text-[0.78rem] font-semibold text-red-700">
+                                              {tokenErro}
+                                            </div>
+                                          ) : tokenFeedback ? (
+                                            <div
+                                              className={`rounded-[0.85rem] border px-3 py-1.5 text-[0.76rem] font-semibold ${
+                                                tokenFeedback.tipo === "success"
+                                                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                  : tokenFeedback.tipo === "error"
+                                                    ? "border-red-200 bg-red-50 text-red-700"
+                                                    : "border-sky-200 bg-sky-50 text-sky-700"
+                                              }`}
+                                            >
+                                              {tokenFeedback.mensagem}
+                                            </div>
+                                          ) : (
+                                            <div className="rounded-[0.85rem] border border-sky-100 bg-sky-50/70 px-3 py-1.5 text-[0.74rem] text-sky-800">
+                                              Se nao recebeu o codigo, toque em reenviar token.
+                                            </div>
+                                          )}
+
+                                          <div className="grid gap-2 sm:grid-cols-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => void reenviarTokenInline(consulta)}
+                                              disabled={reenviandoToken || validandoToken}
+                                              className="h-9 rounded-[0.85rem] border border-amber-300 bg-amber-50 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-amber-900 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
+                                            >
+                                              {reenviandoToken ? "REENVIANDO..." : "REENVIAR TOKEN"}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => void validarTokenInline(consulta)}
+                                              disabled={validandoToken || reenviandoToken}
+                                              className="h-9 rounded-[0.85rem] bg-emerald-600 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
+                                            >
+                                              {validandoToken ? "VALIDANDO..." : "CONFIRMAR TOKEN"}
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : podeSeguir ? (
                                       <button
-                                        onClick={() =>
-                                          tokenEnviado && !autorizacaoConcluida
-                                            ? void abrirValidacaoTokenDireta(consulta)
-                                            : void abrirEtapaSenha(consulta)
-                                        }
+                                        onClick={() => void abrirEtapaSenha(consulta)}
                                         className="mt-3 h-14 shrink-0 bg-[#00338d] px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f] md:text-[1.08rem]"
                                       >
-                                        {tokenEnviado && !autorizacaoConcluida ? "CONTINUAR TOKEN" : "SELECIONAR"}
+                                        SELECIONAR
                                       </button>
                                     ) : (
                                       <div
@@ -1825,7 +2248,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponivel"}
                                       </div>
                                     )}
                                   </div>
@@ -1836,13 +2259,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="shrink-0 px-3 py-3 md:px-5">
-                      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+                    <div className="shrink-0 px-3 py-1.5 md:px-5">
+                      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
                         <button
                           type="button"
                           onClick={() => setIndiceConsultaAtual((valorAtual) => Math.max(valorAtual - 1, 0))}
                           disabled={indiceConsultaAtual === 0}
-                          className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.96rem] font-black uppercase transition ${
+                          className={`min-w-[144px] rounded-[1rem] border px-4 py-2 text-[0.82rem] font-black uppercase transition ${
                             indiceConsultaAtual === 0
                               ? "border-slate-300 bg-white text-slate-400"
                               : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
@@ -1858,7 +2281,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                             )
                           }
                           disabled={indiceConsultaAtual >= indiceMaximoLiberado}
-                          className={`min-w-[172px] rounded-[1rem] border px-5 py-3.5 text-[0.96rem] font-black uppercase transition ${
+                          className={`min-w-[144px] rounded-[1rem] border px-4 py-2 text-[0.82rem] font-black uppercase transition ${
                             indiceConsultaAtual >= indiceMaximoLiberado
                               ? "border-slate-300 bg-white text-slate-400"
                               : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
@@ -1948,9 +2371,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
             onClose={() => {
               setConsultaAutorizacaoAberta(null);
               setIniciarAutorizacaoAutomaticamente(false);
+              setAbrirTokenInlineAposEnvio(false);
             }}
-            onAfterFlow={() => buscarConsultas()}
+            onAfterFlow={() => finalizarFluxoTokenInline(consultaAutorizacaoAberta.idEvento)}
             iniciarAutomaticamente={iniciarAutorizacaoAutomaticamente}
+            abrirTokenInlineAposEnvio={abrirTokenInlineAposEnvio}
           />
         )}
       </main>
