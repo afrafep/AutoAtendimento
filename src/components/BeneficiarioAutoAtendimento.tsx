@@ -2089,7 +2089,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                         {faltouConsulta
                                           ? "Consulta não realizada"
                                           : tokenEnviado && !autorizacaoConcluida
-                                            ? "Autorizado e token enviado para o aplicativo ou SMS"
+                                            ? "Digite o código do celular para concluir"
                                             : autorizacaoConcluida
                                               ? "Atendimento liberado"
                                               : formatarStatus(consulta.statusAgendamento)}
@@ -2217,7 +2217,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                                               type="button"
                                               onClick={() => void reenviarTokenInline(consulta)}
                                               disabled={reenviandoToken || validandoToken}
-                                              className="h-9 rounded-[0.85rem] border border-amber-300 bg-amber-50 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-amber-900 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
+                                              className="h-9 rounded-[0.85rem] border border-orange-600 bg-orange-500 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
                                             >
                                               {reenviandoToken ? "REENVIANDO..." : "REENVIAR TOKEN"}
                                             </button>
