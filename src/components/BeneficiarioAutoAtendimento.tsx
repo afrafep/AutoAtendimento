@@ -1005,6 +1005,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           [consulta.idEvento]: "N\u00e3o foi poss\u00edvel reenviar o token agora.",
         }));
         await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o foi poss\u00edvel reenviar o token agora.");
+        return;
       }
 
       atualizarFeedbackTokenInline(
@@ -1033,6 +1034,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         [consulta.idEvento]: "N\u00e3o foi poss\u00edvel reenviar o token agora.",
       }));
       await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o foi poss\u00edvel reenviar o token agora.");
+    } finally {
       setConsultaReenviandoTokenId(null);
     }
   };
@@ -2254,7 +2256,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           {tokenErro ? (
                                             <div className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-center shadow-sm">
                                               <p className="text-[0.9rem] font-black uppercase tracking-[0.04em] text-red-700 md:text-[1rem]">
-                                                ATEN\u00c7\u00c3O
+                                                ATENÇÃO
                                               </p>
                                               <p className="mt-1 text-[0.82rem] font-bold text-red-700 md:text-[0.92rem]">
                                                 {tokenErro}
@@ -2322,7 +2324,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponÃƒÂ­vel"}
                                       </div>
                                     )}
                                   </div>
