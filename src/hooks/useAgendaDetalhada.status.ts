@@ -359,27 +359,6 @@ export const createAgendaDetalhadaStatus = ({
       }
     });
   };
-  // Função para buscar o nome do profissional que realiza o procedimento
-  const getNomeProfissionalRealiza = async (
-    idProfissional: string | number | undefined,
-  ) => {
-    if (!idProfissional) return null;
-
-    try {
-      const dadosProfissional =
-        await buscarDadosProfissionalReal(idProfissional);
-      if (dadosProfissional) {
-        // Buscar o nome do profissional dinamicamente e converter para maiúsculo
-        const nomeProfissional = dadosProfissional.nmProfissional || "";
-        return nomeProfissional.toUpperCase();
-      }
-    } catch (error) {
-      console.error("Erro ao buscar profissional realiza:", error);
-    }
-
-    return null;
-  };
-
   return {
     atualizarStatusEmLote,
     fetchAgenda,
