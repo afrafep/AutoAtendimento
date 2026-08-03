@@ -2124,7 +2124,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                         {faltouConsulta
                                           ? "Consulta n\u00e3o realizada"
                                           : tokenEnviado && !autorizacaoConcluida
-                                            ? "Digite o c\u00f3digo que chegou no celular, pelo aplicativo ou por SMS."
+                                            ? "AGUARDANDO SEU TOKEN"
                                             : autorizacaoConcluida
                                               ? "Atendimento liberado"
                                               : formatarStatus(consulta.statusAgendamento)}
