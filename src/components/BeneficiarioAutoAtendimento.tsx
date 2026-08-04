@@ -2279,22 +2279,9 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                   }`}
                                 >
                                   <div className="flex min-h-0 flex-1 flex-col gap-2.5">
-                                    <div className="flex items-start justify-between gap-2.5">
+                                    <div className="flex flex-col gap-2.5">
                                       {tokenInlineVisivel ? (
-                                        <div className="flex min-w-0 flex-1 items-center text-left">
-                                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                            <p className="text-[1.55rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.95rem]">
-                                              {consulta.profissionalNome}
-                                            </p>
-                                            <p className="text-[1.3rem] font-black uppercase tracking-[0.05em] text-slate-600 md:text-[1.6rem]">
-                                              - {consulta.especialidadeNome}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <div />
-                                      )}
-                                      {!compareceuConsulta || tokenEnviadoNoFluxo || autorizacaoConcluida || faltouConsulta ? (
+                                        <div className="flex justify-end">
                                         <p
                                           className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
                                             faltouConsulta
@@ -2334,6 +2321,14 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                                 ? "Atendimento liberado"
                                                 : formatarStatus(consulta.statusAgendamento)}
                                         </p>
+                                        </div>
+                                      ) : null}
+                                      {tokenInlineVisivel ? (
+                                        <div className="min-w-0 text-left">
+                                          <p className="truncate text-[1.55rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.95rem]">
+                                            {`${consulta.profissionalNome} - ${consulta.especialidadeNome}`}
+                                          </p>
+                                        </div>
                                       ) : null}
                                     </div>
 
@@ -2500,6 +2495,9 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
 
 
 
