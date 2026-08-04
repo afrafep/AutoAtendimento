@@ -612,6 +612,12 @@ const resolveNumeroGuiaOperadoraInline = (
   return 0;
 };
 
+const possuiGuiaGerada = (numeroGuiaGerado: unknown) =>
+  numeroGuiaGerado != null && String(numeroGuiaGerado).trim() !== "";
+
+const possuiSenhaAutorizacao = (senhaAutorizacao: unknown) =>
+  senhaAutorizacao != null && String(senhaAutorizacao).trim() !== "";
+
 const extrairRetornoApiToken = (data: any) => ({
   status: toSafeTokenString(data?.status),
   mensagem: toSafeTokenString(data?.mensagem || data?.message || data?.error),
@@ -758,6 +764,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         const consulta = cardConsulta.consultaBase;
         const autorizado = normalizarBoolean(consulta.autorizado);
         const tokenValidado = normalizarBoolean(consulta.tokenValidado);
+        const guiaGerada = possuiGuiaGerada(consulta.numeroGuiaGerado);
+        const senhaAutorizacaoPreenchida = possuiSenhaAutorizacao(
+          consulta.senhaAutorizacao,
+        );
 
         return {
           cardConsulta,
@@ -767,6 +777,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           total: cardsConsultas.length,
           autorizado,
           tokenValidado,
+          guiaGerada,
+          senhaAutorizacaoPreenchida,
           tokenEnviado: autorizado,
           autorizacaoConcluida: autorizado && tokenValidado,
         };
@@ -778,7 +790,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     let maiorIndiceLiberado = 0;
 
     cardsConsultasFluxo.forEach((item, indice) => {
-      if (item.autorizacaoConcluida) {
+      if (
+        item.autorizacaoConcluida ||
+        item.guiaGerada ||
+        item.senhaAutorizacaoPreenchida
+      ) {
         maiorIndiceLiberado = Math.min(indice + 1, cardsConsultasFluxo.length - 1);
       }
     });
@@ -2270,6 +2286,10 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                               const podeAutorizar = ["AGENDADO", "CONFIRMADO", "COMPARECEU"].includes(statusAtual);
                               const processandoSenha = consultaProcessandoSenhaId === consulta.idEvento;
                               const tokenAberto = consultaTokenAbertaId === consulta.idEvento;
+                              const deveProcurarRecepcao =
+                                !normalizarBoolean(consulta.autorizado) &&
+                                !normalizarBoolean(consulta.tokenValidado) &&
+                                possuiSenhaAutorizacao(consulta.senhaAutorizacao);
                               const tokenEnviadoNoFluxo = normalizarBoolean(consulta.autorizado) && !autorizacaoConcluida;
                               const tokenInlineVisivel = !autorizacaoConcluida && (processandoSenha || tokenAberto || normalizarBoolean(consulta.autorizado));
                               const podeSeguir = podeAutorizar || tokenInlineVisivel || autorizacaoConcluida;
@@ -2404,10 +2424,21 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                       />
                                     ) : podeSeguir ? (
                                       <button
-                                        onClick={() => void abrirEtapaSenha(consulta)}
-                                        className="mt-3 h-14 shrink-0 bg-[#00338d] px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:bg-[#00286f] md:text-[1.08rem]"
+                                        onClick={() =>
+                                          deveProcurarRecepcao
+                                            ? undefined
+                                            : void abrirEtapaSenha(consulta)
+                                        }
+                                        disabled={deveProcurarRecepcao}
+                                        className={`mt-3 h-14 shrink-0 px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition md:text-[1.08rem] ${
+                                          deveProcurarRecepcao
+                                            ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
+                                            : "bg-[#00338d] hover:bg-[#00286f]"
+                                        }`}
                                       >
-                                        INICIAR CONSULTA
+                                        {deveProcurarRecepcao
+                                          ? "PROCURE A RECEPÇÃO"
+                                          : "INICIAR CONSULTA"}
                                       </button>
                                     ) : (
                                       <div

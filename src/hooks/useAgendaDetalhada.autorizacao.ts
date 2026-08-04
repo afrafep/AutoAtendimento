@@ -1179,6 +1179,46 @@ export const createAgendaDetalhadaAutorizacao = ({
         payloadTissSadt,
       );
 
+      const numeroGuiaGeradoPersistencia = String(
+        responseTiss.data?.numeroGuiaGerado || "",
+      ).trim();
+      const numeroGuiaOperadoraPersistencia = Number(
+        responseTiss.data?.numeroGuiaOperadora || 0,
+      );
+      const senhaGuiaPersistencia = String(
+        responseTiss.data?.senhaGuia || numeroGuiaOperadoraPersistencia || "",
+      ).trim();
+
+      if (responseTiss.data?.sucesso === false) {
+        const errorMessagePersistencia =
+          responseTiss.data?.mensagemErro || "AutorizaÃ§Ã£o negada pela operadora";
+        const decodedErrorMessagePersistencia =
+          corrigirTextoQuebrado(errorMessagePersistencia);
+
+        if (
+          numeroGuiaGeradoPersistencia ||
+          numeroGuiaOperadoraPersistencia > 0
+        ) {
+          await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
+            autorizado: false,
+            tokenValidado: false,
+            senhaAutorizacao: String(
+              numeroGuiaOperadoraPersistencia || senhaGuiaPersistencia || "",
+            ),
+            numeroGuiaGerado: numeroGuiaGeradoPersistencia || null,
+            numeroGuiaOperadora: numeroGuiaOperadoraPersistencia || null,
+          });
+
+          persistirDadosGuiaAutorizacao(
+            evento.idEvento,
+            numeroGuiaGeradoPersistencia,
+            numeroGuiaOperadoraPersistencia,
+          );
+        }
+
+        throw new Error(decodedErrorMessagePersistencia);
+      }
+
       // CORREÇÃO: verificar se a requisição foi bem-sucedida, mas a autorização falhou
       if (responseTiss.data?.sucesso === false) {
         const errorMessage =
@@ -1211,6 +1251,8 @@ export const createAgendaDetalhadaAutorizacao = ({
       await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
         autorizado: true,
         senhaAutorizacao: String(numeroGuiaOperadora || ""),
+        numeroGuiaGerado: numeroGuiaGerado || null,
+        numeroGuiaOperadora: numeroGuiaOperadora || null,
       });
 
       void encaminharSenhaPainelParaMedico({
