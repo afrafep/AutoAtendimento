@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -172,7 +172,7 @@ const formatarHoraAtual = () => {
 const TEMPO_INATIVIDADE_MS = 50 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
 const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
-const BLOQUEIO_REENVIO_TOKEN_MS = 3 * 60 * 1000;
+const BLOQUEIO_REENVIO_TOKEN_MS = 2 * 60 * 1000;
 
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
@@ -661,7 +661,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [consultaValidandoTokenId, setConsultaValidandoTokenId] = useState<number | null>(null);
   const [consultaTecladoTokenId, setConsultaTecladoTokenId] = useState<number | null>(null);
   const [bloqueioReenvioAtePorConsulta, setBloqueioReenvioAtePorConsulta] = useState<Record<number, number>>({});
-  const [mostrarModalInatividade, setMostrarModalInatividade] = useState(false);
+  const [agoraReenvioToken, setAgoraReenvioToken] = useState(() => Date.now());
+  const [mostrarModalInatividade, setMostrarModalInatividade] = useState(false);
+
   const [segundosRestantesInatividade, setSegundosRestantesInatividade] = useState(
     CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
   );
@@ -819,7 +821,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const encerrarSessaoPorInatividade = () => {
     limparTemporizadoresSessao();
     setMostrarModalInatividade(false);
-    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+
     resetarTelaCpf();
   };
 
@@ -830,10 +833,12 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setMostrarModalInatividade(false);
     setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
 
-    expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
+    expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
+
 
     intervaloSessaoRef.current = window.setInterval(() => {
-      const restante = Math.max(0, Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000));
+      const restante = Math.max(0, Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000));
+
 
       if (restante <= CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS) {
         setMostrarModalInatividade(true);
@@ -857,6 +862,21 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
     return () => window.clearInterval(intervaloHora);
   }, []);
+
+  useEffect(() => {
+    const existeBloqueioAtivo = Object.values(bloqueioReenvioAtePorConsulta).some(
+      (tempo) => tempo > Date.now(),
+    );
+
+    if (!existeBloqueioAtivo) return;
+
+    setAgoraReenvioToken(Date.now());
+    const intervaloReenvio = window.setInterval(() => {
+      setAgoraReenvioToken(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(intervaloReenvio);
+  }, [bloqueioReenvioAtePorConsulta]);
 
   useEffect(() => {
     const estadoPersistidoInicial = lerEstadoTelaPersistido();
@@ -894,6 +914,31 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       setIndiceConsultaAtual(cardsConsultasFluxo.length - 1);
     }
   }, [cardsConsultasFluxo, indiceConsultaAtual, indiceMaximoLiberado]);
+  useEffect(() => {
+    if (etapaTela !== "consultas" || !consultaFluxoAtual) return;
+
+    if (!consultaFluxoAtual.autorizado || consultaFluxoAtual.autorizacaoConcluida) {
+      return;
+    }
+
+    const idEventoAtual = consultaFluxoAtual.consulta.idEvento;
+
+    setBloqueioReenvioAtePorConsulta((prev) => {
+      if ((prev[idEventoAtual] || 0) > Date.now()) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [idEventoAtual]: Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
+      };
+    });
+  }, [
+    etapaTela,
+    consultaFluxoAtual?.consulta.idEvento,
+    consultaFluxoAtual?.autorizado,
+    consultaFluxoAtual?.autorizacaoConcluida,
+  ]);
 
   useEffect(() => {
     if (!hidratado) return;
@@ -933,7 +978,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const resetarTelaCpf = () => {
     limparTemporizadoresSessao();
     setMostrarModalInatividade(false);
-    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+
     setCpf("");
     setPacienteNome("");
     setConsultas([]);
@@ -1214,9 +1260,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   if (token.length !== 4) {
     setTokenErroPorConsulta((prev) => ({
       ...prev,
-      [consulta.idEvento]: "Digite os 4 d�gitos do token.",
+      [consulta.idEvento]: "Digite os 4 dï¿½gitos do token.",
     }));
-    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 d�gitos do token.");
+    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 dï¿½gitos do token.");
     return;
   }
   if (!senhaGuia) {
@@ -2221,7 +2267,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                               const reenviandoToken = consultaReenviandoTokenId === consulta.idEvento;
                               const validandoToken = consultaValidandoTokenId === consulta.idEvento;
                               const tecladoTokenAberto = consultaTecladoTokenId === consulta.idEvento;
-                              const segundosRestantesReenvio = Math.max(0, Math.ceil(((bloqueioReenvioAtePorConsulta[consulta.idEvento] || 0) - Date.now()) / 1000));
+                              const segundosRestantesReenvio = Math.max(0, Math.ceil(((bloqueioReenvioAtePorConsulta[consulta.idEvento] || 0) - agoraReenvioToken) / 1000));
 
                               return (
                                 <article
@@ -2277,7 +2323,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                               aria-hidden="true"
                                               className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
                                             >
-                                              {"✓"}
+                                              {"âœ“"}
                                             </span>
                                           ) : null}
                                           {faltouConsulta
@@ -2362,7 +2408,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indispon�vel"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponï¿½vel"}
                                       </div>
                                     )}
                                   </div>
@@ -2454,6 +2500,8 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
