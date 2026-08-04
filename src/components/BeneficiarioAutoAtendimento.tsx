@@ -2344,7 +2344,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
                                         </p>
                                       ) : (
-                                        <p className={`${tokenInlineVisivel ? "text-[4rem] md:text-[4.8rem]" : "text-[4.5rem] md:text-[5.2rem]"} font-black tracking-tight text-[#00338d]`}>
+                                        <p className={`${tokenInlineVisivel ? "text-[4.25rem] md:text-[5.1rem]" : "text-[5rem] md:text-[5.9rem]"} font-black tracking-tight text-[#00338d]`}>
                                           {formatarHora(consulta.horaInicio)}
                                         </p>
                                       )}
@@ -2500,6 +2500,8 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
 
 
 
