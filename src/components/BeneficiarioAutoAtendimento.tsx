@@ -172,7 +172,7 @@ const formatarHoraAtual = () => {
 const TEMPO_INATIVIDADE_MS = 50 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
 const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
-const BLOQUEIO_REENVIO_TOKEN_MS = 2 * 60 * 1000;
+const BLOQUEIO_REENVIO_TOKEN_MS = 40 * 1000;
 
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
@@ -2234,11 +2234,11 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                   onContinuar={reiniciarTemporizadorSessao}
                 />
 
-                <div className="flex-1 overflow-hidden px-3 pb-3 pt-2 md:px-6 md:pb-4 md:pt-3">
-                  <div className="mx-auto flex h-full max-w-6xl flex-col gap-2 overflow-hidden">
-                    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2.5 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-3">
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <p className="text-[1rem] font-bold leading-[1.6] text-slate-700 md:text-[1.40rem]">
+                <div className="flex-1 overflow-hidden px-3 pb-2 pt-2 md:px-5 md:pb-3 md:pt-2.5">
+                  <div className="mx-auto flex h-full max-w-6xl flex-col gap-1.5 overflow-hidden">
+                    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-2.5">
+                      <div className="mb-1.5 flex items-start justify-between gap-3">
+                        <p className="text-[1.08rem] font-bold leading-[1.45] text-slate-700 md:text-[1.52rem]">
                           {consultaFluxoAtual?.autorizacaoConcluida
                             ? "Autorizado. Pr\u00f3ximo hor\u00e1rio liberado."
                             : "Finalize o autoatendimento para liberar o pr\u00f3ximo hor\u00e1rio."}
@@ -2272,21 +2272,21 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                               return (
                                 <article
                                   key={cardConsulta.chave}
-                                  className={`relative flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2.5" : "p-3"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                                  className={`relative flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2" : "p-2.5"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
                                     autorizacaoConcluida
                                       ? "border-emerald-200 bg-emerald-50/55 opacity-75"
                                       : "border-slate-200 bg-white"
                                   }`}
                                 >
-                                  <div className="flex min-h-0 flex-1 flex-col gap-4">
-                                    <div className="flex items-start justify-between gap-3">
+                                  <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+                                    <div className="flex items-start justify-between gap-2.5">
                                       {tokenInlineVisivel ? (
                                         <div className="flex min-w-0 flex-1 items-center text-left">
                                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                            <p className="text-[1.34rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.62rem]">
+                                            <p className="text-[1.55rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.95rem]">
                                               {consulta.profissionalNome}
                                             </p>
-                                            <p className="text-[1.16rem] font-black uppercase tracking-[0.05em] text-slate-600 md:text-[1.34rem]">
+                                            <p className="text-[1.3rem] font-black uppercase tracking-[0.05em] text-slate-600 md:text-[1.6rem]">
                                               - {consulta.especialidadeNome}
                                             </p>
                                           </div>
@@ -2323,11 +2323,11 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                               aria-hidden="true"
                                               className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
                                             >
-                                              {"âœ“"}
+                                              {"\u2713"}
                                             </span>
                                           ) : null}
                                           {faltouConsulta
-                                            ? "Consulta n?o realizada"
+                                            ? "Consulta não realizada"
                                             : tokenEnviadoNoFluxo && !autorizacaoConcluida
                                               ? "AGUARDANDO SEU TOKEN"
                                               : autorizacaoConcluida
@@ -2337,14 +2337,14 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                       ) : null}
                                     </div>
 
-                                    <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-2 pb-2" : "gap-5 pb-2"}`}>
+                                    <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-1 pb-1" : "gap-3 pb-1"}`}>
 
                                       {cardConsulta.agrupadoUltrassom ? (
                                         <p className={`${tokenInlineVisivel ? "text-[1.8rem] md:text-[2.05rem]" : "text-[2rem] md:text-[2.4rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
-                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Hor?rios do dia"}
+                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
                                         </p>
                                       ) : (
-                                        <p className={`${tokenInlineVisivel ? "text-[3.45rem] md:text-[4.2rem]" : "text-[4.2rem] md:text-[5rem]"} font-black tracking-tight text-[#00338d]`}>
+                                        <p className={`${tokenInlineVisivel ? "text-[4rem] md:text-[4.8rem]" : "text-[4.5rem] md:text-[5.2rem]"} font-black tracking-tight text-[#00338d]`}>
                                           {formatarHora(consulta.horaInicio)}
                                         </p>
                                       )}
@@ -2500,6 +2500,10 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
+
 
 
 
