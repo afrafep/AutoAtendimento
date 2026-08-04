@@ -2340,7 +2340,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                     <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-1 pb-1" : "gap-3 pb-1"}`}>
 
                                       {cardConsulta.agrupadoUltrassom ? (
-                                        <p className={`${tokenInlineVisivel ? "text-[1.8rem] md:text-[2.05rem]" : "text-[2rem] md:text-[2.4rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
+                                        <p className={`${tokenInlineVisivel ? "mt-2 text-[2.05rem] md:mt-3 md:text-[2.35rem]" : "mt-5 text-[2.6rem] md:mt-7 md:text-[3.2rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
                                           {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
                                         </p>
                                       ) : (
@@ -2500,6 +2500,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
