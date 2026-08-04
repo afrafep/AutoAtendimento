@@ -17,10 +17,10 @@ export default function ConsultaProfissionalResumoCard({
           : "border-slate-100 bg-slate-50"
       }`}
     >
-      <p className="text-[1.4rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.7rem]">
+      <p className="text-[1.6rem] font-black uppercase tracking-[0.09em] text-slate-900 md:text-[1.9rem]">
         {profissionalNome}
       </p>
-      <p className="mt-3 text-[1.16rem] font-black uppercase tracking-[0.08em] text-slate-900 md:text-[1.32rem]">
+      <p className="mt-3 text-[1.50rem] font-black uppercase tracking-[0.09em] text-slate-900 md:text-[1.9rem]">
         {especialidadeNome}
       </p>
     </div>
