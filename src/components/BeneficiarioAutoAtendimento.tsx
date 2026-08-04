@@ -2186,7 +2186,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-2 overflow-hidden">
                     <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2.5 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-3">
                       <div className="mb-2 flex items-start justify-between gap-3">
-                        <p className="text-[0.94rem] font-bold leading-[1.3] text-slate-700 md:text-[1.05rem]">
+                        <p className="text-[1rem] font-bold leading-[1.6] text-slate-700 md:text-[1.40rem]">
                           {consultaFluxoAtual?.autorizacaoConcluida
                             ? "Autorizado. Pr\u00f3ximo hor\u00e1rio liberado."
                             : "Finalize o autoatendimento para liberar o pr\u00f3ximo hor\u00e1rio."}
