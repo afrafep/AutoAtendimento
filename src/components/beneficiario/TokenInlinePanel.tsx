@@ -60,6 +60,7 @@ export default function TokenInlinePanel({
   onValidar,
 }: TokenInlinePanelProps) {
   const reenvioBloqueado = segundosRestantesReenvio > 0;
+  const tokenCompleto = tokenDigitado.length === 4;
 
   return (
     <div className="mt-1 rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-3 py-2.5 shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-4 md:px-4 md:py-2.5">
@@ -196,7 +197,7 @@ export default function TokenInlinePanel({
           <button
             type="button"
             onClick={onValidar}
-            disabled={validandoToken || reenviandoToken}
+            disabled={validandoToken || reenviandoToken || !tokenCompleto}
             className="h-12 rounded-[0.95rem] bg-emerald-600 px-4 text-[0.84rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-[3.25rem]"
           >
             {validandoToken ? "VALIDANDO..." : "CONFIRMAR TOKEN"}
@@ -206,4 +207,6 @@ export default function TokenInlinePanel({
     </div>
   );
 }
+
+
 

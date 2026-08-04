@@ -1260,9 +1260,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   if (token.length !== 4) {
     setTokenErroPorConsulta((prev) => ({
       ...prev,
-      [consulta.idEvento]: "Digite os 4 dï¿½gitos do token.",
+      [consulta.idEvento]: "Digite os 4 dígitos do token.",
     }));
-    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 dï¿½gitos do token.");
+    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 dígitos do token.");
     return;
   }
   if (!senhaGuia) {
@@ -2403,7 +2403,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponï¿½vel"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
                                       </div>
                                     )}
                                   </div>
@@ -2495,6 +2495,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
