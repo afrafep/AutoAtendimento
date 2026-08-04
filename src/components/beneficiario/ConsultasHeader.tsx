@@ -1,26 +1,12 @@
-import SessaoExpiracaoCard from "./SessaoExpiracaoCard";
-
 interface ConsultasHeaderProps {
   pacienteNome: string;
   dataConsultasCabecalho: string;
-  segundosParaExpirarSessao: number;
-  segundosRestantesInatividade: number;
-  mostrarModalInatividade: boolean;
-  formatarTempoSessao: (segundos: number) => string;
-  onContinuarSessao: () => void;
-  onEncerrarSessao: () => void;
   onSair: () => void;
 }
 
 export default function ConsultasHeader({
   pacienteNome,
   dataConsultasCabecalho,
-  segundosParaExpirarSessao,
-  segundosRestantesInatividade,
-  mostrarModalInatividade,
-  formatarTempoSessao,
-  onContinuarSessao,
-  onEncerrarSessao,
   onSair,
 }: ConsultasHeaderProps) {
   return (
@@ -30,7 +16,7 @@ export default function ConsultasHeader({
           Atendimentos do dia
         </p>
         <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-          {pacienteNome || "Benefici\u00e1rio"}
+          {pacienteNome || "Beneficiário"}
         </h2>
         <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
           {dataConsultasCabecalho && dataConsultasCabecalho !== "--/--/----"
@@ -39,15 +25,7 @@ export default function ConsultasHeader({
         </p>
       </div>
 
-      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-end">
-        <SessaoExpiracaoCard
-          segundosParaExpirarSessao={segundosParaExpirarSessao}
-          segundosRestantesInatividade={segundosRestantesInatividade}
-          mostrarModalInatividade={mostrarModalInatividade}
-          formatarTempoSessao={formatarTempoSessao}
-          onContinuar={onContinuarSessao}
-          onEncerrar={onEncerrarSessao}
-        />
+      <div className="flex justify-center md:justify-end">
         <button
           onClick={onSair}
           className="h-12 min-w-[190px] rounded-2xl border border-red-300/35 bg-red-500/90 px-7 text-[0.9rem] font-bold text-white shadow-[0_10px_22px_rgba(127,29,29,0.18)] transition hover:bg-red-600 md:px-8 md:text-[0.96rem]"

@@ -6,9 +6,6 @@ interface ConsultaResumoProps {
 function ConsultaResumoCompacto({ profissionalNome, especialidadeNome }: ConsultaResumoProps) {
   return (
     <div className="mx-auto max-w-3xl rounded-[0.95rem] border border-slate-200 bg-white/75 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-      <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#00338d] md:text-[0.72rem]">
-        Atendimento selecionado
-      </p>
       <p className="mt-1 text-[1rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.08rem]">
         {profissionalNome}
       </p>
@@ -35,10 +32,10 @@ export default function AutorizacaoPreparandoCard({
         <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#00338d]/20 border-t-[#00338d]" />
       </div>
       <p className="mt-3 text-[1.04rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.12rem]">
-        {"Preparando autoriza\u00e7\u00e3o"}
+        {"Registrando que voc\u00ea compareceu"}
       </p>
       <p className="mt-2 text-[0.9rem] text-slate-600 md:text-[0.96rem]">
-        {"Aguarde um instante. O token ser\u00e1 enviado e a valida\u00e7\u00e3o vai aparecer aqui na mesma tela."}
+        {"Estamos enviando seu token."}
       </p>
     </div>
   );

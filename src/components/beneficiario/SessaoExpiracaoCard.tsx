@@ -1,63 +1,55 @@
 interface SessaoExpiracaoCardProps {
-  segundosParaExpirarSessao: number;
-  segundosRestantesInatividade: number;
   mostrarModalInatividade: boolean;
+  segundosRestantesInatividade: number;
   formatarTempoSessao: (segundos: number) => string;
   onContinuar: () => void;
-  onEncerrar: () => void;
 }
 
 export default function SessaoExpiracaoCard({
-  segundosParaExpirarSessao,
-  segundosRestantesInatividade,
   mostrarModalInatividade,
+  segundosRestantesInatividade,
   formatarTempoSessao,
   onContinuar,
-  onEncerrar,
 }: SessaoExpiracaoCardProps) {
-  return (
-    <div className="relative w-full sm:w-auto">
-      <div className="inline-flex min-w-[176px] flex-col items-center justify-center rounded-[1.1rem] border border-white/20 bg-white/10 px-4 py-2 text-center shadow-[0_10px_20px_rgba(15,23,42,0.14)] backdrop-blur">
-        <span className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-blue-100/90 md:text-[0.62rem]">
-          {"SESS\u00c3O EXPIRA EM"}
-        </span>
-        <span className="mt-1 text-[1rem] font-black tracking-[0.06em] text-white md:text-[1.12rem]">
-          {formatarTempoSessao(segundosParaExpirarSessao)}
-        </span>
-      </div>
+  if (!mostrarModalInatividade) {
+    return null;
+  }
 
-      {mostrarModalInatividade && (
-        <div className="absolute left-1/2 top-0 z-40 w-[260px] -translate-x-1/2 rounded-[1.4rem] border border-white/25 bg-[linear-gradient(135deg,rgba(0,51,141,0.98)_0%,rgba(29,78,216,0.98)_55%,rgba(56,189,248,0.96)_100%)] p-4 text-center text-white shadow-[0_22px_40px_rgba(15,23,42,0.28)] sm:left-auto sm:right-0 sm:translate-x-0">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-amber-200/80 bg-white/12 text-[1.2rem] font-black text-amber-200">
-            !
-          </div>
-          <p className="mt-3 text-[1rem] font-black uppercase tracking-[0.04em]">
-            {"VOC\u00ca T\u00c1 A\u00cd?"}
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-[2px]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="w-full max-w-[30rem] rounded-[2rem] border border-white/20 bg-[linear-gradient(135deg,rgba(0,51,141,0.98)_0%,rgba(29,78,216,0.98)_58%,rgba(56,189,248,0.96)_100%)] p-6 text-center text-white shadow-[0_30px_60px_rgba(15,23,42,0.35)] md:p-8"
+      >
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-amber-200/90 bg-white/10 text-[2rem] font-black text-amber-200">
+          !
+        </div>
+
+        <p className="mt-5 text-[1.5rem] font-black uppercase tracking-[0.04em] md:text-[1.9rem]">
+          {"Aten\u00e7\u00e3o"}
+        </p>
+        <p className="mt-3 text-[1rem] font-bold leading-relaxed text-blue-50 md:text-[1.18rem]">
+          Encerrando por falta de interatividade. Toque na tela para permanecer.
+        </p>
+
+        <div className="mt-6 rounded-[1.4rem] border border-amber-200/55 bg-white/10 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+          <p className="text-[0.84rem] font-black uppercase tracking-[0.18em] text-amber-100 md:text-[0.92rem]">
+            Encerrando em
           </p>
-          <p className="mt-1 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-blue-100/90">
-            {"ENCERRANDO EM..."}
-          </p>
-          <p className="mt-2 text-[2rem] font-black tracking-[0.08em] text-amber-200">
+          <p className="mt-2 text-[2.5rem] font-black tracking-[0.08em] text-amber-200 md:text-[3rem]">
             {formatarTempoSessao(segundosRestantesInatividade)}
           </p>
-          <div className="mt-3 grid gap-2">
-            <button
-              type="button"
-              onClick={onContinuar}
-              className="h-10 rounded-[0.9rem] bg-white px-4 text-[0.8rem] font-black uppercase text-[#00338d] shadow-[0_10px_18px_rgba(255,255,255,0.2)] transition hover:brightness-95"
-            >
-              CONTINUAR
-            </button>
-            <button
-              type="button"
-              onClick={onEncerrar}
-              className="h-10 rounded-[0.9rem] border border-white/30 bg-white/10 px-4 text-[0.76rem] font-black uppercase text-white transition hover:bg-white/15"
-            >
-              ENCERRAR AGORA
-            </button>
-          </div>
         </div>
-      )}
+
+        <button
+          type="button"
+          onClick={onContinuar}
+          className="mt-6 flex h-14 w-full items-center justify-center rounded-[1.1rem] bg-white px-4 text-[0.95rem] font-black uppercase tracking-[0.04em] text-[#00338d] shadow-[0_16px_30px_rgba(255,255,255,0.2)] transition hover:brightness-95 md:text-[1rem]"
+        >
+          TOCAR PARA PERMANECER
+        </button>
+      </div>
     </div>
   );
 }

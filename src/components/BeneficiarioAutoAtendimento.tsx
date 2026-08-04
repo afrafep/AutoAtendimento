@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -12,6 +12,7 @@ import { TokenEnviar } from "./TokenEnviar";
 import { TokenValidar } from "./TokenValidar";
 import ConsultasHeader from "./beneficiario/ConsultasHeader";
 import CpfTecladoNumerico from "./beneficiario/CpfTecladoNumerico";
+import SessaoExpiracaoCard from "./beneficiario/SessaoExpiracaoCard";
 import AutorizacaoPreparandoCard from "./beneficiario/AutorizacaoPreparandoCard";
 import TokenInlinePanel from "./beneficiario/TokenInlinePanel";
 import ConsultaProfissionalResumoCard from "./beneficiario/ConsultaProfissionalResumoCard";
@@ -170,7 +171,8 @@ const formatarHoraAtual = () => {
 
 const TEMPO_INATIVIDADE_MS = 50 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
-const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 10;
+const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
+const BLOQUEIO_REENVIO_TOKEN_MS = 3 * 60 * 1000;
 
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
@@ -658,10 +660,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [consultaReenviandoTokenId, setConsultaReenviandoTokenId] = useState<number | null>(null);
   const [consultaValidandoTokenId, setConsultaValidandoTokenId] = useState<number | null>(null);
   const [consultaTecladoTokenId, setConsultaTecladoTokenId] = useState<number | null>(null);
-  const [mostrarModalInatividade, setMostrarModalInatividade] = useState(false);
-  const [segundosParaExpirarSessao, setSegundosParaExpirarSessao] = useState(
-    Math.floor(TEMPO_INATIVIDADE_MS / 1000),
-  );
+  const [bloqueioReenvioAtePorConsulta, setBloqueioReenvioAtePorConsulta] = useState<Record<number, number>>({});
+  const [mostrarModalInatividade, setMostrarModalInatividade] = useState(false);
   const [segundosRestantesInatividade, setSegundosRestantesInatividade] = useState(
     CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
   );
@@ -819,8 +819,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const encerrarSessaoPorInatividade = () => {
     limparTemporizadoresSessao();
     setMostrarModalInatividade(false);
-    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
-    setSegundosParaExpirarSessao(Math.floor(TEMPO_INATIVIDADE_MS / 1000));
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
     resetarTelaCpf();
   };
 
@@ -831,13 +830,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setMostrarModalInatividade(false);
     setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
 
-    expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
-    setSegundosParaExpirarSessao(Math.floor(TEMPO_INATIVIDADE_MS / 1000));
+    expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
 
     intervaloSessaoRef.current = window.setInterval(() => {
-      const restante = Math.max(0, Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000));
-
-      setSegundosParaExpirarSessao(restante);
+      const restante = Math.max(0, Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000));
 
       if (restante <= CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS) {
         setMostrarModalInatividade(true);
@@ -937,8 +933,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const resetarTelaCpf = () => {
     limparTemporizadoresSessao();
     setMostrarModalInatividade(false);
-    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
-    setSegundosParaExpirarSessao(Math.floor(TEMPO_INATIVIDADE_MS / 1000));
+    setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
     setCpf("");
     setPacienteNome("");
     setConsultas([]);
@@ -953,6 +948,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setConsultaReenviandoTokenId(null);
     setConsultaValidandoTokenId(null);
     setConsultaTecladoTokenId(null);
+    setBloqueioReenvioAtePorConsulta({});
     setTokenDigitadoPorConsulta({});
     setTokenErroPorConsulta({});
     setTokenFeedbackPorConsulta({});
@@ -1090,10 +1086,14 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setTimeout(() => focarCampoTokenInline(idEvento, ultimoIndice), 0);
   };
 
-  const finalizarFluxoTokenInline = async (idEvento: number) => {
+      const finalizarFluxoTokenInline = async (idEvento: number) => {
     await buscarConsultas();
     setConsultaProcessandoSenhaId(null);
     setConsultaTokenAbertaId(idEvento);
+    setBloqueioReenvioAtePorConsulta((prev) => ({
+      ...prev,
+      [idEvento]: prev[idEvento] || Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
+    }));
     setAbrirTokenInlineAposEnvio(false);
   };
 
@@ -1133,6 +1133,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         await exibirModalErroTokenInline(consulta.idEvento, "N\u00e3o foi poss\u00edvel reenviar o token agora.");
         return;
       }
+
+      setBloqueioReenvioAtePorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
+      }));
 
       atualizarFeedbackTokenInline(
         consulta.idEvento,
@@ -1209,9 +1214,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   if (token.length !== 4) {
     setTokenErroPorConsulta((prev) => ({
       ...prev,
-      [consulta.idEvento]: "Digite os 4 dígitos do token.",
+      [consulta.idEvento]: "Digite os 4 d�gitos do token.",
     }));
-    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 dígitos do token.");
+    await exibirModalErroTokenInline(consulta.idEvento, "Digite os 4 d�gitos do token.");
     return;
   }
   if (!senhaGuia) {
@@ -2172,15 +2177,16 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                   <ConsultasHeader
                     pacienteNome={pacienteNome}
                     dataConsultasCabecalho={dataConsultasCabecalho}
-                    segundosParaExpirarSessao={segundosParaExpirarSessao}
-                    segundosRestantesInatividade={segundosRestantesInatividade}
-                    mostrarModalInatividade={mostrarModalInatividade}
-                    formatarTempoSessao={formatarTempoSessao}
-                    onContinuarSessao={reiniciarTemporizadorSessao}
-                    onEncerrarSessao={encerrarSessaoPorInatividade}
                     onSair={() => void confirmarEncerramentoAutoAtendimento()}
                   />
                 </div>
+
+                <SessaoExpiracaoCard
+                  mostrarModalInatividade={mostrarModalInatividade}
+                  segundosRestantesInatividade={segundosRestantesInatividade}
+                  formatarTempoSessao={formatarTempoSessao}
+                  onContinuar={reiniciarTemporizadorSessao}
+                />
 
                 <div className="flex-1 overflow-hidden px-3 pb-3 pt-2 md:px-6 md:pb-4 md:pt-3">
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-2 overflow-hidden">
@@ -2192,7 +2198,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                             : "Finalize o autoatendimento para liberar o pr\u00f3ximo hor\u00e1rio."}
                         </p>
                         <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-[0.88rem] font-black uppercase tracking-[0.05em] text-[#00338d] md:text-[0.96rem]">
-                          {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual} de ${consultaFluxoAtual.total}` : "0 de 0"}
+                          {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual}/${consultaFluxoAtual.total}` : "0/0"}
                         </span>
                       </div>
 
@@ -2215,6 +2221,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                               const reenviandoToken = consultaReenviandoTokenId === consulta.idEvento;
                               const validandoToken = consultaValidandoTokenId === consulta.idEvento;
                               const tecladoTokenAberto = consultaTecladoTokenId === consulta.idEvento;
+                              const segundosRestantesReenvio = Math.max(0, Math.ceil(((bloqueioReenvioAtePorConsulta[consulta.idEvento] || 0) - Date.now()) / 1000));
 
                               return (
                                 <article
@@ -2227,59 +2234,71 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                 >
                                   <div className="flex min-h-0 flex-1 flex-col gap-4">
                                     <div className="flex items-start justify-between gap-3">
-                                      <div />
-                                      <p
-                                        className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
-                                          faltouConsulta
-                                            ? "border-red-200 bg-red-50 text-red-700"
-                                            : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                                              ? "border-amber-200 bg-amber-50 text-amber-800"
-                                              : compareceuConsulta
-                                                ? "border-orange-200 bg-orange-50 text-orange-700"
+                                      {tokenInlineVisivel ? (
+                                        <div className="flex min-w-0 flex-1 items-center text-left">
+                                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <p className="text-[1.34rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.62rem]">
+                                              {consulta.profissionalNome}
+                                            </p>
+                                            <p className="text-[1.16rem] font-black uppercase tracking-[0.05em] text-slate-600 md:text-[1.34rem]">
+                                              - {consulta.especialidadeNome}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div />
+                                      )}
+                                      {!compareceuConsulta || tokenEnviadoNoFluxo || autorizacaoConcluida || faltouConsulta ? (
+                                        <p
+                                          className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
+                                            faltouConsulta
+                                              ? "border-red-200 bg-red-50 text-red-700"
+                                              : tokenEnviadoNoFluxo && !autorizacaoConcluida
+                                                ? "border-amber-200 bg-amber-50 text-amber-800"
                                                 : autorizacaoConcluida
                                                   ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                                                   : "border-blue-200 bg-blue-50 text-[#00338d]"
-                                        }`}
-                                      >
-                                        {!autorizacaoConcluida ? (
-                                          <span
-                                            aria-hidden="true"
-                                            className={`inline-flex h-2.5 w-2.5 rounded-full ${
-                                              faltouConsulta
-                                                ? "bg-red-500"
-                                                : tokenEnviadoNoFluxo
-                                                  ? "bg-amber-500"
-                                                  : compareceuConsulta
-                                                    ? "bg-orange-500"
+                                          }`}
+                                        >
+                                          {!autorizacaoConcluida ? (
+                                            <span
+                                              aria-hidden="true"
+                                              className={`inline-flex h-2.5 w-2.5 rounded-full ${
+                                                faltouConsulta
+                                                  ? "bg-red-500"
+                                                  : tokenEnviadoNoFluxo
+                                                    ? "bg-amber-500"
                                                     : "bg-[#00338d]"
-                                            }`}
-                                          />
-                                        ) : null}
-                                        {autorizacaoConcluida ? (
-                                          <span
-                                            aria-hidden="true"
-                                            className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
-                                          >
-                                            {"\u2713"}
-                                          </span>
-                                        ) : null}
-                                        {faltouConsulta
-                                          ? "Consulta n\u00e3o realizada"
-                                          : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                                            ? "AGUARDANDO SEU TOKEN"
-                                            : autorizacaoConcluida
-                                              ? "Atendimento liberado"
-                                              : formatarStatus(consulta.statusAgendamento)}
-                                      </p>
+                                              }`}
+                                            />
+                                          ) : null}
+                                          {autorizacaoConcluida ? (
+                                            <span
+                                              aria-hidden="true"
+                                              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
+                                            >
+                                              {"✓"}
+                                            </span>
+                                          ) : null}
+                                          {faltouConsulta
+                                            ? "Consulta n?o realizada"
+                                            : tokenEnviadoNoFluxo && !autorizacaoConcluida
+                                              ? "AGUARDANDO SEU TOKEN"
+                                              : autorizacaoConcluida
+                                                ? "Atendimento liberado"
+                                                : formatarStatus(consulta.statusAgendamento)}
+                                        </p>
+                                      ) : null}
                                     </div>
 
-                                    <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-2 pb-1" : "gap-5 pb-2"}`}>
+                                    <div className={`flex min-h-0 flex-1 flex-col text-center ${tokenInlineVisivel ? "gap-2 pb-2" : "gap-5 pb-2"}`}>
+
                                       {cardConsulta.agrupadoUltrassom ? (
-                                        <p className={`${tokenInlineVisivel ? "text-[1.55rem] md:text-[1.8rem]" : "text-[2rem] md:text-[2.4rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
-                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Hor\u00e1rios do dia"}
+                                        <p className={`${tokenInlineVisivel ? "text-[1.8rem] md:text-[2.05rem]" : "text-[2rem] md:text-[2.4rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}>
+                                          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Hor?rios do dia"}
                                         </p>
                                       ) : (
-                                        <p className={`${tokenInlineVisivel ? "text-[2.45rem] md:text-[2.9rem]" : "text-[4.2rem] md:text-[5rem]"} font-black tracking-tight text-[#00338d]`}>
+                                        <p className={`${tokenInlineVisivel ? "text-[3.45rem] md:text-[4.2rem]" : "text-[4.2rem] md:text-[5rem]"} font-black tracking-tight text-[#00338d]`}>
                                           {formatarHora(consulta.horaInicio)}
                                         </p>
                                       )}
@@ -2291,8 +2310,6 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           autorizacaoConcluida={autorizacaoConcluida}
                                         />
                                       )}
-
-                                    
                                     </div>
                                     {autorizacaoConcluida ? null : processandoSenha ? (
                                       <AutorizacaoPreparandoCard
@@ -2308,6 +2325,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                         tecladoTokenAberto={tecladoTokenAberto}
                                         reenviandoToken={reenviandoToken}
                                         validandoToken={validandoToken}
+                                        segundosRestantesReenvio={segundosRestantesReenvio}
                                         onTokenChange={(indiceToken, valor) =>
                                           atualizarTokenDigitadoInline(consulta.idEvento, indiceToken, valor)
                                         }
@@ -2344,7 +2362,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           faltouConsulta ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
                                         }`}
                                       >
-                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indisponível"}
+                                        {faltouConsulta ? "Atendimento encerrado" : "Atendimento indispon�vel"}
                                       </div>
                                     )}
                                   </div>
@@ -2436,6 +2454,12 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
+
+
+
 
 
 

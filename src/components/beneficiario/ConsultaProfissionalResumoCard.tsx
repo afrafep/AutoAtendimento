@@ -20,7 +20,7 @@ export default function ConsultaProfissionalResumoCard({
       <p className="text-[1.6rem] font-black uppercase tracking-[0.09em] text-slate-900 md:text-[1.9rem]">
         {profissionalNome}
       </p>
-      <p className="mt-3 text-[1.50rem] font-black uppercase tracking-[0.09em] text-slate-900 md:text-[1.9rem]">
+      <p className="mt-3 text-[1.5rem] font-black uppercase tracking-[0.09em] text-slate-900 md:text-[1.9rem]">
         {especialidadeNome}
       </p>
     </div>

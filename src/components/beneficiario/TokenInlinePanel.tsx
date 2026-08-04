@@ -19,6 +19,7 @@ interface TokenInlinePanelProps {
   tecladoTokenAberto: boolean;
   reenviandoToken: boolean;
   validandoToken: boolean;
+  segundosRestantesReenvio: number;
   onTokenChange: (indice: number, valor: string) => void;
   onTokenKeyDown: (indice: number, event: KeyboardEvent<HTMLInputElement>) => void;
   onTokenPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
@@ -31,20 +32,11 @@ interface TokenInlinePanelProps {
   onValidar: () => void;
 }
 
-function ConsultaResumoInline({ profissionalNome, especialidadeNome }: ConsultaTokenInlineProps) {
-  return (
-    <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50/85 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-      <p className="text-[0.66rem] font-black uppercase tracking-[0.14em] text-[#00338d] md:text-[0.72rem]">
-        Atendimento selecionado
-      </p>
-      <p className="mt-1 text-[1.02rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.12rem]">
-        {profissionalNome}
-      </p>
-      <p className="mt-0.5 text-[0.8rem] font-bold uppercase tracking-[0.05em] text-slate-600 md:text-[0.88rem]">
-        {especialidadeNome}
-      </p>
-    </div>
-  );
+function formatarTempoCurto(segundos: number) {
+  const total = Math.max(0, segundos);
+  const minutos = String(Math.floor(total / 60)).padStart(2, "0");
+  const segundosRestantes = String(total % 60).padStart(2, "0");
+  return `${minutos}:${segundosRestantes}`;
 }
 
 export default function TokenInlinePanel({
@@ -55,6 +47,7 @@ export default function TokenInlinePanel({
   tecladoTokenAberto,
   reenviandoToken,
   validandoToken,
+  segundosRestantesReenvio,
   onTokenChange,
   onTokenKeyDown,
   onTokenPaste,
@@ -66,22 +59,18 @@ export default function TokenInlinePanel({
   onReenviar,
   onValidar,
 }: TokenInlinePanelProps) {
+  const reenvioBloqueado = segundosRestantesReenvio > 0;
+
   return (
     <div className="mt-2 rounded-[1.05rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-3 py-3 shadow-[0_14px_28px_rgba(15,23,42,0.08)] sm:px-4 md:px-4 md:py-3">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-2.5 text-center">
-        <ConsultaResumoInline
-          idEvento={consulta.idEvento}
-          profissionalNome={consulta.profissionalNome}
-          especialidadeNome={consulta.especialidadeNome}
-        />
-
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 text-center">
         <div>
-          <p className="text-[0.84rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[0.80rem]">
+          <p className="text-[0.98rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.05rem]">
             {"Digite os 4 d\u00edgitos do token."}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           {Array.from({ length: 4 }).map((_, indiceToken) => (
             <input
               key={`token-${consulta.idEvento}-${indiceToken}`}
@@ -96,7 +85,7 @@ export default function TokenInlinePanel({
               onFocus={() => onAbrirTeclado(indiceToken)}
               onClick={() => onAbrirTeclado(indiceToken)}
               readOnly
-              className="h-12 w-11 rounded-[0.9rem] border border-slate-300 bg-white text-center text-[1.15rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[3.4rem] md:w-[3.1rem] md:text-[1.3rem]"
+              className="h-16 w-14 rounded-[1rem] border border-slate-300 bg-white text-center text-[1.6rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[4.5rem] md:w-[4rem] md:text-[1.9rem]"
             />
           ))}
         </div>
@@ -106,7 +95,7 @@ export default function TokenInlinePanel({
             <div className="pointer-events-auto rounded-[1rem] border border-slate-200 bg-white/98 p-3 shadow-[0_18px_38px_rgba(15,23,42,0.18)] backdrop-blur">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-[0.72rem] font-black uppercase tracking-[0.12em] text-slate-600">
-                  TECLADO NUM?RICO
+                  {"TECLADO NUM\u00c9RICO"}
                 </p>
                 <button
                   type="button"
@@ -156,7 +145,7 @@ export default function TokenInlinePanel({
         {tokenErro ? (
           <div className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-center shadow-sm">
             <p className="text-[0.9rem] font-black uppercase tracking-[0.04em] text-red-700 md:text-[1rem]">
-              ATEN??O
+              {"ATEN\u00c7\u00c3O"}
             </p>
             <p className="mt-1 text-[0.82rem] font-bold text-red-700 md:text-[0.92rem]">
               {tokenErro}
@@ -195,16 +184,20 @@ export default function TokenInlinePanel({
           <button
             type="button"
             onClick={onReenviar}
-            disabled={reenviandoToken || validandoToken}
-            className="h-9 rounded-[0.85rem] border border-orange-600 bg-orange-500 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
+            disabled={reenviandoToken || validandoToken || reenvioBloqueado}
+            className="h-10 rounded-[0.85rem] border border-orange-600 bg-orange-500 px-4 text-[0.72rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-11"
           >
-            {reenviandoToken ? "REENVIANDO..." : "REENVIAR TOKEN"}
+            {reenviandoToken
+              ? "REENVIANDO..."
+              : reenvioBloqueado
+                ? `REENVIAR TOKEN (${formatarTempoCurto(segundosRestantesReenvio)})`
+                : "REENVIAR TOKEN"}
           </button>
           <button
             type="button"
             onClick={onValidar}
             disabled={validandoToken || reenviandoToken}
-            className="h-9 rounded-[0.85rem] bg-emerald-600 px-4 text-[0.68rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-10"
+            className="h-10 rounded-[0.85rem] bg-emerald-600 px-4 text-[0.72rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-11"
           >
             {validandoToken ? "VALIDANDO..." : "CONFIRMAR TOKEN"}
           </button>
