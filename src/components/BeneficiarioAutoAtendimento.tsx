@@ -2243,7 +2243,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                             ? "Autorizado. Pr\u00f3ximo hor\u00e1rio liberado."
                             : "Finalize o autoatendimento para liberar o pr\u00f3ximo hor\u00e1rio."}
                         </p>
-                        <span className="inline-flex shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-[0.88rem] font-black uppercase tracking-[0.05em] text-[#00338d] md:text-[0.96rem]">
+                        <span className="inline-flex min-h-[3.15rem] shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-[1rem] font-black uppercase tracking-[0.05em] text-[#00338d] md:min-h-[3.4rem] md:px-5 md:text-[1.12rem]">
                           {consultaFluxoAtual ? `${consultaFluxoAtual.etapaAtual}/${consultaFluxoAtual.total}` : "0/0"}
                         </span>
                       </div>
@@ -2495,6 +2495,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
 
 
 
