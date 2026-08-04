@@ -2169,7 +2169,6 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
           draggable
           theme="light"
           toastClassName="!rounded-[1rem] !border !border-slate-200 !bg-white !shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
-          bodyClassName="!text-[0.95rem] !font-bold !text-slate-800"
         />
 
         <div className="w-full transition-all duration-200">
