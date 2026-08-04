@@ -1,4 +1,6 @@
-﻿import type { ClipboardEvent, KeyboardEvent } from "react";
+﻿import { useEffect, useRef } from "react";
+import type { ClipboardEvent, KeyboardEvent } from "react";
+import { toast } from "react-toastify";
 
 interface TokenFeedbackInlineProps {
   tipo: "success" | "error" | "info";
@@ -142,44 +144,9 @@ export default function TokenInlinePanel({
             </div>
           </div>
         ) : null}
-
-        {tokenErro ? (
-          <div className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-center shadow-sm">
-            <p className="text-[0.9rem] font-black uppercase tracking-[0.04em] text-red-700 md:text-[1rem]">
-              {"ATEN\u00c7\u00c3O"}
-            </p>
-            <p className="mt-1 text-[0.82rem] font-bold text-red-700 md:text-[0.92rem]">
-              {tokenErro}
-            </p>
-          </div>
-        ) : tokenFeedback ? (
-          <div
-            className={`rounded-[1rem] border px-4 py-3 text-center shadow-sm ${
-              tokenFeedback.tipo === "success"
-                ? "border-emerald-300 bg-emerald-100 text-emerald-900"
-                : tokenFeedback.tipo === "error"
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-sky-200 bg-sky-50 text-sky-700"
-            }`}
-          >
-            {tokenFeedback.tipo === "success" ? (
-              <div className="space-y-1">
-                <p className="text-[0.95rem] font-black uppercase tracking-[0.04em] md:text-[1.05rem]">
-                  TOKEN REENVIADO
-                </p>
-                <p className="text-[0.82rem] font-bold md:text-[0.92rem]">
-                  {tokenFeedback.mensagem}
-                </p>
-              </div>
-            ) : (
-              tokenFeedback.mensagem
-            )}
-          </div>
-        ) : (
-          <div className="rounded-[0.85rem] border border-sky-100 bg-sky-50/70 px-3 py-2 text-[0.84rem] text-sky-800">
-            {"N\u00e3o recebeu? Toque em reenviar token."}
-          </div>
-        )}
+        <div className="rounded-[0.85rem] border border-sky-100 bg-sky-50/70 px-3 py-2 text-[0.84rem] text-sky-800">
+          {"N\u00e3o recebeu? Toque em reenviar token."}
+        </div>
 
         <div className="grid gap-2.5 sm:grid-cols-2">
           <button
@@ -207,6 +174,8 @@ export default function TokenInlinePanel({
     </div>
   );
 }
+
+
 
 
 

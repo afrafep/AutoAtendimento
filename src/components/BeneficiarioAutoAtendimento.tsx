@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import {
   FaClipboardList,
@@ -2143,6 +2144,17 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
     <div className="min-h-screen bg-[linear-gradient(180deg,#eaf3ff_0%,#ffffff_28%,#eef6ff_100%)] text-slate-900">
       <main className="relative z-10 flex min-h-screen w-full flex-col">
         <div id="beneficiario-modal-root" className="pointer-events-none absolute inset-0 z-40 overflow-hidden" />
+        <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+          theme="light"
+          toastClassName="!rounded-[1rem] !border !border-slate-200 !bg-white !shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
+          bodyClassName="!text-[0.95rem] !font-bold !text-slate-800"
+        />
 
         <div className="w-full transition-all duration-200">
 
@@ -2280,9 +2292,9 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                 >
                                   <div className="flex min-h-0 flex-1 flex-col gap-2.5">
                                     <div className="flex flex-col gap-2.5">
-                                      {tokenInlineVisivel ? (
+                                      {!compareceuConsulta || tokenEnviadoNoFluxo || autorizacaoConcluida || faltouConsulta ? (
                                         <div className="flex justify-end">
-                                        <p
+                                          <p
                                           className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
                                             faltouConsulta
                                               ? "border-red-200 bg-red-50 text-red-700"
@@ -2495,6 +2507,10 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+
+
 
 
 

@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "@/styles/global.css";
+import "react-toastify/dist/ReactToastify.css";
 
 export const metadata: Metadata = {
   title: "Sisclinic Autoatendimento",
@@ -17,3 +18,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+
