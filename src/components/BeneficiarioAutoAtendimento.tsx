@@ -2739,19 +2739,33 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                 <div className="flex-1 overflow-hidden px-3 pb-2 pt-2 md:px-5 md:pb-3 md:pt-2.5">
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-1.5 overflow-hidden">
                     <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-2.5">
-                      <div className="mb-1.5 flex items-start justify-between gap-3">
-                        <p className="text-[1.08rem] font-bold leading-[1.45] text-slate-700 md:text-[1.52rem]">
-                          {consultaFluxoAtual?.autorizacaoConcluida
-                            ? "Autorizado. Pr\u00f3ximo hor\u00e1rio liberado."
-                            : "Finalize o autoatendimento para liberar o pr\u00f3ximo hor\u00e1rio."}
-                        </p>
-                        <span className="inline-flex min-h-[3.15rem] shrink-0 items-center justify-center rounded-full border border-blue-300 bg-blue-50 px-4 py-2 text-[1rem] font-black uppercase tracking-[0.05em] text-[#00338d] md:min-h-[3.4rem] md:px-5 md:text-[1.12rem]">
-                          {consultaFluxoAtual
-                            ? `${consultaFluxoAtual.etapaAtual}/${consultaFluxoAtual.total}`
-                            : "0/0"}
-                        </span>
-                      </div>
+         <p className="text-[1.08rem] font-bold leading-[1.45] text-slate-700 md:text-[1.52rem]">
+  {(() => {
+    const totalConsultas = cardsConsultasFluxo.length;
+    const consultaAtual = consultaFluxoAtual;
+    const isAutorizada = consultaAtual?.autorizacaoConcluida;
+    const isUltimaConsulta = indiceConsultaAtual === totalConsultas - 1;
 
+    // CASO 1: Apenas 1 consulta no total
+    if (totalConsultas === 1) {
+      return isAutorizada
+        ? "✅ Consulta autorizada, aguarde para ser atendido!"
+        : "Finalize o autoatendimento para liberar sua consulta.";
+    }
+
+    // CASO 2: Última consulta da lista (ex: 2/2)
+    if (isUltimaConsulta) {
+      return isAutorizada
+        ? "✅ Todas as consultas autorizadas! Aguarde o atendimento."
+        : "Finalize o autoatendimento para liberar a última consulta.";
+    }
+
+    // CASO 3: Há próxima consulta disponível
+    return isAutorizada
+      ? `✅ Autorizado. Próxima consulta liberada.`
+      : `Finalize o autoatendimento para liberar a próxima consulta.`;
+  })()}
+</p>
                       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         {consultaFluxoAtual
                           ? (() => {
