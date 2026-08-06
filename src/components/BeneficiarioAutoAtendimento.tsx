@@ -2622,10 +2622,156 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         {consulta.especialidadeNome}
       </p>
 
-      {/* LOCAL - Tamanho reduzido */}
-      <p className="font-black text-[#00338d] text-[1.6rem] md:text-[1.8rem] mt-0.5 leading-tight">
-        {consulta.localidadePainel || "Local não informado"}
-      </p>    
+ {/* LOCAL - Dinâmico baseado na especialidade */}
+<p className="font-black text-[#00338d] text-[2.4rem] md:text-[2.4rem] mt-0.5 leading-tight">
+  {(() => {
+    const especialidade = consulta.especialidadeNome?.toLowerCase() || "";
+    
+    // Mapeamento de locais por especialidade
+    const localMap: Record<string, string> = {
+      // ============ SUBSOLO ============
+      "fisioterapeuta": "SUBSOLO",
+      "fisioterapeuta sad": "SUBSOLO",
+      "fisoterapeuta sad": "SUBSOLO",
+      "terapeuta ocupacional": "SUBSOLO",
+      "terapeuta ocupacional infantil": "SUBSOLO",
+      "terapia ocupacional": "SUBSOLO",
+      "terapia ocupacional infantil": "SUBSOLO",
+      "osteopatia": "SUBSOLO",
+      "quiropata": "SUBSOLO",
+      
+      // ============ 1º ANDAR ============
+      "psicologo": "1º ANDAR",
+      "psicologo sad": "1º ANDAR",
+      "psicologia infantil": "1º ANDAR",
+      "psiquiatra": "1º ANDAR",
+      "psiquiatra infantil": "1º ANDAR",
+      "fonoaudiologo": "1º ANDAR",
+      "fonoaudiologo sad": "1º ANDAR",
+      "foniatra": "1º ANDAR",
+      "nutricionista": "1º ANDAR",
+      "nutricionista sad": "1º ANDAR",
+      "nutri maternoinfantil": "1º ANDAR",
+      "ortoptista": "1º ANDAR",
+      
+      // ============ TÉRREO ============
+      "ultrassonografista": "TÉRREO",
+      "medico ultrassonografista": "TÉRREO",
+      "cardiologista": "TÉRREO",
+      "clinico geral": "TÉRREO",
+      "clinico geral / cardiologia": "TÉRREO",
+      "medico da familia": "TÉRREO",
+      "medico da família": "TÉRREO",
+      "medico da dor": "TÉRREO",
+      "procedimento medico da dor": "TÉRREO",
+      "enfermeiro": "TÉRREO",
+      "enfermeiro sad": "TÉRREO",
+      "tecnico de enfermagem": "TÉRREO",
+      "vacinação": "TÉRREO",
+      "vacinação influenza jp": "TÉRREO",
+      "vacinação prevenar 13- jp": "TÉRREO",
+      "vacinacao herpes zoster": "TÉRREO",
+      "vacina herpes zoster": "TÉRREO",
+      "teste ergométrico": "TÉRREO",
+      "ecocardiograma": "TÉRREO",
+      "mapa": "TÉRREO",
+      "holter": "TÉRREO",
+      "exame antígeno": "TÉRREO",
+      "exame antígeno": "TÉRREO",
+      "procedimento dermatologico": "TÉRREO",
+      "procedimento oftalmologico": "TÉRREO",
+      "dermatologista": "TÉRREO",
+      "oftalmologista": "TÉRREO",
+      "oftalmologista infantil": "TÉRREO",
+      "ginecologista": "TÉRREO",
+      "obstetra": "TÉRREO",
+      "ginecologista / obstetra": "TÉRREO",
+      "urologista": "TÉRREO",
+      "otorrinolaringologista": "TÉRREO",
+      "ortopedista": "TÉRREO",
+      "neurologista": "TÉRREO",
+      "neurologista infantil": "TÉRREO",
+      "neurocirurgiao": "TÉRREO",
+      "endocrinologista": "TÉRREO",
+      "endocrinologia infantil": "TÉRREO",
+      "gastroenterologista": "TÉRREO",
+      "endoscopista": "TÉRREO",
+      "endoscopia e colonoscopia": "TÉRREO",
+      "pneumologista": "TÉRREO",
+      "reumatologista": "TÉRREO",
+      "nefrologista": "TÉRREO",
+      "infectologista": "TÉRREO",
+      "hematologista": "TÉRREO",
+      "oncologista clinico": "TÉRREO",
+      "oncologista cirurgico": "TÉRREO",
+      "oncologista pediatrico": "TÉRREO",
+      "radiologista": "TÉRREO",
+      "radioterapeuta": "TÉRREO",
+      "anestesista": "TÉRREO",
+      "cirurgiao": "TÉRREO",
+      "cirurgiao cardiovascular": "TÉRREO",
+      "cirurgiao de cabeca e pescoco": "TÉRREO",
+      "cirurgiao de mao": "TÉRREO",
+      "cirurgiao do aparelho digestivo": "TÉRREO",
+      "cirurgiao pediatrico": "TÉRREO",
+      "cirurgiao plastico": "TÉRREO",
+      "cirurgiao toracico": "TÉRREO",
+      "cirurgiao vascular": "TÉRREO",
+      "angiologista": "TÉRREO",
+      "medico do trabalho": "TÉRREO",
+      "medico legista": "TÉRREO",
+      "medico nuclear": "TÉRREO",
+      "medico sad": "TÉRREO",
+      "plantonista": "TÉRREO",
+      "pericias medicas": "TÉRREO",
+      "saude da familia": "TÉRREO",
+      "geral comunitario": "TÉRREO",
+      "geriatra": "TÉRREO",
+      "pediatra": "TÉRREO",
+      "mastologista": "TÉRREO",
+      "proctologista": "TÉRREO",
+      "fisiatra": "TÉRREO",
+      "alergista/imunologista": "TÉRREO",
+      "anatopatologista": "TÉRREO",
+      "broncoesofalogista": "TÉRREO",
+      "cancerologista": "TÉRREO",
+      "citopatologista": "TÉRREO",
+      "medicina esportiva/ nutrologia": "TÉRREO",
+      "geneticista clinico": "TÉRREO",
+      "hansenologista": "TÉRREO",
+      "hemoterapeuta": "TÉRREO",
+      "homeopata": "TÉRREO",
+      "intensivista": "TÉRREO",
+      "patologista clinico": "TÉRREO",
+      "sanitarista": "TÉRREO",
+      "veterinario": "TÉRREO",
+      "acupunturista": "TÉRREO",
+      "nutrologista": "TÉRREO",
+      "nutricionista (saude em acao cg)": "TÉRREO",
+      "nutricionista (saude em acao patos)": "TÉRREO",
+      "outros profissionais nao classificaveis nessa tabela (padrao)": "TÉRREO",
+      "sem preferência": "TÉRREO",
+      "medico da família": "TÉRREO",
+      "procedimento": "TÉRREO",
+      "sad": "TÉRREO",
+      "medico": "TÉRREO",
+    };
+
+    // Verifica se a especialidade está no mapeamento
+    for (const [key, value] of Object.entries(localMap)) {
+      if (especialidade.includes(key)) {
+        return value;
+      }
+    }
+
+    // Se tiver um local específico cadastrado, usa ele
+    if (consulta.localidadePainel) {
+      return consulta.localidadePainel;
+    }
+
+    return "Local não informado";
+  })()}
+</p>  
     </div>
 
     {/* BOTÃO - Fixo na parte inferior */}
@@ -2680,7 +2826,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
             : void abrirEtapaSenha(consulta)
         }
         disabled={deveProcurarRecepcao}
-        className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[1.6rem] ${
+        className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[1.3rem] ${
           deveProcurarRecepcao
             ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
             : "bg-[#00338d] hover:bg-[#00286f]"
