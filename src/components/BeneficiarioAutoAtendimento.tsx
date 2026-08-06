@@ -1171,6 +1171,63 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }
   };
 
+  // Função auxiliar para obter o local baseado na especialidade
+  const obterLocalPorEspecialidade = (
+    consulta: ConsultaAutoAtendimento,
+  ): string => {
+    const especialidade = consulta.especialidadeNome?.toLowerCase() || "";
+
+    const localMap: Record<string, string> = {
+      fisioterapeuta: "SUBSOLO (Fisioterapia)",
+      "fisioterapeuta sad": "SUBSOLO (Fisioterapia)",
+      "terapeuta ocupacional": "SUBSOLO (Terapia Ocupacional)",
+      "terapia ocupacional": "SUBSOLO (Terapia Ocupacional)",
+      osteopatia: "SUBSOLO (Osteopatia)",
+      quiropata: "SUBSOLO (Quiropraxia)",
+      psicologo: "1º ANDAR (Psicologia)",
+      "psicologo sad": "1º ANDAR (Psicologia)",
+      "psicologia infantil": "1º ANDAR (Psicologia Infantil)",
+      psiquiatra: "1º ANDAR (Psiquiatria)",
+      "psiquiatra infantil": "1º ANDAR (Psiquiatria Infantil)",
+      fonoaudiologo: "1º ANDAR (Fonoaudiologia)",
+      "fonoaudiologo sad": "1º ANDAR (Fonoaudiologia)",
+      nutricionista: "1º ANDAR (Nutrição)",
+      "nutricionista sad": "1º ANDAR (Nutrição)",
+      ultrassonografista: "TÉRREO (Ultrassonografia)",
+      "medico ultrassonografista": "TÉRREO (Ultrassonografia)",
+      ecocardiograma: "TÉRREO (Ecocardiograma)",
+      "teste ergométrico": "TÉRREO (Teste Ergométrico)",
+      mapa: "TÉRREO (Mapa)",
+      holter: "TÉRREO (Holter)",
+      vacinação: "TÉRREO (Vacinação)",
+      dermatologista: "TÉRREO (Dermatologia)",
+      oftalmologista: "TÉRREO (Oftalmologia)",
+      cardiologista: "TÉRREO (Cardiologia)",
+      "clinico geral": "TÉRREO (Clínico Geral)",
+      ginecologista: "TÉRREO (Ginecologia)",
+      obstetra: "TÉRREO (Obstetrícia)",
+      ortopedista: "TÉRREO (Ortopedia)",
+      neurologista: "TÉRREO (Neurologia)",
+      pediatra: "TÉRREO (Pediatria)",
+      enfermeiro: "TÉRREO (Enfermagem)",
+      "tecnico de enfermagem": "TÉRREO (Enfermagem)",
+    };
+
+    // Verifica se a especialidade está no mapeamento
+    for (const [key, value] of Object.entries(localMap)) {
+      if (especialidade.includes(key)) {
+        return value;
+      }
+    }
+
+    // Se tiver um local específico cadastrado, usa ele
+    if (consulta.localidadePainel) {
+      return consulta.localidadePainel;
+    }
+
+    return "RECEPÇÃO PRINCIPAL (Térreo)";
+  };
+
   const handleTokenInlineKeyDown = (
     idEvento: number,
     indice: number,
@@ -1231,16 +1288,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setTimeout(() => focarCampoTokenInline(idEvento, ultimoIndice), 0);
   };
 
-  const finalizarFluxoTokenInline = async (idEvento: number) => {
-    await buscarConsultas();
-    setConsultaProcessandoSenhaId(null);
-    setConsultaTokenAbertaId(idEvento);
-    setBloqueioReenvioAtePorConsulta((prev) => ({
-      ...prev,
-      [idEvento]: prev[idEvento] || Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
-    }));
-    setAbrirTokenInlineAposEnvio(false);
-  };
+ const finalizarFluxoTokenInline = async (idEvento: number) => {
+  await buscarConsultas();
+
+  setConsultaProcessandoSenhaId(null);
+  setConsultaTokenAbertaId(idEvento);
+  setBloqueioReenvioAtePorConsulta((prev) => ({
+    ...prev,
+    [idEvento]: prev[idEvento] || Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
+  }));
+  setAbrirTokenInlineAposEnvio(false);
+};
 
   const reenviarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
@@ -1361,98 +1419,318 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
   };
 
-  const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
-    const token = String(
-      tokenDigitadoPorConsulta[consulta.idEvento] || "",
-    ).replace(/\D/g, "");
-    const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
-    const numeroGuiaOperadora = resolveNumeroGuiaOperadoraInline(
-      senhaGuia,
-      consulta.numeroGuiaOperadora,
+const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
+  const token = String(
+    tokenDigitadoPorConsulta[consulta.idEvento] || "",
+  ).replace(/\D/g, "");
+  const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
+  const numeroGuiaOperadora = resolveNumeroGuiaOperadoraInline(
+    senhaGuia,
+    consulta.numeroGuiaOperadora,
+  );
+
+  if (token.length !== 4) {
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: "Digite os 4 dígitos do token.",
+    }));
+    await exibirModalErroTokenInline(
+      consulta.idEvento,
+      "Digite os 4 dígitos do token.",
     );
-
-    if (token.length !== 4) {
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: "Digite os 4 dígitos do token.",
-      }));
-      await exibirModalErroTokenInline(
-        consulta.idEvento,
-        "Digite os 4 dígitos do token.",
-      );
-      return;
-    }
-    if (!senhaGuia) {
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]:
-          "N\u00e3o encontramos a senha da guia para validar o token.",
-      }));
-      await exibirModalErroTokenInline(
-        consulta.idEvento,
+    return;
+  }
+  if (!senhaGuia) {
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]:
         "N\u00e3o encontramos a senha da guia para validar o token.",
-      );
+    }));
+    await exibirModalErroTokenInline(
+      consulta.idEvento,
+      "N\u00e3o encontramos a senha da guia para validar o token.",
+    );
+    return;
+  }
+  limparMensagemTokenInline(consulta.idEvento);
+  setConsultaValidandoTokenId(consulta.idEvento);
+
+  try {
+    const response = await api.post("/sisclinic/token/validar", {
+      token: toSafeTokenString(token),
+      cdBeneficiario: toSafeTokenString(consulta.nrCarteiraPlano),
+      numeroGuiaOperadora,
+    });
+
+    const retornoApi = extrairRetornoApiToken(response.data);
+    const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
+    const mensagemLower = mensagem.toLowerCase();
+    const tokenValidado =
+      mensagemLower.includes("token validado com sucesso") ||
+      mensagemLower.includes("senha ja validada com envio de token");
+
+    if (!tokenValidado) {
+      const mensagemErro =
+        mensagem || "N\u00e3o foi poss\u00edvel validar o token informado.";
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: mensagemErro,
+      }));
+      await exibirModalErroTokenInline(consulta.idEvento, mensagemErro);
       return;
     }
-    limparMensagemTokenInline(consulta.idEvento);
-    setConsultaValidandoTokenId(consulta.idEvento);
 
-    try {
-      const response = await api.post("/sisclinic/token/validar", {
-        token: toSafeTokenString(token),
-        cdBeneficiario: toSafeTokenString(consulta.nrCarteiraPlano),
-        numeroGuiaOperadora,
-      });
+    await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
+      tokenValidado: true,
+    });
 
-      const retornoApi = extrairRetornoApiToken(response.data);
-      const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
-      const mensagemLower = mensagem.toLowerCase();
-      const tokenValidado =
-        mensagemLower.includes("token validado com sucesso") ||
-        mensagemLower.includes("senha ja validada com envio de token");
+    setTokenDigitadoPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: "",
+    }));
+    atualizarFeedbackTokenInline(
+      consulta.idEvento,
+      "success",
+      "Token validado com sucesso. Atendimento liberado.",
+    );
+    setConsultaTokenAbertaId(null);
+    setConsultaTecladoTokenId(null);
 
-      if (!tokenValidado) {
-        const mensagemErro =
-          mensagem || "N\u00e3o foi poss\u00edvel validar o token informado.";
-        setTokenErroPorConsulta((prev) => ({
-          ...prev,
-          [consulta.idEvento]: mensagemErro,
-        }));
-        await exibirModalErroTokenInline(consulta.idEvento, mensagemErro);
-        return;
+    // Buscar consultas atualizadas
+    await buscarConsultas();
+
+    // Função auxiliar para obter o local baseado na especialidade
+    const obterLocalPorEspecialidade = (
+      consultaItem: ConsultaAutoAtendimento,
+    ): string => {
+      const especialidade = consultaItem.especialidadeNome?.toLowerCase() || "";
+
+      const localMap: Record<string, string> = {
+        // SUBSOLO
+        fisioterapeuta: "SUBSOLO (Fisioterapia)",
+        "fisioterapeuta sad": "SUBSOLO (Fisioterapia)",
+        "fisoterapeuta sad": "SUBSOLO (Fisioterapia)",
+        "terapeuta ocupacional": "SUBSOLO (Terapia Ocupacional)",
+        "terapeuta ocupacional infantil": "SUBSOLO (Terapia Ocupacional Infantil)",
+        "terapia ocupacional": "SUBSOLO (Terapia Ocupacional)",
+        "terapia ocupacional infantil": "SUBSOLO (Terapia Ocupacional Infantil)",
+        osteopatia: "SUBSOLO (Osteopatia)",
+        quiropata: "SUBSOLO (Quiropraxia)",
+
+        // 1º ANDAR
+        dermatologista: "1º ANDAR (Dermatologia)",
+        psicologo: "1º ANDAR (Psicologia)",
+        "psicologo sad": "1º ANDAR (Psicologia)",
+        "psicologia infantil": "1º ANDAR (Psicologia Infantil)",
+        psiquiatra: "1º ANDAR (Psiquiatria)",
+        "psiquiatra infantil": "1º ANDAR (Psiquiatria Infantil)",
+        fonoaudiologo: "1º ANDAR (Fonoaudiologia)",
+        "fonoaudiologo sad": "1º ANDAR (Fonoaudiologia)",
+        foniatra: "1º ANDAR (Foniatria)",
+        nutricionista: "1º ANDAR (Nutrição)",
+        "nutricionista sad": "1º ANDAR (Nutrição)",
+        "nutri maternoinfantil": "1º ANDAR (Nutrição Maternoinfantil)",
+        ortoptista: "1º ANDAR (Ortoptista)",
+
+        // TÉRREO
+        ultrassonografista: "TÉRREO (Ultrassonografia)",
+        "medico ultrassonografista": "TÉRREO (Ultrassonografia)",
+        ecocardiograma: "TÉRREO (Ecocardiograma)",
+        "teste ergométrico": "TÉRREO (Teste Ergométrico)",
+        mapa: "TÉRREO (Mapa)",
+        holter: "TÉRREO (Holter)",
+        vacinação: "TÉRREO (Vacinação)",
+        "vacinação influenza jp": "TÉRREO (Vacinação)",
+        "vacinação prevenar 13- jp": "TÉRREO (Vacinação)",
+        "vacinacao herpes zoster": "TÉRREO (Vacinação)",
+        "vacina herpes zoster": "TÉRREO (Vacinação)",
+        "exame antígeno": "TÉRREO (Exame Antígeno)",
+        "procedimento dermatologico": "TÉRREO (Dermatologia)",
+        oftalmologista: "TÉRREO (Oftalmologia)",
+        "oftalmologista infantil": "TÉRREO (Oftalmologia Infantil)",
+        "procedimento oftalmologico": "TÉRREO (Oftalmologia)",
+        cardiologista: "TÉRREO (Cardiologia)",
+        "clinico geral": "TÉRREO (Clínico Geral)",
+        "clinico geral / cardiologia": "TÉRREO (Clínico Geral / Cardiologia)",
+        "medico da familia": "TÉRREO (Medicina da Família)",
+        "medico da família": "TÉRREO (Medicina da Família)",
+        "medico da dor": "TÉRREO (Medicina da Dor)",
+        "procedimento medico da dor": "TÉRREO (Medicina da Dor)",
+        ginecologista: "TÉRREO (Ginecologia)",
+        obstetra: "TÉRREO (Obstetrícia)",
+        "ginecologista / obstetra": "TÉRREO (Ginecologia / Obstetrícia)",
+        urologista: "TÉRREO (Urologia)",
+        otorrinolaringologista: "TÉRREO (Otorrinolaringologia)",
+        ortopedista: "TÉRREO (Ortopedia)",
+        neurologista: "TÉRREO (Neurologia)",
+        "neurologista infantil": "TÉRREO (Neurologia Infantil)",
+        neurocirurgiao: "TÉRREO (Neurocirurgia)",
+        endocrinologista: "TÉRREO (Endocrinologia)",
+        "endocrinologia infantil": "TÉRREO (Endocrinologia Infantil)",
+        gastroenterologista: "TÉRREO (Gastroenterologia)",
+        endoscopista: "TÉRREO (Endoscopia)",
+        "endoscopia e colonoscopia": "TÉRREO (Endoscopia e Colonoscopia)",
+        pneumologista: "TÉRREO (Pneumologia)",
+        reumatologista: "TÉRREO (Reumatologia)",
+        nefrologista: "TÉRREO (Nefrologia)",
+        infectologista: "TÉRREO (Infectologia)",
+        hematologista: "TÉRREO (Hematologia)",
+        "oncologista clinico": "TÉRREO (Oncologia Clínica)",
+        "oncologista cirurgico": "TÉRREO (Oncologia Cirúrgica)",
+        "oncologista pediatrico": "TÉRREO (Oncologia Pediátrica)",
+        radiologista: "TÉRREO (Radiologia)",
+        radioterapeuta: "TÉRREO (Radioterapia)",
+        anestesista: "TÉRREO (Anestesiologia)",
+        cirurgiao: "TÉRREO (Cirurgia)",
+        "cirurgiao cardiovascular": "TÉRREO (Cirurgia Cardiovascular)",
+        "cirurgiao de cabeca e pescoco": "TÉRREO (Cirurgia de Cabeça e Pescoço)",
+        "cirurgiao de mao": "TÉRREO (Cirurgia de Mão)",
+        "cirurgiao do aparelho digestivo": "TÉRREO (Cirurgia do Aparelho Digestivo)",
+        "cirurgiao pediatrico": "TÉRREO (Cirurgia Pediátrica)",
+        "cirurgiao plastico": "TÉRREO (Cirurgia Plástica)",
+        "cirurgiao toracico": "TÉRREO (Cirurgia Torácica)",
+        "cirurgiao vascular": "TÉRREO (Cirurgia Vascular)",
+        angiologista: "TÉRREO (Angiologia)",
+        enfermeiro: "TÉRREO (Enfermagem)",
+        "enfermeiro sad": "TÉRREO (Enfermagem)",
+        "tecnico de enfermagem": "TÉRREO (Enfermagem)",
+        pediatra: "TÉRREO (Pediatria)",
+        geriatra: "TÉRREO (Geriatria)",
+        mastologista: "TÉRREO (Mastologia)",
+        proctologista: "TÉRREO (Proctologia)",
+        fisiatra: "TÉRREO (Fisiatria)",
+        "medico do trabalho": "TÉRREO (Medicina do Trabalho)",
+        "medico legista": "TÉRREO (Medicina Legal)",
+        "medico nuclear": "TÉRREO (Medicina Nuclear)",
+        "medico sad": "TÉRREO (Medicina SAD)",
+        plantonista: "TÉRREO (Plantão)",
+        "pericias medicas": "TÉRREO (Perícias Médicas)",
+        "saude da familia": "TÉRREO (Saúde da Família)",
+        "geral comunitario": "TÉRREO (Geral Comunitário)",
+        "alergista/imunologista": "TÉRREO (Alergologia/Imunologia)",
+        acupunturista: "TÉRREO (Acupuntura)",
+        nutrologista: "TÉRREO (Nutrologia)",
+        "nutricionista (saude em acao cg)": "TÉRREO (Nutrição)",
+        "nutricionista (saude em acao patos)": "TÉRREO (Nutrição)",
+        "outros profissionais nao classificaveis nessa tabela (padrao)": "TÉRREO (Atendimento Geral)",
+        "sem preferência": "TÉRREO (Atendimento Geral)",
+        procedimento: "TÉRREO (Procedimento)",
+        sad: "TÉRREO (Atendimento SAD)",
+        medico: "TÉRREO (Atendimento Médico)",
+      };
+
+      for (const [key, value] of Object.entries(localMap)) {
+        if (especialidade.includes(key)) {
+          return value;
+        }
       }
 
-      await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
-        tokenValidado: true,
-      });
+      if (consultaItem.localidadePainel) {
+        return consultaItem.localidadePainel;
+      }
 
-      setTokenDigitadoPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: "",
-      }));
-      atualizarFeedbackTokenInline(
-        consulta.idEvento,
-        "success",
-        "Token validado com sucesso. Atendimento liberado.",
+      return "RECEPÇÃO PRINCIPAL (Térreo)";
+    };
+
+    // ✅ FILTRO: apenas consultas que NÃO foram autorizadas
+    const consultasRestantes = consultas.filter(
+      (c) =>
+        c.idEvento !== consulta.idEvento &&
+        c.statusAgendamento !== "FALTOU" &&
+        c.statusAgendamento !== "CANCELADO" &&
+        !c.autorizado,
+    );
+
+    const consultasRestantesCount = consultasRestantes.length;
+    const totalConsultas = consultas.length;
+    const localCorreto = obterLocalPorEspecialidade(consulta);
+    const isLastConsulta = consultasRestantesCount === 0;
+
+    let titulo = "";
+    let mensagemSucesso = "";
+
+    if (isLastConsulta) {
+      const consultasAutorizadas = consultas.filter(
+        (c) => c.autorizado && c.tokenValidado,
       );
-      setConsultaTokenAbertaId(null);
-      setConsultaTecladoTokenId(null);
-      await buscarConsultas();
-    } catch (error: any) {
-      const retornoApi = extrairRetornoApiToken(error?.response?.data);
-      const mensagem = normalizarMensagemTokenInline(
-        retornoApi.mensagem || error?.message || "Erro ao validar token",
-      );
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: mensagem,
-      }));
-      await exibirModalErroTokenInline(consulta.idEvento, mensagem);
-    } finally {
-      setConsultaValidandoTokenId(null);
+
+      if (totalConsultas === 1) {
+        const consultaUnica = consultasAutorizadas[0] || consulta;
+        const local = obterLocalPorEspecialidade(consultaUnica);
+        titulo = "✅ CONSULTA LIBERADA!";
+        mensagemSucesso = `Sua consulta com ${consultaUnica.profissionalNome} (${consultaUnica.especialidadeNome}) foi liberada!\n\n📍 Aguarde no ${local}.\n\n🔔 Você já pode seguir para o atendimento.`;
+      } else {
+        titulo = "🎯 TODAS AS CONSULTAS LIBERADAS!";
+
+        let listaConsultas = "";
+        if (consultasAutorizadas.length > 0) {
+          listaConsultas = consultasAutorizadas
+            .sort((a, b) =>
+              String(a.horaInicio).localeCompare(String(b.horaInicio)),
+            )
+            .map((c, index) => {
+              const local = obterLocalPorEspecialidade(c);
+              const hora = formatarHora(c.horaInicio);
+              return `${index + 1}ª - ${hora} - ${c.profissionalNome} (${c.especialidadeNome})\n   📍 Aguarde no ${local}`;
+            })
+            .join("\n\n");
+        }
+
+        mensagemSucesso = `✅ Todas as suas ${totalConsultas} consultas foram liberadas!\n\n📋 Ordem das consultas:\n${listaConsultas}\n\n📍 Aguarde na RECEPÇÃO PRINCIPAL (Térreo) para ser direcionado.`;
+      }
+    } else {
+      titulo = "✅ CONSULTA LIBERADA!";
+
+      const proximasConsultas = consultasRestantes
+        .sort((a, b) =>
+          String(a.horaInicio).localeCompare(String(b.horaInicio)),
+        )
+        .map((c, index) => {
+          const local = obterLocalPorEspecialidade(c);
+          const hora = formatarHora(c.horaInicio);
+          return `${index + 1}ª - ${hora} - ${c.profissionalNome} (${c.especialidadeNome})\n   📍 Aguarde no ${local}`;
+        })
+        .join("\n\n");
+
+      mensagemSucesso = `👏 Consulta com ${consulta.profissionalNome} (${consulta.especialidadeNome}) liberada!\n\n📍 Aguarde no ${localCorreto}.\n\n🔄 Próximas consultas:\n${proximasConsultas}\n\n⚠️ Clique em CONTINUAR para ir para a próxima consulta.`;
     }
-  };
 
+    // ✅ MODAL COM TAMANHO AJUSTADO E COM AÇÃO DE SAIR AO CLICAR EM CONTINUAR
+    await Swal.fire({
+      title: titulo,
+      text: mensagemSucesso,
+      icon: "success",
+      confirmButtonText: "SAIR", // <--- MUDOU PARA "SAIR"
+      allowOutsideClick: false,
+      background: "#ffffff",
+      color: "#0f172a",
+      width: "650px",
+      padding: "2rem",
+      customClass: {
+        popup: "!rounded-[1.4rem] !px-6 !py-5 !max-w-[800px] !w-full",
+        title: "!text-[1.9rem] !font-black !text-emerald-700 !text-center !mb-3",
+        confirmButton: "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-8 !py-3 !text-[1.5rem] !w-full !mt-3 hover:!bg-emerald-700",
+        htmlContainer: "!text-[1.2rem] !leading-relaxed !text-slate-700 !whitespace-pre-line !text-left",
+      },
+    });
+
+    // ✅ AO CLICAR EM "SAIR" - RESETA A TELA E VOLTA PARA O CPF
+    resetarTelaCpf();
+
+  } catch (error: any) {
+    const retornoApi = extrairRetornoApiToken(error?.response?.data);
+    const mensagem = normalizarMensagemTokenInline(
+      retornoApi.mensagem || error?.message || "Erro ao validar token",
+    );
+    setTokenErroPorConsulta((prev) => ({
+      ...prev,
+      [consulta.idEvento]: mensagem,
+    }));
+    await exibirModalErroTokenInline(consulta.idEvento, mensagem);
+  } finally {
+    setConsultaValidandoTokenId(null);
+  }
+};
   const preencherTokenViaTecladoInline = (
     consulta: ConsultaAutoAtendimento,
     digito: string,
@@ -2541,314 +2819,382 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               );
 
                               return (
-<article
-  key={cardConsulta.chave}
-  className={`relative flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2" : "p-2"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
-    autorizacaoConcluida
-      ? "border-emerald-200 bg-emerald-50/55 opacity-75"
-      : "border-slate-200 bg-white"
-  }`}
->
-  <div className="flex min-h-0 flex-1 flex-col">
-    {/* Status - canto superior direito */}
-    <div className="flex justify-end shrink-0">
-      {!compareceuConsulta ||
-      tokenEnviadoNoFluxo ||
-      autorizacaoConcluida ||
-      faltouConsulta ? (
-        <p
-          className={`inline-flex ${tokenInlineVisivel ? "min-h-6 px-2 py-0.5 text-[0.6rem] md:text-[0.65rem]" : "min-h-7 px-3 py-1 text-[0.65rem] md:text-[0.7rem]"} items-center gap-1.5 rounded-full border text-center font-black uppercase tracking-[0.06em] shadow-[0_8px_14px_rgba(15,23,42,0.08)] ${
-            faltouConsulta
-              ? "border-red-200 bg-red-50 text-red-700"
-              : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                ? "border-amber-200 bg-amber-50 text-amber-800"
-                : autorizacaoConcluida
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-blue-200 bg-blue-50 text-[#00338d]"
-          }`}
-        >
-          {!autorizacaoConcluida ? (
-            <span
-              aria-hidden="true"
-              className={`inline-flex h-2 w-2 rounded-full ${
-                faltouConsulta
-                  ? "bg-red-500"
-                  : tokenEnviadoNoFluxo
-                    ? "bg-amber-500"
-                    : "bg-[#00338d]"
-              }`}
-            />
-          ) : null}
-          {autorizacaoConcluida ? (
-            <span
-              aria-hidden="true"
-              className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[0.6rem] text-white"
-            >
-              {"\u2713"}
-            </span>
-          ) : null}
-          {faltouConsulta
-            ? "Consulta não realizada"
-            : tokenEnviadoNoFluxo && !autorizacaoConcluida
-              ? "AGUARDANDO SEU TOKEN"
-              : autorizacaoConcluida
-                ? "Atendimento liberado"
-                : formatarStatus(consulta.statusAgendamento)}
-        </p>
-      ) : null}
-    </div>
+                                <article
+                                  key={cardConsulta.chave}
+                                  className={`relative flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2" : "p-2"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
+                                    autorizacaoConcluida
+                                      ? "border-emerald-200 bg-emerald-50/55 opacity-75"
+                                      : "border-slate-200 bg-white"
+                                  }`}
+                                >
+                                  <div className="flex min-h-0 flex-1 flex-col">
+                                    {/* Status - canto superior direito */}
+                                    <div className="flex justify-end shrink-0">
+                                      {!compareceuConsulta ||
+                                      tokenEnviadoNoFluxo ||
+                                      autorizacaoConcluida ||
+                                      faltouConsulta ? (
+                                        <p
+                                          className={`inline-flex ${tokenInlineVisivel ? "min-h-6 px-2 py-0.5 text-[0.6rem] md:text-[0.65rem]" : "min-h-7 px-3 py-1 text-[0.65rem] md:text-[0.7rem]"} items-center gap-1.5 rounded-full border text-center font-black uppercase tracking-[0.06em] shadow-[0_8px_14px_rgba(15,23,42,0.08)] ${
+                                            faltouConsulta
+                                              ? "border-red-200 bg-red-50 text-red-700"
+                                              : tokenEnviadoNoFluxo &&
+                                                  !autorizacaoConcluida
+                                                ? "border-amber-200 bg-amber-50 text-amber-800"
+                                                : autorizacaoConcluida
+                                                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                                  : "border-blue-200 bg-blue-50 text-[#00338d]"
+                                          }`}
+                                        >
+                                          {!autorizacaoConcluida ? (
+                                            <span
+                                              aria-hidden="true"
+                                              className={`inline-flex h-2 w-2 rounded-full ${
+                                                faltouConsulta
+                                                  ? "bg-red-500"
+                                                  : tokenEnviadoNoFluxo
+                                                    ? "bg-amber-500"
+                                                    : "bg-[#00338d]"
+                                              }`}
+                                            />
+                                          ) : null}
+                                          {autorizacaoConcluida ? (
+                                            <span
+                                              aria-hidden="true"
+                                              className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[0.6rem] text-white"
+                                            >
+                                              {"\u2713"}
+                                            </span>
+                                          ) : null}
+                                          {faltouConsulta
+                                            ? "Consulta não realizada"
+                                            : tokenEnviadoNoFluxo &&
+                                                !autorizacaoConcluida
+                                              ? "AGUARDANDO SEU TOKEN"
+                                              : autorizacaoConcluida
+                                                ? "Atendimento liberado"
+                                                : formatarStatus(
+                                                    consulta.statusAgendamento,
+                                                  )}
+                                        </p>
+                                      ) : null}
+                                    </div>
 
-    {/* Container centralizado - Ocupa todo o espaço disponível */}
-    <div className="flex-1 flex flex-col items-center justify-center text-center gap-0.5 py-1">
-      
-      {/* HORÁRIO - Tamanho reduzido para caber na tela */}
-      {cardConsulta.agrupadoUltrassom ? (
-        <p className="font-black uppercase tracking-[0.05em] text-[#00338d] text-[1.8rem] md:text-[2.2rem] leading-tight">
-          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
-        </p>
-      ) : (
-        <p className="font-black tracking-tight text-[#00338d] text-[3.5rem] md:text-[4rem] leading-none">
-          {formatarHora(consulta.horaInicio)}
-        </p>
-      )}
+                                    {/* Container centralizado - Ocupa todo o espaço disponível */}
+                                    <div className="flex-1 flex flex-col items-center justify-center text-center gap-0.5 py-1">
+                                      {/* HORÁRIO - Tamanho reduzido para caber na tela */}
+                                      {cardConsulta.agrupadoUltrassom ? (
+                                        <p className="font-black uppercase tracking-[0.05em] text-[#00338d] text-[1.8rem] md:text-[2.2rem] leading-tight">
+                                          {obterFaixaHorariosConsultas(
+                                            cardConsulta.consultasRelacionadas,
+                                          ) || "Horários do dia"}
+                                        </p>
+                                      ) : (
+                                        <p className="font-black tracking-tight text-[#00338d] text-[3.5rem] md:text-[4rem] leading-none">
+                                          {formatarHora(consulta.horaInicio)}
+                                        </p>
+                                      )}
 
-      {/* PROFISSIONAL - Nome em maiúsculo - Tamanho reduzido */}
-      <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[1.8rem] md:text-[1.8rem] mt-0.5 leading-tight">
-        {consulta.profissionalNome}
-      </p>
+                                      {/* PROFISSIONAL - Nome em maiúsculo - Tamanho reduzido */}
+                                      <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[1.8rem] md:text-[1.8rem] mt-0.5 leading-tight">
+                                        {consulta.profissionalNome}
+                                      </p>
 
-      {/* ESPECIALIDADE - Tamanho reduzido */}
-      <p className="font-black uppercase text-[#180539] text-[0.85rem] md:text-[1.8rem] leading-tight">
-        {consulta.especialidadeNome}
-      </p>
+                                      {/* ESPECIALIDADE - Tamanho reduzido */}
+                                      <p className="font-black uppercase text-[#180539] text-[0.85rem] md:text-[1.8rem] leading-tight">
+                                        {consulta.especialidadeNome}
+                                      </p>
 
- {/* LOCAL - Dinâmico baseado na especialidade */}
-<p className="font-black text-[#00338d] text-[2.4rem] md:text-[2.4rem] mt-0.5 leading-tight">
-  {(() => {
-    const especialidade = consulta.especialidadeNome?.toLowerCase() || "";
-    
-    // Mapeamento de locais por especialidade
-    const localMap: Record<string, string> = {
-      // ============ SUBSOLO ============
-      "fisioterapeuta": "SUBSOLO",
-      "fisioterapeuta sad": "SUBSOLO",
-      "fisoterapeuta sad": "SUBSOLO",
-      "terapeuta ocupacional": "SUBSOLO",
-      "terapeuta ocupacional infantil": "SUBSOLO",
-      "terapia ocupacional": "SUBSOLO",
-      "terapia ocupacional infantil": "SUBSOLO",
-      "osteopatia": "SUBSOLO",
-      "quiropata": "SUBSOLO",
-      
-      // ============ 1º ANDAR ============
-      "psicologo": "1º ANDAR",
-      "psicologo sad": "1º ANDAR",
-      "psicologia infantil": "1º ANDAR",
-      "psiquiatra": "1º ANDAR",
-      "psiquiatra infantil": "1º ANDAR",
-      "fonoaudiologo": "1º ANDAR",
-      "fonoaudiologo sad": "1º ANDAR",
-      "foniatra": "1º ANDAR",
-      "nutricionista": "1º ANDAR",
-      "nutricionista sad": "1º ANDAR",
-      "nutri maternoinfantil": "1º ANDAR",
-      "ortoptista": "1º ANDAR",
-      
-      // ============ TÉRREO ============
-      "ultrassonografista": "TÉRREO",
-      "medico ultrassonografista": "TÉRREO",
-      "cardiologista": "TÉRREO",
-      "clinico geral": "TÉRREO",
-      "clinico geral / cardiologia": "TÉRREO",
-      "medico da familia": "TÉRREO",
-      "medico da família": "TÉRREO",
-      "medico da dor": "TÉRREO",
-      "procedimento medico da dor": "TÉRREO",
-      "enfermeiro": "TÉRREO",
-      "enfermeiro sad": "TÉRREO",
-      "tecnico de enfermagem": "TÉRREO",
-      "vacinação": "TÉRREO",
-      "vacinação influenza jp": "TÉRREO",
-      "vacinação prevenar 13- jp": "TÉRREO",
-      "vacinacao herpes zoster": "TÉRREO",
-      "vacina herpes zoster": "TÉRREO",
-      "teste ergométrico": "TÉRREO",
-      "ecocardiograma": "TÉRREO",
-      "mapa": "TÉRREO",
-      "holter": "TÉRREO",
-      "exame antígeno": "TÉRREO",
-      "procedimento dermatologico": "TÉRREO",
-      "procedimento oftalmologico": "TÉRREO",
-      "dermatologista": "TÉRREO",
-      "oftalmologista": "TÉRREO",
-      "oftalmologista infantil": "TÉRREO",
-      "ginecologista": "TÉRREO",
-      "obstetra": "TÉRREO",
-      "ginecologista / obstetra": "TÉRREO",
-      "urologista": "TÉRREO",
-      "otorrinolaringologista": "TÉRREO",
-      "ortopedista": "TÉRREO",
-      "neurologista": "TÉRREO",
-      "neurologista infantil": "TÉRREO",
-      "neurocirurgiao": "TÉRREO",
-      "endocrinologista": "TÉRREO",
-      "endocrinologia infantil": "TÉRREO",
-      "gastroenterologista": "TÉRREO",
-      "endoscopista": "TÉRREO",
-      "endoscopia e colonoscopia": "TÉRREO",
-      "pneumologista": "TÉRREO",
-      "reumatologista": "TÉRREO",
-      "nefrologista": "TÉRREO",
-      "infectologista": "TÉRREO",
-      "hematologista": "TÉRREO",
-      "oncologista clinico": "TÉRREO",
-      "oncologista cirurgico": "TÉRREO",
-      "oncologista pediatrico": "TÉRREO",
-      "radiologista": "TÉRREO",
-      "radioterapeuta": "TÉRREO",
-      "anestesista": "TÉRREO",
-      "cirurgiao": "TÉRREO",
-      "cirurgiao cardiovascular": "TÉRREO",
-      "cirurgiao de cabeca e pescoco": "TÉRREO",
-      "cirurgiao de mao": "TÉRREO",
-      "cirurgiao do aparelho digestivo": "TÉRREO",
-      "cirurgiao pediatrico": "TÉRREO",
-      "cirurgiao plastico": "TÉRREO",
-      "cirurgiao toracico": "TÉRREO",
-      "cirurgiao vascular": "TÉRREO",
-      "angiologista": "TÉRREO",
-      "medico do trabalho": "TÉRREO",
-      "medico legista": "TÉRREO",
-      "medico nuclear": "TÉRREO",
-      "medico sad": "TÉRREO",
-      "plantonista": "TÉRREO",
-      "pericias medicas": "TÉRREO",
-      "saude da familia": "TÉRREO",
-      "geral comunitario": "TÉRREO",
-      "geriatra": "TÉRREO",
-      "pediatra": "TÉRREO",
-      "mastologista": "TÉRREO",
-      "proctologista": "TÉRREO",
-      "fisiatra": "TÉRREO",
-      "alergista/imunologista": "TÉRREO",
-      "anatopatologista": "TÉRREO",
-      "broncoesofalogista": "TÉRREO",
-      "cancerologista": "TÉRREO",
-      "citopatologista": "TÉRREO",
-      "medicina esportiva/ nutrologia": "TÉRREO",
-      "geneticista clinico": "TÉRREO",
-      "hansenologista": "TÉRREO",
-      "hemoterapeuta": "TÉRREO",
-      "homeopata": "TÉRREO",
-      "intensivista": "TÉRREO",
-      "patologista clinico": "TÉRREO",
-      "sanitarista": "TÉRREO",
-      "veterinario": "TÉRREO",
-      "acupunturista": "TÉRREO",
-      "nutrologista": "TÉRREO",
-      "nutricionista (saude em acao cg)": "TÉRREO",
-      "nutricionista (saude em acao patos)": "TÉRREO",
-      "outros profissionais nao classificaveis nessa tabela (padrao)": "TÉRREO",
-      "sem preferência": "TÉRREO",
-      "procedimento": "TÉRREO",
-      "sad": "TÉRREO",
-      "medico": "TÉRREO",
-    };
+                                      {/* LOCAL - Dinâmico baseado na especialidade */}
+                                      <p className="font-black text-[#00338d] text-[2.4rem] md:text-[2.4rem] mt-0.5 leading-tight">
+                                        {(() => {
+                                          const especialidade =
+                                            consulta.especialidadeNome?.toLowerCase() ||
+                                            "";
 
-    // Verifica se a especialidade está no mapeamento
-    for (const [key, value] of Object.entries(localMap)) {
-      if (especialidade.includes(key)) {
-        return value;
-      }
-    }
+                                          // Mapeamento de locais por especialidade
+                                          const localMap: Record<
+                                            string,
+                                            string
+                                          > = {
+                                            // ============ SUBSOLO ============
+                                            fisioterapeuta: "SUBSOLO",
+                                            "fisioterapeuta sad": "SUBSOLO",
+                                            "fisoterapeuta sad": "SUBSOLO",
+                                            "terapeuta ocupacional": "SUBSOLO",
+                                            "terapeuta ocupacional infantil":
+                                              "SUBSOLO",
+                                            "terapia ocupacional": "SUBSOLO",
+                                            "terapia ocupacional infantil":
+                                              "SUBSOLO",
+                                            osteopatia: "SUBSOLO",
+                                            quiropata: "SUBSOLO",
 
-    // Se tiver um local específico cadastrado, usa ele
-    if (consulta.localidadePainel) {
-      return consulta.localidadePainel;
-    }
+                                            // ============ 1º ANDAR ============
+                                            dermatologista: "1º ANDAR",
 
-    return "Local não informado";
-  })()}
-</p>  
-    </div>
+                                            psicologo: "1º ANDAR",
+                                            "psicologo sad": "1º ANDAR",
+                                            "psicologia infantil": "1º ANDAR",
+                                            psiquiatra: "1º ANDAR",
+                                            "psiquiatra infantil": "1º ANDAR",
+                                            fonoaudiologo: "1º ANDAR",
+                                            "fonoaudiologo sad": "1º ANDAR",
+                                            foniatra: "1º ANDAR",
+                                            nutricionista: "1º ANDAR",
+                                            "nutricionista sad": "1º ANDAR",
+                                            "nutri maternoinfantil": "1º ANDAR",
+                                            ortoptista: "1º ANDAR",
 
-    {/* BOTÃO - Fixo na parte inferior */}
-    {autorizacaoConcluida ? null : processandoSenha ? (
-      <AutorizacaoPreparandoCard
-        profissionalNome={consulta.profissionalNome}
-        especialidadeNome={consulta.especialidadeNome}
-      />
-    ) : tokenInlineVisivel ? (
-      <div className="shrink-0">
-        <TokenInlinePanel
-          consulta={consulta}
-          tokenDigitado={tokenDigitado}
-          tokenErro={tokenErro}
-          tokenFeedback={tokenFeedback}
-          tecladoTokenAberto={tecladoTokenAberto}
-          reenviandoToken={reenviandoToken}
-          validandoToken={validandoToken}
-          segundosRestantesReenvio={segundosRestantesReenvio}
-          onTokenChange={(indiceToken, valor) =>
-            atualizarTokenDigitadoInline(consulta.idEvento, indiceToken, valor)
-          }
-          onTokenKeyDown={(indiceToken, event) =>
-            handleTokenInlineKeyDown(consulta.idEvento, indiceToken, event)
-          }
-          onTokenPaste={(event) =>
-            handleTokenInlinePaste(consulta.idEvento, event)
-          }
-          onAbrirTeclado={(indiceToken) =>
-            abrirTecladoTokenInline(consulta.idEvento, indiceToken)
-          }
-          onFecharTeclado={fecharTecladoTokenInline}
-          onPreencherDigito={(digito) =>
-            preencherTokenViaTecladoInline(consulta, digito)
-          }
-          onLimparToken={() =>
-            limparTokenViaTecladoInline(consulta.idEvento)
-          }
-          onApagarUltimoDigito={() =>
-            apagarUltimoDigitoViaTecladoInline(consulta.idEvento)
-          }
-          onReenviar={() => void reenviarTokenInline(consulta)}
-          onValidar={() => void validarTokenInline(consulta)}
-        />
-     
-      </div>
-    ) : podeSeguir ? (
-      <button
-        onClick={() =>
-          deveProcurarRecepcao
-            ? undefined
-            : void abrirEtapaSenha(consulta)
-        }
-        disabled={deveProcurarRecepcao}
-        className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[1.3rem] ${
-          deveProcurarRecepcao
-            ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
-            : "bg-[#00338d] hover:bg-[#00286f]"
-        }`}
-      >
-        {deveProcurarRecepcao
-          ? "PROCURE A RECEPÇÃO"
-          : "INICIAR CONSULTA"}
-      </button>
-    ) : (
-      <div
-        className={`flex h-10 shrink-0 w-full items-center justify-center px-3 text-center text-[0.8rem] font-bold ${
-          faltouConsulta
-            ? "bg-red-50 text-red-600"
-            : "bg-slate-100 text-slate-500"
-        }`}
-      >
-        {faltouConsulta
-          ? "Atendimento encerrado"
-          : "Atendimento indisponível"}
-      </div>
-    )}
-  </div>
-</article>
+                                            // ============ TÉRREO ============
+                                            ultrassonografista: "TÉRREO",
+                                            "medico ultrassonografista":
+                                              "TÉRREO",
+                                            cardiologista: "TÉRREO",
+                                            "clinico geral": "TÉRREO",
+                                            "clinico geral / cardiologia":
+                                              "TÉRREO",
+                                            "medico da familia": "TÉRREO",
+                                            "medico da família": "TÉRREO",
+                                            "medico da dor": "TÉRREO",
+                                            "procedimento medico da dor":
+                                              "TÉRREO",
+                                            enfermeiro: "TÉRREO",
+                                            "enfermeiro sad": "TÉRREO",
+                                            "tecnico de enfermagem": "TÉRREO",
+                                            vacinação: "TÉRREO",
+                                            "vacinação influenza jp": "TÉRREO",
+                                            "vacinação prevenar 13- jp":
+                                              "TÉRREO",
+                                            "vacinacao herpes zoster": "TÉRREO",
+                                            "vacina herpes zoster": "TÉRREO",
+                                            "teste ergométrico": "TÉRREO",
+                                            ecocardiograma: "TÉRREO",
+                                            mapa: "TÉRREO",
+                                            holter: "TÉRREO",
+                                            "exame antígeno": "TÉRREO",
+                                            "procedimento dermatologico":
+                                              "TÉRREO",
+                                            "procedimento oftalmologico":
+                                              "TÉRREO",
+                                            oftalmologista: "TÉRREO",
+                                            "oftalmologista infantil": "TÉRREO",
+                                            ginecologista: "TÉRREO",
+                                            obstetra: "TÉRREO",
+                                            "ginecologista / obstetra":
+                                              "TÉRREO",
+                                            urologista: "TÉRREO",
+                                            otorrinolaringologista: "TÉRREO",
+                                            ortopedista: "TÉRREO",
+                                            neurologista: "TÉRREO",
+                                            "neurologista infantil": "TÉRREO",
+                                            neurocirurgiao: "TÉRREO",
+                                            endocrinologista: "TÉRREO",
+                                            "endocrinologia infantil": "TÉRREO",
+                                            gastroenterologista: "TÉRREO",
+                                            endoscopista: "TÉRREO",
+                                            "endoscopia e colonoscopia":
+                                              "TÉRREO",
+                                            pneumologista: "TÉRREO",
+                                            reumatologista: "TÉRREO",
+                                            nefrologista: "TÉRREO",
+                                            infectologista: "TÉRREO",
+                                            hematologista: "TÉRREO",
+                                            "oncologista clinico": "TÉRREO",
+                                            "oncologista cirurgico": "TÉRREO",
+                                            "oncologista pediatrico": "TÉRREO",
+                                            radiologista: "TÉRREO",
+                                            radioterapeuta: "TÉRREO",
+                                            anestesista: "TÉRREO",
+                                            cirurgiao: "TÉRREO",
+                                            "cirurgiao cardiovascular":
+                                              "TÉRREO",
+                                            "cirurgiao de cabeca e pescoco":
+                                              "TÉRREO",
+                                            "cirurgiao de mao": "TÉRREO",
+                                            "cirurgiao do aparelho digestivo":
+                                              "TÉRREO",
+                                            "cirurgiao pediatrico": "TÉRREO",
+                                            "cirurgiao plastico": "TÉRREO",
+                                            "cirurgiao toracico": "TÉRREO",
+                                            "cirurgiao vascular": "TÉRREO",
+                                            angiologista: "TÉRREO",
+                                            "medico do trabalho": "TÉRREO",
+                                            "medico legista": "TÉRREO",
+                                            "medico nuclear": "TÉRREO",
+                                            "medico sad": "TÉRREO",
+                                            plantonista: "TÉRREO",
+                                            "pericias medicas": "TÉRREO",
+                                            "saude da familia": "TÉRREO",
+                                            "geral comunitario": "TÉRREO",
+                                            geriatra: "TÉRREO",
+                                            pediatra: "TÉRREO",
+                                            mastologista: "TÉRREO",
+                                            proctologista: "TÉRREO",
+                                            fisiatra: "TÉRREO",
+                                            "alergista/imunologista": "TÉRREO",
+                                            anatopatologista: "TÉRREO",
+                                            broncoesofalogista: "TÉRREO",
+                                            cancerologista: "TÉRREO",
+                                            citopatologista: "TÉRREO",
+                                            "medicina esportiva/ nutrologia":
+                                              "TÉRREO",
+                                            "geneticista clinico": "TÉRREO",
+                                            hansenologista: "TÉRREO",
+                                            hemoterapeuta: "TÉRREO",
+                                            homeopata: "TÉRREO",
+                                            intensivista: "TÉRREO",
+                                            "patologista clinico": "TÉRREO",
+                                            sanitarista: "TÉRREO",
+                                            veterinario: "TÉRREO",
+                                            acupunturista: "TÉRREO",
+                                            nutrologista: "TÉRREO",
+                                            "nutricionista (saude em acao cg)":
+                                              "TÉRREO",
+                                            "nutricionista (saude em acao patos)":
+                                              "TÉRREO",
+                                            "outros profissionais nao classificaveis nessa tabela (padrao)":
+                                              "TÉRREO",
+                                            "sem preferência": "TÉRREO",
+                                            procedimento: "TÉRREO",
+                                            sad: "TÉRREO",
+                                            medico: "TÉRREO",
+                                          };
+
+                                          // Verifica se a especialidade está no mapeamento
+                                          for (const [
+                                            key,
+                                            value,
+                                          ] of Object.entries(localMap)) {
+                                            if (especialidade.includes(key)) {
+                                              return value;
+                                            }
+                                          }
+
+                                          // Se tiver um local específico cadastrado, usa ele
+                                          if (consulta.localidadePainel) {
+                                            return consulta.localidadePainel;
+                                          }
+
+                                          return "Local não informado";
+                                        })()}
+                                      </p>
+                                    </div>
+
+                                    {/* BOTÃO - Fixo na parte inferior */}
+                                    {autorizacaoConcluida ? null : processandoSenha ? (
+                                      <AutorizacaoPreparandoCard
+                                        profissionalNome={
+                                          consulta.profissionalNome
+                                        }
+                                        especialidadeNome={
+                                          consulta.especialidadeNome
+                                        }
+                                      />
+                                    ) : tokenInlineVisivel ? (
+                                      <div className="shrink-0">
+                                        <TokenInlinePanel
+                                          consulta={consulta}
+                                          tokenDigitado={tokenDigitado}
+                                          tokenErro={tokenErro}
+                                          tokenFeedback={tokenFeedback}
+                                          tecladoTokenAberto={
+                                            tecladoTokenAberto
+                                          }
+                                          reenviandoToken={reenviandoToken}
+                                          validandoToken={validandoToken}
+                                          segundosRestantesReenvio={
+                                            segundosRestantesReenvio
+                                          }
+                                          onTokenChange={(indiceToken, valor) =>
+                                            atualizarTokenDigitadoInline(
+                                              consulta.idEvento,
+                                              indiceToken,
+                                              valor,
+                                            )
+                                          }
+                                          onTokenKeyDown={(
+                                            indiceToken,
+                                            event,
+                                          ) =>
+                                            handleTokenInlineKeyDown(
+                                              consulta.idEvento,
+                                              indiceToken,
+                                              event,
+                                            )
+                                          }
+                                          onTokenPaste={(event) =>
+                                            handleTokenInlinePaste(
+                                              consulta.idEvento,
+                                              event,
+                                            )
+                                          }
+                                          onAbrirTeclado={(indiceToken) =>
+                                            abrirTecladoTokenInline(
+                                              consulta.idEvento,
+                                              indiceToken,
+                                            )
+                                          }
+                                          onFecharTeclado={
+                                            fecharTecladoTokenInline
+                                          }
+                                          onPreencherDigito={(digito) =>
+                                            preencherTokenViaTecladoInline(
+                                              consulta,
+                                              digito,
+                                            )
+                                          }
+                                          onLimparToken={() =>
+                                            limparTokenViaTecladoInline(
+                                              consulta.idEvento,
+                                            )
+                                          }
+                                          onApagarUltimoDigito={() =>
+                                            apagarUltimoDigitoViaTecladoInline(
+                                              consulta.idEvento,
+                                            )
+                                          }
+                                          onReenviar={() =>
+                                            void reenviarTokenInline(consulta)
+                                          }
+                                          onValidar={() =>
+                                            void validarTokenInline(consulta)
+                                          }
+                                        />
+                                      </div>
+                                    ) : podeSeguir ? (
+                                      <button
+                                        onClick={() =>
+                                          deveProcurarRecepcao
+                                            ? undefined
+                                            : void abrirEtapaSenha(consulta)
+                                        }
+                                        disabled={deveProcurarRecepcao}
+                                        className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[1.3rem] ${
+                                          deveProcurarRecepcao
+                                            ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
+                                            : "bg-[#00338d] hover:bg-[#00286f]"
+                                        }`}
+                                      >
+                                        {deveProcurarRecepcao
+                                          ? "PROCURE A RECEPÇÃO"
+                                          : "INICIAR CONSULTA"}
+                                      </button>
+                                    ) : (
+                                      <div
+                                        className={`flex h-10 shrink-0 w-full items-center justify-center px-3 text-center text-[0.8rem] font-bold ${
+                                          faltouConsulta
+                                            ? "bg-red-50 text-red-600"
+                                            : "bg-slate-100 text-slate-500"
+                                        }`}
+                                      >
+                                        {faltouConsulta
+                                          ? "Atendimento encerrado"
+                                          : "Atendimento indisponível"}
+                                      </div>
+                                    )}
+                                  </div>
+                                </article>
                               );
                             })()
                           : null}
