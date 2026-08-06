@@ -2613,17 +2613,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       )}
 
       {/* PROFISSIONAL - Nome em maiúsculo - Tamanho reduzido */}
-      <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[0.95rem] md:text-[1.1rem] mt-0.5 leading-tight">
+      <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[1.6rem] md:text-[1.6rem] mt-0.5 leading-tight">
         {consulta.profissionalNome}
       </p>
 
       {/* ESPECIALIDADE - Tamanho reduzido */}
-      <p className="font-bold uppercase text-[#180539] text-[0.85rem] md:text-[0.95rem] leading-tight">
+      <p className="font-bold uppercase text-[#180539] text-[0.85rem] md:text-[1.6rem] leading-tight">
         {consulta.especialidadeNome}
       </p>
 
       {/* LOCAL - Tamanho reduzido */}
-      <p className="font-black text-[#00338d] text-[0.95rem] md:text-[1.1rem] mt-0.5 leading-tight">
+      <p className="font-black text-[#00338d] text-[1.6rem] md:text-[1.6rem] mt-0.5 leading-tight">
         {consulta.localidadePainel || "Local não informado"}
       </p>    
     </div>
@@ -2670,10 +2670,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
           onReenviar={() => void reenviarTokenInline(consulta)}
           onValidar={() => void validarTokenInline(consulta)}
         />
-        {/* Texto "Não recebeu? Toque em reenviar token." */}
-        <p className="text-center text-[0.6rem] text-slate-500 mt-0.5">
-          Não recebeu? Toque em reenviar token.
-        </p>
+     
       </div>
     ) : podeSeguir ? (
       <button
@@ -2683,7 +2680,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
             : void abrirEtapaSenha(consulta)
         }
         disabled={deveProcurarRecepcao}
-        className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[0.95rem] ${
+        className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[1.6rem] ${
           deveProcurarRecepcao
             ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
             : "bg-[#00338d] hover:bg-[#00286f]"
@@ -2741,7 +2738,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                     <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
                       {"AUTORIZA\u00c7\u00c3O"}
                     </h2>
-                    <p className="mt-2 text-[0.95rem] text-blue-100">
+                    <p className="mt-2 text-[1.6rem] text-blue-100">
                       {
                         "Confira o atendimento. A senha do painel ser\u00e1 gerada e vinculada automaticamente antes de seguir, para autoriza\u00e7\u00e3o."
                       }

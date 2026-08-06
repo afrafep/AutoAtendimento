@@ -88,7 +88,7 @@ export default function TokenInlinePanel({
               onFocus={() => onAbrirTeclado(indiceToken)}
               onClick={() => onAbrirTeclado(indiceToken)}
               readOnly
-              className="h-[4.6rem] w-[4.2rem] rounded-[1rem] border border-slate-300 bg-white text-center text-[1.9rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[5.2rem] md:w-[4.8rem] md:text-[2.2rem]"
+              className="h-[3rem] w-[3rem] rounded-[1rem] border border-slate-300 bg-white text-center text-[1.9rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[4.2rem] md:w-[4.0rem] md:text-[2.2rem]"
             />
           ))}
         </div>
@@ -153,7 +153,7 @@ export default function TokenInlinePanel({
             type="button"
             onClick={onReenviar}
             disabled={reenviandoToken || validandoToken || reenvioBloqueado}
-            className="h-12 rounded-[0.95rem] border border-orange-600 bg-orange-500 px-4 text-[0.84rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-[3.25rem]"
+            className="h-10 rounded-[0.70rem] border border-orange-600 bg-orange-500 px-4 text-[0.84rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-[3.0rem]"
           >
             {reenviandoToken
               ? "REENVIANDO..."
@@ -165,7 +165,7 @@ export default function TokenInlinePanel({
             type="button"
             onClick={onValidar}
             disabled={validandoToken || reenviandoToken || !tokenCompleto}
-            className="h-12 rounded-[0.95rem] bg-emerald-600 px-4 text-[0.84rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-[3.25rem]"
+            className="h-12 rounded-[0.95rem] bg-emerald-600 px-4 text-[0.84rem] font-black uppercase tracking-[0.03em] text-white shadow-[0_10px_18px_rgba(5,150,105,0.22)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 md:h-[3.0rem]"
           >
             {validandoToken ? "VALIDANDO..." : "CONFIRMAR TOKEN"}
           </button>
