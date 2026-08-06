@@ -2352,14 +2352,15 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                                 ? "Atendimento liberado"
                                                 : formatarStatus(consulta.statusAgendamento)}
                                         </p>
-                                        </div>
+                                        </div>                                        
                                       ) : null}
                                       {tokenInlineVisivel ? (
+                                        
                                         <div className="min-w-0 text-left">
                                           <p className="truncate text-[1.55rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.95rem]">
                                             {`${consulta.profissionalNome} - ${consulta.especialidadeNome}`}
                                           </p>
-                                        </div>
+                                        </div>                                        
                                       ) : null}
                                     </div>
 
@@ -2372,6 +2373,7 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                       ) : (
                                         <p className={`${tokenInlineVisivel ? "text-[4.25rem] md:text-[5.1rem]" : "text-[5rem] md:text-[5.9rem]"} font-black tracking-tight text-[#00338d]`}>
                                           {formatarHora(consulta.horaInicio)}
+                                          
                                         </p>
                                       )}
 
@@ -2382,6 +2384,11 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           autorizacaoConcluida={autorizacaoConcluida}
                                         />
                                       )}
+                                      <p className={`${tokenInlineVisivel ? "text-[1.25rem] md:text-[1.8rem]" : "text-[2rem] md:text-[2.0rem]"} font-black tracking-tight text-[#00338d]`}>
+                                                                                          <span className="font-bold">{consulta.localidadePainel || "Local não informado"}</span>
+
+
+                                          </p>
                                     </div>
                                     {autorizacaoConcluida ? null : processandoSenha ? (
                                       <AutorizacaoPreparandoCard
@@ -2537,121 +2544,3 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
