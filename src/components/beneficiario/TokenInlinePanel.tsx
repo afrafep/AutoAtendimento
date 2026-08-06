@@ -69,7 +69,7 @@ export default function TokenInlinePanel({
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-2.5 text-center">
         <div>
           <p className="text-[1.08rem] font-black uppercase tracking-[0.04em] text-slate-900 md:text-[1.2rem]">
-            {"Digite os 4 d\u00edgitos do token."}
+            {"Digite os 4 d\u00edgitos do seu token enviado para o Aplicativo ou sms."}
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export default function TokenInlinePanel({
               onFocus={() => onAbrirTeclado(indiceToken)}
               onClick={() => onAbrirTeclado(indiceToken)}
               readOnly
-              className="h-[3rem] w-[3rem] rounded-[1rem] border border-slate-300 bg-white text-center text-[1.9rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[4.2rem] md:w-[4.0rem] md:text-[2.2rem]"
+              className="h-[2rem] w-[2rem] rounded-[1rem] border border-slate-300 bg-white text-center text-[1.9rem] font-black text-slate-900 shadow-[0_8px_18px_rgba(15,23,42,0.06)] outline-none transition focus:border-cyan-400 focus:bg-sky-50 md:h-[3.9rem] md:w-[3.8rem] md:text-[2.6rem]"
             />
           ))}
         </div>

@@ -2613,17 +2613,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       )}
 
       {/* PROFISSIONAL - Nome em maiúsculo - Tamanho reduzido */}
-      <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[1.6rem] md:text-[1.6rem] mt-0.5 leading-tight">
+      <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[1.8rem] md:text-[1.8rem] mt-0.5 leading-tight">
         {consulta.profissionalNome}
       </p>
 
       {/* ESPECIALIDADE - Tamanho reduzido */}
-      <p className="font-bold uppercase text-[#180539] text-[0.85rem] md:text-[1.6rem] leading-tight">
+      <p className="font-black uppercase text-[#180539] text-[0.85rem] md:text-[1.8rem] leading-tight">
         {consulta.especialidadeNome}
       </p>
 
       {/* LOCAL - Tamanho reduzido */}
-      <p className="font-black text-[#00338d] text-[1.6rem] md:text-[1.6rem] mt-0.5 leading-tight">
+      <p className="font-black text-[#00338d] text-[1.6rem] md:text-[1.8rem] mt-0.5 leading-tight">
         {consulta.localidadePainel || "Local não informado"}
       </p>    
     </div>
