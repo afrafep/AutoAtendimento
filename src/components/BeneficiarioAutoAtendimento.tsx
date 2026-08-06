@@ -2541,7 +2541,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
                               );
 
                               return (
-
 <article
   key={cardConsulta.chave}
   className={`relative flex min-h-0 flex-1 flex-col border ${tokenInlineVisivel ? "p-2" : "p-2.5"} shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
@@ -2550,99 +2549,87 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       : "border-slate-200 bg-white"
   }`}
 >
-  <div className="flex min-h-0 flex-1 flex-col gap-2.5">
-    <div className="flex flex-col gap-2.5">
+  <div className="flex min-h-0 flex-1 flex-col">
+    {/* Status - canto superior direito */}
+    <div className="flex justify-end">
       {!compareceuConsulta ||
       tokenEnviadoNoFluxo ||
       autorizacaoConcluida ||
       faltouConsulta ? (
-        <div className="flex justify-end">
-          <p
-            className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} max-w-full items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
-              faltouConsulta
-                ? "border-red-200 bg-red-50 text-red-700"
-                : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                  ? "border-amber-200 bg-amber-50 text-amber-800"
-                  : autorizacaoConcluida
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : "border-blue-200 bg-blue-50 text-[#00338d]"
-            }`}
-          >
-            {!autorizacaoConcluida ? (
-              <span
-                aria-hidden="true"
-                className={`inline-flex h-2.5 w-2.5 rounded-full ${
-                  faltouConsulta
-                    ? "bg-red-500"
-                    : tokenEnviadoNoFluxo
-                      ? "bg-amber-500"
-                      : "bg-[#00338d]"
-                }`}
-              />
-            ) : null}
-            {autorizacaoConcluida ? (
-              <span
-                aria-hidden="true"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
-              >
-                {"\u2713"}
-              </span>
-            ) : null}
-            {faltouConsulta
-              ? "Consulta não realizada"
+        <p
+          className={`inline-flex ${tokenInlineVisivel ? "min-h-8 px-3 py-1 text-[0.68rem] md:text-[0.74rem]" : "min-h-9 px-4 py-1.5 text-[0.76rem] md:text-[0.84rem]"} items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.08em] shadow-[0_10px_18px_rgba(15,23,42,0.1)] ${
+            faltouConsulta
+              ? "border-red-200 bg-red-50 text-red-700"
               : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                ? "AGUARDANDO SEU TOKEN"
+                ? "border-amber-200 bg-amber-50 text-amber-800"
                 : autorizacaoConcluida
-                  ? "Atendimento liberado"
-                  : formatarStatus(consulta.statusAgendamento)}
-          </p>
-        </div>
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : "border-blue-200 bg-blue-50 text-[#00338d]"
+          }`}
+        >
+          {!autorizacaoConcluida ? (
+            <span
+              aria-hidden="true"
+              className={`inline-flex h-2.5 w-2.5 rounded-full ${
+                faltouConsulta
+                  ? "bg-red-500"
+                  : tokenEnviadoNoFluxo
+                    ? "bg-amber-500"
+                    : "bg-[#00338d]"
+              }`}
+            />
+          ) : null}
+          {autorizacaoConcluida ? (
+            <span
+              aria-hidden="true"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.72rem] text-white"
+            >
+              {"\u2713"}
+            </span>
+          ) : null}
+          {faltouConsulta
+            ? "Consulta não realizada"
+            : tokenEnviadoNoFluxo && !autorizacaoConcluida
+              ? "AGUARDANDO SEU TOKEN"
+              : autorizacaoConcluida
+                ? "Atendimento liberado"
+                : formatarStatus(consulta.statusAgendamento)}
+        </p>
       ) : null}
     </div>
 
-    {/* Container centralizado para todas as informações */}
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
+    {/* Container centralizado - Ocupa todo o espaço disponível */}
+    <div className="flex-1 flex flex-col items-center justify-center text-center gap-1 py-2">
       
-      {/* HORÁRIO - Centralizado */}
+      {/* HORÁRIO - Grande e centralizado */}
       {cardConsulta.agrupadoUltrassom ? (
-        <p
-          className={`${tokenInlineVisivel ? "mt-2 text-[2.05rem] md:mt-3 md:text-[2.35rem]" : "mt-5 text-[2.6rem] md:mt-7 md:text-[3.2rem]"} font-black uppercase tracking-[0.07em] text-[#00338d]`}
-        >
-          {obterFaixaHorariosConsultas(
-            cardConsulta.consultasRelacionadas,
-          ) || "Horários do dia"}
+        <p className="font-black uppercase tracking-[0.07em] text-[#00338d] text-[2.6rem] md:text-[3.2rem]">
+          {obterFaixaHorariosConsultas(cardConsulta.consultasRelacionadas) || "Horários do dia"}
         </p>
       ) : (
-        <p
-          className={`${tokenInlineVisivel ? "text-[4.25rem] md:text-[5.1rem]" : "text-[5rem] md:text-[5.9rem]"} font-black tracking-tight text-[#00338d]`}
-        >
+        <p className="font-black tracking-tight text-[#00338d] text-[5rem] md:text-[5.9rem] leading-none">
           {formatarHora(consulta.horaInicio)}
         </p>
       )}
 
-      {/* PROFISSIONAL - Centralizado */}
-      {tokenInlineVisivel ? (
-        <p className="mt-1 text-[1.55rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1.95rem]">
-          {consulta.profissionalNome}
-        </p>
-      ) : (
-        <ConsultaProfissionalResumoCard
-          profissionalNome={consulta.profissionalNome}
-          especialidadeNome={consulta.especialidadeNome}
-          autorizacaoConcluida={autorizacaoConcluida}
-        />
-      )}
+      {/* PROFISSIONAL - Nome em maiúsculo */}
+      <p className="font-black uppercase tracking-[0.03em] text-slate-900 text-[1.9rem] md:text-[2.2rem] mt-1">
+        {consulta.profissionalNome}
+      </p>
 
-      {/* ESPECIALIDADE - Centralizado (apenas quando token NÃO está visível) */}
-      {!tokenInlineVisivel && (
-        <p className="mt-1 text-[3.1rem] font-bold  text-[#180539] md:text-[2.3rem] ">
-        {consulta.localidadePainel || "Local ainda não definido"}        </p>
-      )}
+      {/* ESPECIALIDADE - Em maiúsculo também */}
+      <p className="font-black uppercase text-[#00338d] text-[1.6rem] md:text-[2.0rem]">
+        {consulta.especialidadeNome}
+      </p>
 
+      {/* LOCAL - Com formato "Consultório - 04" */}
+      <p className="font-black text-[#80539] text-[1.9rem] md:text-[2.2rem] mt-1">
+        {consulta.localidadePainel || "Local não informado"}
+      </p>
 
     </div>
 
-    {/* BOTÃO - Mantido abaixo */}
+    {/* BOTÃO - Fixo na parte inferior */}
     {autorizacaoConcluida ? null : processandoSenha ? (
       <AutorizacaoPreparandoCard
         profissionalNome={consulta.profissionalNome}
@@ -2659,47 +2646,26 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         validandoToken={validandoToken}
         segundosRestantesReenvio={segundosRestantesReenvio}
         onTokenChange={(indiceToken, valor) =>
-          atualizarTokenDigitadoInline(
-            consulta.idEvento,
-            indiceToken,
-            valor,
-          )
+          atualizarTokenDigitadoInline(consulta.idEvento, indiceToken, valor)
         }
         onTokenKeyDown={(indiceToken, event) =>
-          handleTokenInlineKeyDown(
-            consulta.idEvento,
-            indiceToken,
-            event,
-          )
+          handleTokenInlineKeyDown(consulta.idEvento, indiceToken, event)
         }
         onTokenPaste={(event) =>
-          handleTokenInlinePaste(
-            consulta.idEvento,
-            event,
-          )
+          handleTokenInlinePaste(consulta.idEvento, event)
         }
         onAbrirTeclado={(indiceToken) =>
-          abrirTecladoTokenInline(
-            consulta.idEvento,
-            indiceToken,
-          )
+          abrirTecladoTokenInline(consulta.idEvento, indiceToken)
         }
         onFecharTeclado={fecharTecladoTokenInline}
         onPreencherDigito={(digito) =>
-          preencherTokenViaTecladoInline(
-            consulta,
-            digito,
-          )
+          preencherTokenViaTecladoInline(consulta, digito)
         }
         onLimparToken={() =>
-          limparTokenViaTecladoInline(
-            consulta.idEvento,
-          )
+          limparTokenViaTecladoInline(consulta.idEvento)
         }
         onApagarUltimoDigito={() =>
-          apagarUltimoDigitoViaTecladoInline(
-            consulta.idEvento,
-          )
+          apagarUltimoDigitoViaTecladoInline(consulta.idEvento)
         }
         onReenviar={() => void reenviarTokenInline(consulta)}
         onValidar={() => void validarTokenInline(consulta)}
@@ -2712,7 +2678,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
             : void abrirEtapaSenha(consulta)
         }
         disabled={deveProcurarRecepcao}
-        className={`mt-3 h-14 shrink-0 px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition md:text-[1.08rem] ${
+        className={`mt-3 h-14 w-full shrink-0 px-4 text-[1rem] font-black text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition md:text-[1.08rem] ${
           deveProcurarRecepcao
             ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
             : "bg-[#00338d] hover:bg-[#00286f]"
@@ -2724,7 +2690,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       </button>
     ) : (
       <div
-        className={`flex h-14 shrink-0 items-center justify-center px-3 text-center text-[0.94rem] font-bold ${
+        className={`flex h-14 w-full shrink-0 items-center justify-center px-3 text-center text-[0.94rem] font-bold ${
           faltouConsulta
             ? "bg-red-50 text-red-600"
             : "bg-slate-100 text-slate-500"
