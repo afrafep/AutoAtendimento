@@ -16,11 +16,15 @@ export default function SessaoExpiracaoCard({
   }
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-[2px]">
+    <div 
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-[2px]"
+      onClick={onContinuar} // ← Clique no backdrop/fundo
+    >
       <div
         role="dialog"
         aria-modal="true"
         className="w-full max-w-[30rem] rounded-[2rem] border border-white/20 bg-[linear-gradient(135deg,rgba(0,51,141,0.98)_0%,rgba(29,78,216,0.98)_58%,rgba(56,189,248,0.96)_100%)] p-6 text-center text-white shadow-[0_30px_60px_rgba(15,23,42,0.35)] md:p-8"
+        onClick={(e) => e.stopPropagation()} // ← Impede que o clique no modal propague para o backdrop
       >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-amber-200/90 bg-white/10 text-[2rem] font-black text-amber-200">
           !
@@ -47,7 +51,7 @@ export default function SessaoExpiracaoCard({
           onClick={onContinuar}
           className="mt-6 flex h-14 w-full items-center justify-center rounded-[1.1rem] bg-white px-4 text-[0.95rem] font-black uppercase tracking-[0.04em] text-[#00338d] shadow-[0_16px_30px_rgba(255,255,255,0.2)] transition hover:brightness-95 md:text-[1rem]"
         >
-          TOCAR PARA PERMANECER
+          TOQUE EM QUALQUER PARTE DA TELA PARA PERMANECER
         </button>
       </div>
     </div>
