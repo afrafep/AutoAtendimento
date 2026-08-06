@@ -2384,8 +2384,8 @@ const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
                                           autorizacaoConcluida={autorizacaoConcluida}
                                         />
                                       )}
-                                      <p className={`${tokenInlineVisivel ? "text-[1.25rem] md:text-[1.8rem]" : "text-[2rem] md:text-[2.0rem]"} font-black tracking-tight text-[#00338d]`}>
-                                                                                          <span className="font-bold">{consulta.localidadePainel || "Local não informado"}</span>
+                                      <p className={`${tokenInlineVisivel ? "text-center text-[1.25rem] md:text-[1.8rem]" : "text-[2rem] md:text-[2.0rem]"} font-black tracking-tight text-[#00338d]`}>
+                                                                                          {consulta.localidadePainel || "Local não informado"}
 
 
                                           </p>
