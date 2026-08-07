@@ -2622,14 +2622,14 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                 <div className="mx-auto max-w-6xl">
                   <div
                     className={`flex flex-col gap-3 ${
-                      mostrarTelaBoasVindasCpf ? "min-h-fit h-auto pb-6" : "min-h-0 h-full"
+                      mostrarTelaBoasVindasCpf ? "min-h-fit h-auto pb-5" : "min-h-0 h-full"
                     }`}
                   >
                     {mostrarTelaBoasVindasCpf ? (
                       <button
                         type="button"
                         onClick={abrirEntradaCpf}
-                        className={`group relative min-h-[26rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-5 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[28rem] md:px-8 md:py-6 ${
+                        className={`group relative min-h-[26rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-5 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[27.5rem] md:px-7 md:py-5 ${
                           animandoSaidaTelaBoasVindasCpf
                             ? "-translate-y-[110%] opacity-0"
                             : "translate-y-0 opacity-100"
@@ -2656,15 +2656,15 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             </div>
                           </div>
 
-                          <h2 className="max-w-3xl text-[1.75rem] font-black tracking-tight text-[#0f2d78] md:text-[2.45rem]">
+                          <h2 className="max-w-3xl text-[1.72rem] font-black tracking-tight text-[#0f2d78] md:text-[2.32rem]">
                             Bem-vindo ao autoatendimento
                           </h2>
-                          <p className="mt-2 max-w-3xl text-[0.95rem] leading-relaxed text-slate-600 md:text-[1.08rem]">
+                          <p className="mt-2 max-w-3xl text-[0.92rem] leading-relaxed text-slate-600 md:text-[1.02rem]">
                             Toque na tela para abrir o campo do CPF e localizar
                             seus agendamentos de hoje.
                           </p>
 
-                          <div className="mt-4 inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-cyan-100 bg-white/92 px-5 py-2.5 text-[#16357f] shadow-[0_12px_24px_rgba(15,23,42,0.07)]">
+                          <div className="mt-3 inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-cyan-100 bg-white/92 px-5 py-2.5 text-[#16357f] shadow-[0_12px_24px_rgba(15,23,42,0.07)]">
                             <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
                               Joao Pessoa
                             </span>
@@ -2678,21 +2678,21 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             </span>
                           </div>
 
-                          <div className="mt-4 w-full max-w-3xl rounded-[1.7rem] border-2 border-cyan-100 bg-white/96 px-5 py-4 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)]">
-                            <div className="flex flex-col items-center gap-3">
-                              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)]">
-                                <FaHandPointer className="text-[1.3rem]" />
+                          <div className="mt-4 w-full max-w-3xl rounded-[1.6rem] border-2 border-cyan-100 bg-white/96 px-5 py-4.5 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)]">
+                            <div className="flex flex-col items-center gap-2.5">
+                              <span className="inline-flex h-13 w-13 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-14 md:w-14">
+                                <FaHandPointer className="text-[1.18rem]" />
                               </span>
-                              <p className="text-[1.08rem] font-black text-[#16357f] md:text-[1.24rem]">
+                              <p className="text-[1.08rem] font-black text-[#16357f] md:text-[1.2rem]">
                                 Toque na tela para digitar o CPF
                               </p>
-                              <p className="max-w-2xl text-[0.88rem] leading-relaxed text-slate-600 md:text-[0.96rem]">
+                              <p className="max-w-2xl text-[0.88rem] font-black leading-relaxed text-slate-700 md:text-[0.96rem]">
                                 Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
                               </p>
                             </div>
                           </div>
 
-                          <div className="mt-4 grid w-full gap-3 md:grid-cols-3">
+                          <div className="mt-4 grid w-full gap-3.5 md:grid-cols-3">
                             {[
                               {
                                 icon: FaClinicMedical,
@@ -2714,19 +2714,19 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                               return (
                                 <div
                                   key={item.titulo}
-                                  className="rounded-[1.45rem] border border-white/85 bg-white/92 px-5 py-3.5 text-left shadow-[0_16px_28px_rgba(15,23,42,0.08)]"
+                                  className="rounded-[1.4rem] border border-white/85 bg-white/92 px-4 py-4 text-left shadow-[0_16px_28px_rgba(15,23,42,0.08)]"
                                   style={{
                                     animation: "floatDance 5s ease-in-out infinite",
                                     animationDelay: `${indice * 0.35}s`,
                                   }}
                                 >
-                                  <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-[#0f4db7]">
-                                    <Icone className="text-[1.2rem]" />
+                                  <span className="mb-2.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-[#0f4db7] md:h-11 md:w-11">
+                                    <Icone className="text-[1.08rem]" />
                                   </span>
-                                  <p className="text-[1rem] font-black text-[#16357f] md:text-[1.08rem]">
+                                  <p className="text-[0.98rem] font-black text-[#16357f] md:text-[1.03rem]">
                                     {item.titulo}
                                   </p>
-                                  <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-600 md:text-[0.95rem]">
+                                  <p className="mt-1 text-[0.84rem] leading-relaxed text-slate-600 md:text-[0.9rem]">
                                     {item.texto}
                                   </p>
                                 </div>
@@ -2745,13 +2745,13 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             ].map((Icone, indice) => (
                               <span
                                 key={`icone-saude-${indice}`}
-                                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/85 bg-white/90 text-[#0f4db7] shadow-[0_12px_22px_rgba(15,23,42,0.08)] md:h-14 md:w-14"
+                                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/85 bg-white/90 text-[#0f4db7] shadow-[0_12px_22px_rgba(15,23,42,0.08)] md:h-12 md:w-12"
                                 style={{
                                   animation: "pulseSeal 4.8s ease-in-out infinite",
                                   animationDelay: `${indice * 0.18}s`,
                                 }}
                               >
-                                <Icone className="text-[1.05rem] md:text-[1.2rem]" />
+                                 <Icone className="text-[1rem] md:text-[1.08rem]" />
                               </span>
                             ))}
                           </div>
