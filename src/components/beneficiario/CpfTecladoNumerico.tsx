@@ -58,7 +58,7 @@ export default function CpfTecladoNumerico({
 
       {loading ? (
         <div className="mt-3 flex h-12 w-full items-center justify-center rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_48%,#38bdf8_100%)] px-5 text-[0.84rem] font-black uppercase tracking-[0.05em] text-white shadow-[0_16px_26px_rgba(37,99,235,0.22)] md:h-13 md:text-[0.88rem]">
-          Entrando...
+          Acessando...
         </div>
       ) : null}
     </div>
