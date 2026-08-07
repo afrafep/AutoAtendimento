@@ -18,7 +18,7 @@ export default function ConsultaFluxoNavegacao({
           type="button"
           onClick={onVoltar}
           disabled={!podeVoltar}
-          className={`min-w-[144px] rounded-[1rem] border px-4 py-2 text-[0.82rem] font-black uppercase transition ${
+          className={`min-w-[200px] rounded-[1rem] border px-4 py-2 text-[1.20rem] font-black uppercase transition ${
             !podeVoltar
               ? "border-slate-300 bg-white text-slate-400"
               : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
@@ -30,7 +30,7 @@ export default function ConsultaFluxoNavegacao({
           type="button"
           onClick={onAvancar}
           disabled={!podeAvancar}
-          className={`min-w-[144px] rounded-[1rem] border px-4 py-2 text-[0.82rem] font-black uppercase transition ${
+          className={`min-w-[200px] rounded-[1rem] border px-4 py-2 text-[1.20rem] font-black uppercase transition ${
             !podeAvancar
               ? "border-slate-300 bg-white text-slate-400"
               : "border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] hover:brightness-105"
