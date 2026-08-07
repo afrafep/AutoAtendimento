@@ -1421,6 +1421,38 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
   };
 
+  const exibirModalSucessoELiberarConsulta = async (consulta: ConsultaAutoAtendimento) => {
+  await Swal.fire({
+    title: "✅ ATENDIMENTO LIBERADO!",
+    html: `
+      <div style="text-align: left; padding: 8px 0;">
+        <p style="font-size: 1.1rem; margin-bottom: 8px;"><strong>${consulta.pacienteNome}</strong></p>
+        <p style="color: #475569; margin-bottom: 4px;">📋 ${consulta.profissionalNome}</p>
+        <p style="color: #475569; margin-bottom: 4px;">🏥 ${consulta.especialidadeNome}</p>
+        <p style="color: #00338d; font-weight: bold; font-size: 1.2rem; margin-top: 8px;">
+          🕐 ${formatarHora(consulta.horaInicio)}
+        </p>
+        <p style="color: #16a34a; font-weight: bold; margin-top: 8px;">
+          ✅ Token validado com sucesso!
+        </p>
+        <p style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">
+          Aguarde ser chamado(a) no painel.
+        </p>
+      </div>
+    `,
+    icon: "success",
+    confirmButtonText: "OK, ENTENDI",
+    allowOutsideClick: false,
+    background: "#ffffff",
+    color: "#0f172a",
+    customClass: {
+      popup: "!rounded-[1.2rem] !px-6 !py-5",
+      title: "!text-[1.5rem] !font-black !text-emerald-700",
+      confirmButton: "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-6 !py-3",
+    },
+  });
+};
+
 const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   const token = String(
     tokenDigitadoPorConsulta[consulta.idEvento] || "",
