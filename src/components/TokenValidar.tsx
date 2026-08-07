@@ -155,7 +155,7 @@ export const TokenValidar = async ({
     const keypadButtons =
       Swal.getHtmlContainer()?.querySelectorAll<HTMLButtonElement>(".token-keypad-button");
     const clearButton = document.getElementById("token-keypad-clear") as HTMLButtonElement | null;
-    const backspaceButton = document.getElementById("token-keypad-backspace") as HTMLButtonElement | null;
+    // backspaceButton removido - não será mais usado
 
     if (!inputs || !hiddenInput) return;
 
@@ -168,7 +168,7 @@ export const TokenValidar = async ({
     });
 
     clearButton?.replaceWith(clearButton.cloneNode(true));
-    backspaceButton?.replaceWith(backspaceButton.cloneNode(true));
+    // backspaceButton removido
 
     const freshInputs =
       Swal.getHtmlContainer()?.querySelectorAll<HTMLInputElement>(".token-input");
@@ -178,7 +178,7 @@ export const TokenValidar = async ({
     const freshKeypadButtons =
       Swal.getHtmlContainer()?.querySelectorAll<HTMLButtonElement>(".token-keypad-button");
     const freshClearButton = document.getElementById("token-keypad-clear") as HTMLButtonElement | null;
-    const freshBackspaceButton = document.getElementById("token-keypad-backspace") as HTMLButtonElement | null;
+    // freshBackspaceButton removido
 
     if (!freshInputs || !freshHiddenInput) return;
 
@@ -317,8 +317,8 @@ export const TokenValidar = async ({
       });
     });
 
-    freshBackspaceButton?.addEventListener("click", removeLastDigit);
-    freshClearButton?.addEventListener("click", clearAllDigits);
+    // Apenas o botão APAGAR (remove o último dígito)
+    freshClearButton?.addEventListener("click", removeLastDigit);
 
     freshInputs[0]?.focus();
   };
@@ -376,7 +376,7 @@ export const TokenValidar = async ({
               id="token-keypad-clear"
               class="flex h-14 items-center justify-center rounded-[1rem] border border-red-700 bg-[linear-gradient(180deg,#ef4444_0%,#dc2626_100%)] px-2 text-[0.95rem] font-black uppercase tracking-[0.05em] text-white transition hover:brightness-105 focus:outline-none sm:h-15 sm:text-[1.08rem]"
             >
-              APAGAR
+              APAGARaa
             </button>
             <button
               type="button"
@@ -385,13 +385,8 @@ export const TokenValidar = async ({
             >
               0
             </button>
-            <button
-              type="button"
-              id="token-keypad-backspace"
-              class="flex h-14 items-center justify-center rounded-[1rem] border border-amber-600 bg-[linear-gradient(180deg,#f59e0b_0%,#d97706_100%)] px-2 text-[0.95rem] font-black uppercase tracking-[0.05em] text-white transition hover:brightness-105 focus:outline-none sm:h-15 sm:text-[1.08rem]"
-            >
-              CORRIGIR
-            </button>
+            <!-- Espaço vazio para manter o grid de 3 colunas -->
+            <div class="hidden sm:block"></div>
           </div>
         </div>
         
@@ -630,21 +625,3 @@ export const TokenValidar = async ({
     dismiss: result.dismiss,
   };
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

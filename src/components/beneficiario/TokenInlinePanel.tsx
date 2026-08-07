@@ -29,23 +29,14 @@ interface TokenInlinePanelProps {
   onFecharTeclado: () => void;
   onPreencherDigito: (digito: string) => void;
   onLimparToken: () => void;
-  onApagarUltimoDigito: () => void;
   onReenviar: () => void;
   onValidar: () => void;
 }
 
-function formatarTempoCurto(segundos: number) {
-  const total = Math.max(0, segundos);
-  const minutos = String(Math.floor(total / 60)).padStart(2, "0");
-  const segundosRestantes = String(total % 60).padStart(2, "0");
-  return `${minutos}:${segundosRestantes}`;
-}
 
 export default function TokenInlinePanel({
   consulta,
   tokenDigitado,
-  tokenErro,
-  tokenFeedback,
   tecladoTokenAberto,
   reenviandoToken,
   validandoToken,
@@ -124,7 +115,7 @@ export default function TokenInlinePanel({
                   onClick={onLimparToken}
                   className="h-[3.55rem] rounded-[0.95rem] bg-red-500 text-[0.92rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(239,68,68,0.22)] transition hover:bg-red-600"
                 >
-                  LIMPAR
+                  APAGAR
                 </button>
                 <button
                   type="button"
@@ -132,14 +123,7 @@ export default function TokenInlinePanel({
                   className="h-[3.55rem] rounded-[0.95rem] bg-slate-900 text-[1.55rem] font-black text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
                 >
                   0
-                </button>
-                <button
-                  type="button"
-                  onClick={onApagarUltimoDigito}
-                  className="h-[3.55rem] rounded-[0.95rem] bg-amber-500 text-[0.88rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(245,158,11,0.24)] transition hover:bg-amber-600"
-                >
-                  APAGAR
-                </button>
+                </button>              
               </div>
             </div>
           </div>
@@ -174,6 +158,7 @@ export default function TokenInlinePanel({
     </div>
   );
 }
+
 
 
 

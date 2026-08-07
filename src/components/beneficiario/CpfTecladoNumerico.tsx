@@ -1,14 +1,13 @@
 interface CpfTecladoNumericoProps {
   loading: boolean;
   onAdicionarDigito: (digito: string) => void;
-  onLimpar: () => void;
   onApagarUltimo: () => void;
+  // Remove onLimpar
 }
 
 export default function CpfTecladoNumerico({
   loading,
   onAdicionarDigito,
-  onLimpar,
   onApagarUltimo,
 }: CpfTecladoNumericoProps) {
   return (
@@ -23,6 +22,7 @@ export default function CpfTecladoNumerico({
       </div>
 
       <div className="grid grid-cols-3 gap-3 md:gap-3.5">
+        {/* Números 1-9 */}
         {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digito) => (
           <button
             key={`cpf-tecla-${digito}`}
@@ -34,14 +34,16 @@ export default function CpfTecladoNumerico({
           </button>
         ))}
 
+        {/* Botão APAGAR - ocupa 1 coluna */}
         <button
           type="button"
-          onClick={onLimpar}
+          onClick={onApagarUltimo}
           className="flex h-14 items-center justify-center rounded-[1rem] border border-red-700 bg-[linear-gradient(180deg,#ef4444_0%,#b91c1c_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(185,28,28,0.2)] transition hover:-translate-y-0.5 hover:border-red-800 hover:shadow-[0_16px_26px_rgba(185,28,28,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
         >
           APAGAR
         </button>
 
+        {/* Número 0 */}
         <button
           type="button"
           onClick={() => onAdicionarDigito("0")}
@@ -50,13 +52,8 @@ export default function CpfTecladoNumerico({
           0
         </button>
 
-        <button
-          type="button"
-          onClick={onApagarUltimo}
-          className="flex h-14 items-center justify-center rounded-[1rem] border border-amber-700 bg-[linear-gradient(180deg,#f59e0b_0%,#d97706_100%)] px-2 text-[0.78rem] font-black uppercase tracking-[0.06em] text-white shadow-[0_12px_20px_rgba(245,158,11,0.2)] transition hover:-translate-y-0.5 hover:border-amber-800 hover:shadow-[0_16px_26px_rgba(245,158,11,0.24)] md:h-[3.9rem] md:text-[0.84rem]"
-        >
-          CORRIGIR
-        </button>
+        {/* Espaço vazio para manter o grid de 3 colunas */}
+        <div className="hidden md:block" />
       </div>
 
       {loading ? (

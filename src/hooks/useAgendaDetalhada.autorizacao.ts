@@ -294,7 +294,7 @@ export const createAgendaDetalhadaAutorizacao = ({
     // Se cancelou o modal inicial
     if (!opcaoSelecionada) return;
 
-// FLUXO PARA OUTROS APTOS (SENHA JÁ EXISTENTE)
+    // ===================== FLUXO PARA OUTROS APTOS (SENHA JÁ EXISTENTE) =====================
     if (opcaoSelecionada === "aptos") {
       // VERIFICAR SE JÁ TEM SENHA DA GUIA (já está autorizado)
       const jaTemSenhaGuia =
@@ -467,7 +467,7 @@ export const createAgendaDetalhadaAutorizacao = ({
         // Atualizar autorização em lote para todos os eventos do paciente
         await atualizarStatusEmLote(
           evento.idEvento,
-          "COMPARECEU", // MUDANÇA: string direta
+          "COMPARECEU",
         );
         // Atualizar autorizado e senha apenas para o evento específico
         await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
@@ -486,9 +486,7 @@ export const createAgendaDetalhadaAutorizacao = ({
           toast.warning("Autorização concluída, mas não foi possível encaminhar a senha ao médico.");
         }
 
-        // ===================== INÍCIO DA CORREÇÃO =====================
-        // INTEGRAÇÃO COM LOGIC PACS - ENVIO APÓS AUTORIZAÇÃO BEM-SUCEDIDA (APTOS)
-        // CORREÇÃO: enviar para PACS se for ultrassom (9960008) ou endoscopia/colonoscopia (6831735)
+        // ===================== INTEGRAÇÃO COM LOGIC PACS =====================
         const PROFISSIONAL_ULTRA = 9960008;
         const PROFISSIONAL_ENDO_COLO = 6831735;
         const possuiProcedimentoLogicDireto = possuiProcedimentoLogicMedDireto(
@@ -497,16 +495,13 @@ export const createAgendaDetalhadaAutorizacao = ({
         );
 
         const deveEnviarParaPACS =
-          // Procedimentos configurados para envio direto ao LogicMed
           possuiProcedimentoLogicDireto ||
-          // Verifica ULTRASSOM pela especialidade 170 ou pelos ids antigos
           isUltrassom ||
           evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ULTRA ||
           evento.idProfissionalRealizaProcedimento ===
             String(PROFISSIONAL_ULTRA) ||
           evento.profissional?.idProfissional === PROFISSIONAL_ULTRA ||
           evento.profissional?.idProfissional === String(PROFISSIONAL_ULTRA) ||
-          // Verifica ENDOSCOPIA/COLONOSCOPIA
           evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ENDO_COLO ||
           evento.idProfissionalRealizaProcedimento ===
             String(PROFISSIONAL_ENDO_COLO) ||
@@ -514,7 +509,6 @@ export const createAgendaDetalhadaAutorizacao = ({
           evento.profissional?.idProfissional ===
             String(PROFISSIONAL_ENDO_COLO);
 
-        // Identificar qual tipo de exame para logging
         let tipoExame = "DESCONHECIDO";
         if (possuiProcedimentoLogicDireto) {
           tipoExame = "ECODOPPLERCARDIOGRAMA";
@@ -641,7 +635,6 @@ export const createAgendaDetalhadaAutorizacao = ({
               procedimentos: itensParaPacsRaw,
             };
 
-            // CORREÇÃO: enviar todos os procedimentos, um por um
             for (
               let index = 0;
               index < itensParaPacsRaw.length;
@@ -685,7 +678,6 @@ export const createAgendaDetalhadaAutorizacao = ({
                 );
               }
 
-              // Pequena pausa entre os envios para não sobrecarregar o servidor
               if (index < itensParaPacsRaw.length - 1) {
                 await new Promise((resolve) => setTimeout(resolve, 500));
               }
@@ -747,14 +739,32 @@ export const createAgendaDetalhadaAutorizacao = ({
           error?.message ||
           "Erro ao salvar senha da guia.";
 
+        const decodedErrorMessage = corrigirTextoQuebrado(errorMessage);
+        const isTransacaoJaEnviada = decodedErrorMessage.includes("ORA-20400") || 
+                                      decodedErrorMessage.includes("já foi enviada com sucesso");
+
+        // SALVAR ERRO NO EVENTO PARA TRAVAR O FLUXO
+        try {
+          await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
+            erroAutorizacao: true,
+            mensagemErroAutorizacao: decodedErrorMessage,
+            autorizado: false,
+            tokenValidado: false,
+            senhaAutorizacao: null,
+          });
+        } catch (patchError) {
+          console.error("Erro ao salvar status de erro:", patchError);
+        }
+
         await Swal.fire({
-          title: "Erro na Autorização",
+          title: isTransacaoJaEnviada ? "ATENÇÃO" : "Erro na Autorização",
           html: `
           <div class="text-center space-y-4">
             <div class="rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/20 to-red-600/20 p-5">
               <p class="text-lg font-black uppercase tracking-[0.16em] text-red-200">
-                PROCURE A RECEPÇÃO
+                ${isTransacaoJaEnviada ? "CONSULTA JÁ AUTORIZADA" : "PROCURE A RECEPÇÃO"}
               </p>
+              <p class="text-sm text-red-300 mt-2">${decodedErrorMessage}</p>
             </div>
           </div>
         `,
@@ -920,7 +930,7 @@ export const createAgendaDetalhadaAutorizacao = ({
       return;
     }
 
-    // FLUXO NORMAL TISS SADT
+    // ===================== FLUXO NORMAL TISS SADT =====================
     if (evento.autorizado === true && evento.senhaAutorizacao != null) {
       const senhaGuia = evento.senhaAutorizacao;
       const { numeroGuiaGerado, numeroGuiaOperadora } =
@@ -935,7 +945,7 @@ export const createAgendaDetalhadaAutorizacao = ({
         onTokenValidado: async (_token: string, tokenValidado: boolean) => {
           if (tokenValidado) {
             try {
-                  // CORREÇÃO: marcar como compareceu ao validar o token
+              // CORREÇÃO: marcar como compareceu ao validar o token
               // Atualizar status em lote para todos os eventos do paciente
               await atualizarStatusEmLote(evento.idEvento, "COMPARECEU");
 
@@ -952,7 +962,7 @@ export const createAgendaDetalhadaAutorizacao = ({
                 confirmButtonText: "Concluir",
               });
 
-                  // Atualizar a agenda após a mudança
+              // Atualizar a agenda após a mudança
               fetchAgenda();
             } catch (error) {
               console.error("Erro ao salvar validação do token:", error);
@@ -1048,7 +1058,7 @@ export const createAgendaDetalhadaAutorizacao = ({
     let progress = 0;
     if (!opcoes?.usarFluxoTokenInline) {
       Swal.fire({
-        title: "Processando Autoriza\u00e7\u00e3o",
+        title: "Processando Autorização",
         html: `
   <div class="space-y-6">
     <div class="relative">
@@ -1059,7 +1069,7 @@ export const createAgendaDetalhadaAutorizacao = ({
         <span id="progress-percent">${Math.round(progress)}%</span>
       </div>
     </div>
-    <p id="progress-text" class="text-gray-300 text-center">Iniciando comunica\u00e7\u00e3o com TISS...</p>
+    <p id="progress-text" class="text-gray-300 text-center">Iniciando comunicação com TISS...</p>
     <div class="flex justify-center">
       <div class="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
     </div>
@@ -1110,7 +1120,6 @@ export const createAgendaDetalhadaAutorizacao = ({
               },
             ];
 
-      // CORREÇÃO PARA ULTRASSOM: sempre usar idProfissionalRealizaProcedimento quando disponível
       const idProfissionalParaAutorizacao = idProfissionalParaAutorizacaoBase;
 
       if (!idProfissionalParaAutorizacao) {
@@ -1189,45 +1198,44 @@ export const createAgendaDetalhadaAutorizacao = ({
         responseTiss.data?.senhaGuia || numeroGuiaOperadoraPersistencia || "",
       ).trim();
 
+      // CORREÇÃO: Verificar se houve erro na resposta
       if (responseTiss.data?.sucesso === false) {
         const errorMessagePersistencia =
-          responseTiss.data?.mensagemErro || "AutorizaÃ§Ã£o negada pela operadora";
+          responseTiss.data?.mensagemErro || "Autorização negada pela operadora";
         const decodedErrorMessagePersistencia =
           corrigirTextoQuebrado(errorMessagePersistencia);
 
-        if (
-          numeroGuiaGeradoPersistencia ||
-          numeroGuiaOperadoraPersistencia > 0
-        ) {
-          await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
-            autorizado: false,
-            tokenValidado: false,
-            senhaAutorizacao: String(
-              numeroGuiaOperadoraPersistencia || senhaGuiaPersistencia || "",
-            ),
-            numeroGuiaGerado: numeroGuiaGeradoPersistencia || null,
-            numeroGuiaOperadora: numeroGuiaOperadoraPersistencia || null,
-          });
+        const isTransacaoJaEnviada = decodedErrorMessagePersistencia.includes("ORA-20400") || 
+                                      decodedErrorMessagePersistencia.includes("já foi enviada com sucesso");
 
-          persistirDadosGuiaAutorizacao(
-            evento.idEvento,
-            numeroGuiaGeradoPersistencia,
-            numeroGuiaOperadoraPersistencia,
-          );
-        }
+        // SALVAR ERRO NO EVENTO PARA TRAVAR O FLUXO
+        await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
+          erroAutorizacao: true,
+          mensagemErroAutorizacao: decodedErrorMessagePersistencia,
+          autorizado: false,
+          tokenValidado: false,
+          senhaAutorizacao: null,
+        });
 
-        throw new Error(decodedErrorMessagePersistencia);
-      }
-
-      // CORREÇÃO: verificar se a requisição foi bem-sucedida, mas a autorização falhou
-      if (responseTiss.data?.sucesso === false) {
-        const errorMessage =
-          responseTiss.data?.mensagemErro ||
-          "Autorização negada pela operadora";
-          "Autorização negada pela operadora";
-        const decodedErrorMessage = corrigirTextoQuebrado(errorMessage);
-
-        throw new Error(decodedErrorMessage);
+        // Mostrar erro e NÃO CONTINUAR
+        await Swal.fire({
+          title: isTransacaoJaEnviada ? "ATENÇÃO" : "Erro na Autorização",
+          html: `
+            <div class="text-center space-y-4">
+              <div class="rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/20 to-red-600/20 p-5">
+                <p class="text-lg font-black uppercase tracking-[0.16em] text-red-200">
+                  ${isTransacaoJaEnviada ? "CONSULTA JÁ AUTORIZADA" : "PROCURE A RECEPÇÃO"}
+                </p>
+                <p class="text-sm text-red-300 mt-2">${decodedErrorMessagePersistencia}</p>
+              </div>
+            </div>
+          `,
+          icon: "error",
+          background: "#1f2937",
+          color: "#f9fafb",
+          confirmButtonText: "OK",
+        });
+        return;
       }
 
       const senhaGuia = responseTiss.data?.senhaGuia;
@@ -1237,22 +1245,22 @@ export const createAgendaDetalhadaAutorizacao = ({
         const errorMessage =
           responseTiss.data?.mensagemErro ||
           "Senha guia não encontrada na resposta";
-          "Senha guia não encontrada na resposta";
+        throw new Error(errorMessage);
       }
 
       // CORREÇÃO: salvar senha da guia e marcar como compareceu no TISS SADT
-      // Atualizar status em lote para todos os eventos do paciente
       await atualizarStatusEmLote(
         evento.idEvento,
-        "COMPARECEU", // MUDANÇA: string direta
+        "COMPARECEU",
       );
 
-      // Atualizar autorizado e senha apenas para o evento específico
       await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
         autorizado: true,
         senhaAutorizacao: String(numeroGuiaOperadora || ""),
         numeroGuiaGerado: numeroGuiaGerado || null,
         numeroGuiaOperadora: numeroGuiaOperadora || null,
+        erroAutorizacao: false, // Limpar erro se existia
+        mensagemErroAutorizacao: null,
       });
 
       void encaminharSenhaPainelParaMedico({
@@ -1286,223 +1294,214 @@ export const createAgendaDetalhadaAutorizacao = ({
       });
 
       void (async () => {
-        // ===================== INÍCIO DA CORREÇÃO =====================
-      // INTEGRAÇÃO COM LOGIC PACS - ENVIO APÓS AUTORIZAÇÃO BEM-SUCEDIDA
-      // CORREÇÃO: enviar para PACS se for ultrassom (9960008) ou endoscopia/colonoscopia (6831735)
-      const PROFISSIONAL_ULTRA = 9960008;
-      const PROFISSIONAL_ENDO_COLO = 6831735;
-      const possuiProcedimentoLogicDireto = possuiProcedimentoLogicMedDireto(
-        evento,
-        itensParaPacsRaw,
-      );
+        // ===================== INTEGRAÇÃO COM LOGIC PACS =====================
+        const PROFISSIONAL_ULTRA = 9960008;
+        const PROFISSIONAL_ENDO_COLO = 6831735;
+        const possuiProcedimentoLogicDireto = possuiProcedimentoLogicMedDireto(
+          evento,
+          itensParaPacsRaw,
+        );
 
-      const deveEnviarParaPACS =
-        // Procedimentos configurados para envio direto ao LogicMed
-        possuiProcedimentoLogicDireto ||
-        // Verifica ULTRASSOM pela especialidade 170 ou pelos ids antigos
-        isUltrassom ||
-        evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ULTRA ||
-        evento.idProfissionalRealizaProcedimento ===
-          String(PROFISSIONAL_ULTRA) ||
-        evento.profissional?.idProfissional === PROFISSIONAL_ULTRA ||
-        evento.profissional?.idProfissional === String(PROFISSIONAL_ULTRA) ||
-        // Verifica ENDOSCOPIA/COLONOSCOPIA
-        evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ENDO_COLO ||
-        evento.idProfissionalRealizaProcedimento ===
-          String(PROFISSIONAL_ENDO_COLO) ||
-        evento.profissional?.idProfissional === PROFISSIONAL_ENDO_COLO ||
-        evento.profissional?.idProfissional === String(PROFISSIONAL_ENDO_COLO);
+        const deveEnviarParaPACS =
+          possuiProcedimentoLogicDireto ||
+          isUltrassom ||
+          evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ULTRA ||
+          evento.idProfissionalRealizaProcedimento ===
+            String(PROFISSIONAL_ULTRA) ||
+          evento.profissional?.idProfissional === PROFISSIONAL_ULTRA ||
+          evento.profissional?.idProfissional === String(PROFISSIONAL_ULTRA) ||
+          evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ENDO_COLO ||
+          evento.idProfissionalRealizaProcedimento ===
+            String(PROFISSIONAL_ENDO_COLO) ||
+          evento.profissional?.idProfissional === PROFISSIONAL_ENDO_COLO ||
+          evento.profissional?.idProfissional === String(PROFISSIONAL_ENDO_COLO);
 
-      // Identificar qual tipo de exame para logging
-      let tipoExame = "DESCONHECIDO";
-      if (possuiProcedimentoLogicDireto) {
-        tipoExame = "ECODOPPLERCARDIOGRAMA";
-      } else if (
-        isUltrassom ||
-        evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ULTRA ||
-        evento.idProfissionalRealizaProcedimento ===
-          String(PROFISSIONAL_ULTRA) ||
-        evento.profissional?.idProfissional === PROFISSIONAL_ULTRA ||
-        evento.profissional?.idProfissional === String(PROFISSIONAL_ULTRA)
-      ) {
-        tipoExame = "ULTRASSOM";
-      } else if (
-        evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ENDO_COLO ||
-        evento.idProfissionalRealizaProcedimento ===
-          String(PROFISSIONAL_ENDO_COLO) ||
-        evento.profissional?.idProfissional === PROFISSIONAL_ENDO_COLO ||
-        evento.profissional?.idProfissional === String(PROFISSIONAL_ENDO_COLO)
-      ) {
-        tipoExame = "ENDOSCOPIA/COLONOSCOPIA";
+        let tipoExame = "DESCONHECIDO";
+        if (possuiProcedimentoLogicDireto) {
+          tipoExame = "ECODOPPLERCARDIOGRAMA";
+        } else if (
+          isUltrassom ||
+          evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ULTRA ||
+          evento.idProfissionalRealizaProcedimento ===
+            String(PROFISSIONAL_ULTRA) ||
+          evento.profissional?.idProfissional === PROFISSIONAL_ULTRA ||
+          evento.profissional?.idProfissional === String(PROFISSIONAL_ULTRA)
+        ) {
+          tipoExame = "ULTRASSOM";
+        } else if (
+          evento.idProfissionalRealizaProcedimento === PROFISSIONAL_ENDO_COLO ||
+          evento.idProfissionalRealizaProcedimento ===
+            String(PROFISSIONAL_ENDO_COLO) ||
+          evento.profissional?.idProfissional === PROFISSIONAL_ENDO_COLO ||
+          evento.profissional?.idProfissional === String(PROFISSIONAL_ENDO_COLO)
+        ) {
+          tipoExame = "ENDOSCOPIA/COLONOSCOPIA";
         }
 
-      if (
-        senhaGuia &&
-        itensParaPacsRaw &&
-        itensParaPacsRaw.length > 0 &&
-        deveEnviarParaPACS
-      ) {
-        console.group(
-          `[LOGIC PACS] Preparando envio após autorização bem-sucedida - ${tipoExame}`,
-        );
-        console.log(
-          `Enviando para PACS - Procedimento de ${tipoExame} detectado`,
-        );
+        if (
+          senhaGuia &&
+          itensParaPacsRaw &&
+          itensParaPacsRaw.length > 0 &&
+          deveEnviarParaPACS
+        ) {
+          console.group(
+            `[LOGIC PACS] Preparando envio após autorização bem-sucedida - ${tipoExame}`,
+          );
+          console.log(
+            `Enviando para PACS - Procedimento de ${tipoExame} detectado`,
+          );
 
-        try {
-          const eventoParaPacs = {
-            ...eventoBaseAutorizacao,
-            ...eventoBaseAutorizacao,
-            idEvento: `${evento.idEvento}`,
-            descricaoEvento:
-              eventoBaseAutorizacao.descricaoEvento || evento.descricaoEvento || "",
-            dataInicio: eventoBaseAutorizacao.dataInicio || evento.dataInicio,
-            horaInicio:
-              eventoBaseAutorizacao.horaInicio?.slice(0, 5) ||
-              evento.horaInicio?.slice(0, 5) ||
-              "00:00",
-            cdPaciente:
-              eventoBaseAutorizacao.paciente?.cdPaciente ||
-              evento.paciente?.cdPaciente ||
-              "",
-            idProfissionalRealizaProcedimento:
-              eventoBaseAutorizacao.idProfissionalRealizaProcedimento ||
-              evento.idProfissionalRealizaProcedimento,
-            paciente: {
+          try {
+            const eventoParaPacs = {
+              ...eventoBaseAutorizacao,
+              ...eventoBaseAutorizacao,
+              idEvento: `${evento.idEvento}`,
+              descricaoEvento:
+                eventoBaseAutorizacao.descricaoEvento || evento.descricaoEvento || "",
+              dataInicio: eventoBaseAutorizacao.dataInicio || evento.dataInicio,
+              horaInicio:
+                eventoBaseAutorizacao.horaInicio?.slice(0, 5) ||
+                evento.horaInicio?.slice(0, 5) ||
+                "00:00",
               cdPaciente:
                 eventoBaseAutorizacao.paciente?.cdPaciente ||
                 evento.paciente?.cdPaciente ||
-                "SEM_ID",
-              nmPaciente:
-                (eventoBaseAutorizacao.paciente?.nmPaciente ||
-                  evento.paciente?.nmPaciente ||
-                  "")?.replace(/\s-\s\[\d+\]\s-\s\d+\sanos/, "") ||
-                "PACIENTE SEM NOME",
-              dtNascimento:
-                eventoBaseAutorizacao.paciente?.dtNascimento ||
-                evento.paciente?.dtNascimento ||
                 "",
-              flSexo:
-                eventoBaseAutorizacao.paciente?.flSexo ||
-                evento.paciente?.flSexo ||
-                "O",
-              nmUfEndereco:
-                eventoBaseAutorizacao.paciente?.nmUfEndereco ||
-                evento.paciente?.nmUfEndereco ||
-                "PB",
-              nuCpf:
-                eventoBaseAutorizacao.paciente?.nuCpf ||
-                evento.paciente?.nuCpf ||
+              idProfissionalRealizaProcedimento:
+                eventoBaseAutorizacao.idProfissionalRealizaProcedimento ||
+                evento.idProfissionalRealizaProcedimento,
+              paciente: {
+                cdPaciente:
+                  eventoBaseAutorizacao.paciente?.cdPaciente ||
+                  evento.paciente?.cdPaciente ||
+                  "SEM_ID",
+                nmPaciente:
+                  (eventoBaseAutorizacao.paciente?.nmPaciente ||
+                    evento.paciente?.nmPaciente ||
+                    "")?.replace(/\s-\s\[\d+\]\s-\s\d+\sanos/, "") ||
+                  "PACIENTE SEM NOME",
+                dtNascimento:
+                  eventoBaseAutorizacao.paciente?.dtNascimento ||
+                  evento.paciente?.dtNascimento ||
+                  "",
+                flSexo:
+                  eventoBaseAutorizacao.paciente?.flSexo ||
+                  evento.paciente?.flSexo ||
+                  "O",
+                nmUfEndereco:
+                  eventoBaseAutorizacao.paciente?.nmUfEndereco ||
+                  evento.paciente?.nmUfEndereco ||
+                  "PB",
+                nuCpf:
+                  eventoBaseAutorizacao.paciente?.nuCpf ||
+                  evento.paciente?.nuCpf ||
+                  "",
+                nrCarteiraPlano:
+                  eventoBaseAutorizacao.paciente?.nrCarteiraPlano ||
+                  evento.paciente?.nrCarteiraPlano ||
+                  "",
+              },
+              profissional: {
+                idProfissional:
+                  eventoBaseAutorizacao.profissional?.idProfissional ||
+                  evento.profissional?.idProfissional,
+                nmProfissional:
+                  eventoBaseAutorizacao.profissional?.nmProfissional ||
+                  evento.profissional?.nmProfissional ||
+                  "",
+                especialidade:
+                  eventoBaseAutorizacao.profissional?.especialidade ||
+                  evento.profissional?.especialidade,
+                ufConselho:
+                  eventoBaseAutorizacao.profissional?.ufConselho ||
+                  evento.profissional?.ufConselho ||
+                  "PB",
+                crmNumero:
+                  eventoBaseAutorizacao.profissional?.crmNumero ||
+                  evento.profissional?.crmNumero ||
+                  "",
+              },
+              profissionalSolicitante:
+                eventoBaseAutorizacao.profissionalSolicitante ||
+                evento.profissionalSolicitante ||
+                null,
+              nrConselhoProfSolicitante:
+                eventoBaseAutorizacao.nrConselhoProfSolicitante ||
+                evento.nrConselhoProfSolicitante ||
                 "",
-              nrCarteiraPlano:
-                eventoBaseAutorizacao.paciente?.nrCarteiraPlano ||
-                evento.paciente?.nrCarteiraPlano ||
-                "",
-            },
-            profissional: {
-              idProfissional:
-                eventoBaseAutorizacao.profissional?.idProfissional ||
-                evento.profissional?.idProfissional,
-              nmProfissional:
-                eventoBaseAutorizacao.profissional?.nmProfissional ||
-                evento.profissional?.nmProfissional ||
-                "",
-              especialidade:
-                eventoBaseAutorizacao.profissional?.especialidade ||
-                evento.profissional?.especialidade,
-              ufConselho:
-                eventoBaseAutorizacao.profissional?.ufConselho ||
-                evento.profissional?.ufConselho ||
-                "PB",
-              crmNumero:
-                eventoBaseAutorizacao.profissional?.crmNumero ||
-                evento.profissional?.crmNumero ||
-                "",
-            },
-            profissionalSolicitante:
-              eventoBaseAutorizacao.profissionalSolicitante ||
-              evento.profissionalSolicitante ||
-              null,
-            nrConselhoProfSolicitante:
-              eventoBaseAutorizacao.nrConselhoProfSolicitante ||
-              evento.nrConselhoProfSolicitante ||
-              "",
-            conselhoProfSolicitante:
-              eventoBaseAutorizacao.conselhoProfSolicitante ||
-              evento.conselhoProfSolicitante ||
-              null,
-            ufConselhoProfSolicitante:
-              eventoBaseAutorizacao.ufConselhoProfSolicitante ||
-              evento.ufConselhoProfSolicitante ||
-              null,
-            procedimentos: itensParaPacsRaw,
-          };
-
-          // CORREÇÃO: enviar todos os procedimentos, um por um
-          for (
-            let index = 0;
-            index < itensParaPacsRaw.length;
-            index++
-          ) {
-            const itemPacs = itensParaPacsRaw[index];
-            const procedimentoPacs =
-              itemPacs?.procedimento || itemPacs;
-            const eventoOrigemPacs =
-              itemPacs?.eventoOrigem || eventoBaseAutorizacao || evento;
-            const eventoParaPacsItem = {
-              ...eventoParaPacs,
-              ...eventoOrigemPacs,
-              idEvento: `${eventoOrigemPacs?.idEvento || evento?.idEvento || ""}`,
-              procedimentos: [procedimentoPacs],
+              conselhoProfSolicitante:
+                eventoBaseAutorizacao.conselhoProfSolicitante ||
+                evento.conselhoProfSolicitante ||
+                null,
+              ufConselhoProfSolicitante:
+                eventoBaseAutorizacao.ufConselhoProfSolicitante ||
+                evento.ufConselhoProfSolicitante ||
+                null,
+              procedimentos: itensParaPacsRaw,
             };
-            const worklistBody = await buildLogicWorklistBodyHelper(
-              eventoParaPacsItem,
-              0,
-            );
-            try {
-              const respLogic = await enviarWorklistLogic(worklistBody);
-              if (respLogic.ok) {
-                toast.success(
-                  `Worklist ${index + 1} criada para ${
-                    procedimentoPacs?.nmProcedimento
-                  }!`,
+
+            for (
+              let index = 0;
+              index < itensParaPacsRaw.length;
+              index++
+            ) {
+              const itemPacs = itensParaPacsRaw[index];
+              const procedimentoPacs =
+                itemPacs?.procedimento || itemPacs;
+              const eventoOrigemPacs =
+                itemPacs?.eventoOrigem || eventoBaseAutorizacao || evento;
+              const eventoParaPacsItem = {
+                ...eventoParaPacs,
+                ...eventoOrigemPacs,
+                idEvento: `${eventoOrigemPacs?.idEvento || evento?.idEvento || ""}`,
+                procedimentos: [procedimentoPacs],
+              };
+              const worklistBody = await buildLogicWorklistBodyHelper(
+                eventoParaPacsItem,
+                0,
+              );
+              try {
+                const respLogic = await enviarWorklistLogic(worklistBody);
+                if (respLogic.ok) {
+                  toast.success(
+                    `Worklist ${index + 1} criada para ${
+                      procedimentoPacs?.nmProcedimento
+                    }!`,
+                  );
+                } else {
+                  toast.warn(
+                    `PACS retornou ${respLogic.status} para ${procedimentoPacs?.nmProcedimento}. Verifique logs.`,
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  `Falha ao enviar Worklist para PACS no procedimento ${procedimentoPacs?.nmProcedimento}:`,
+                  err,
                 );
-              } else {
-                toast.warn(
-                  `PACS retornou ${respLogic.status} para ${procedimentoPacs?.nmProcedimento}. Verifique logs.`,
+                toast.error(
+                  `Falha ao enviar Worklist para ${procedimentoPacs?.nmProcedimento} (ver console).`,
                 );
               }
-            } catch (err) {
-              console.error(
-                `Falha ao enviar Worklist para PACS no procedimento ${procedimentoPacs?.nmProcedimento}:`,
-                err,
-              );
-              toast.error(
-                `Falha ao enviar Worklist para ${procedimentoPacs?.nmProcedimento} (ver console).`,
-              );
-            }
 
-            // Pequena pausa entre os envios para não sobrecarregar o servidor
-            if (index < itensParaPacsRaw.length - 1) {
-              await new Promise((resolve) => setTimeout(resolve, 500));
+              if (index < itensParaPacsRaw.length - 1) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+              }
             }
+          } catch (error) {
+            console.error("Erro geral no envio para Logic PACS:", error);
+            toast.error(
+              "Erro ao enviar para PACS, mas autorização foi concluída.",
+            );
           }
-        } catch (error) {
-          console.error("Erro geral no envio para Logic PACS:", error);
-          toast.error(
-            "Erro ao enviar para PACS, mas autorização foi concluída.",
+        } else if (
+          senhaGuia &&
+          itensParaPacsRaw &&
+          itensParaPacsRaw.length > 0
+        ) {
+          console.log(
+            "Não é ultrassom nem endoscopia/colonoscopia - PACS não será enviado",
           );
         }
-      } else if (
-        senhaGuia &&
-        itensParaPacsRaw &&
-        itensParaPacsRaw.length > 0
-      ) {
-        console.log(
-          "Não é ultrassom nem endoscopia/colonoscopia - PACS não será enviado",
-        );
-      }
-      // ===================== FIM DA CORREÇÃO =====================
       })().catch((error) => {
         console.error("Erro assíncrono no envio para Logic PACS:", error);
       });
@@ -1720,21 +1719,39 @@ export const createAgendaDetalhadaAutorizacao = ({
     } catch (error: any) {
       Swal.close();
       console.error("Erro na autorização:", error);
-      // CORREÇÃO: extrair a mensagem de erro específica da resposta da API
+      
       const errorMessage =
         error?.response?.data?.mensagemErro ||
         error?.response?.data?.message ||
         error?.message ||
         "Falha ao autorizar.";
 
+      const decodedErrorMessage = corrigirTextoQuebrado(errorMessage);
+      const isTransacaoJaEnviada = decodedErrorMessage.includes("ORA-20400") || 
+                                    decodedErrorMessage.includes("já foi enviada com sucesso");
+
+      // SALVAR ERRO NO EVENTO PARA TRAVAR O FLUXO
+      try {
+        await api.patch(`/sisclinic/agenda/${evento.idEvento}`, {
+          erroAutorizacao: true,
+          mensagemErroAutorizacao: decodedErrorMessage,
+          autorizado: false,
+          tokenValidado: false,
+          senhaAutorizacao: null,
+        });
+      } catch (patchError) {
+        console.error("Erro ao salvar status de erro:", patchError);
+      }
+
       await Swal.fire({
-        title: "Erro na Autorização",
+        title: isTransacaoJaEnviada ? "ATENÇÃO" : "Erro na Autorização",
         html: `
         <div class="text-center space-y-4">
           <div class="rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/20 to-red-600/20 p-5">
             <p class="text-lg font-black uppercase tracking-[0.16em] text-red-200">
-              PROCURE A RECEPÇÃO
+              ${isTransacaoJaEnviada ? "CONSULTA JÁ AUTORIZADA" : "PROCURE A RECEPÇÃO"}
             </p>
+            <p class="text-sm text-red-300 mt-2">${decodedErrorMessage}</p>
           </div>
         </div>
       `,
