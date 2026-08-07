@@ -164,6 +164,7 @@ const formatarHoraAtual = () => {
 };
 
 const TEMPO_INATIVIDADE_MS = 60 * 1000;
+const TEMPO_RETORNO_TELA_CPF_MS = 60 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
 const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
 const BLOQUEIO_REENVIO_TOKEN_MS = 23 * 1000;
@@ -663,6 +664,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [segundosRestantesInatividade, setSegundosRestantesInatividade] =
     useState(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
   const timeoutInatividadeRef = useRef<number | null>(null);
+  const timeoutTelaCpfRef = useRef<number | null>(null);
   const intervaloSessaoRef = useRef<number | null>(null);
   const intervaloModalInatividadeRef = useRef<number | null>(null);
   const expiracaoSessaoRef = useRef(Date.now() + TEMPO_INATIVIDADE_MS);
@@ -835,6 +837,33 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       window.clearInterval(intervaloModalInatividadeRef.current);
       intervaloModalInatividadeRef.current = null;
     }
+  };
+
+  const limparTemporizadorTelaCpf = () => {
+    if (timeoutTelaCpfRef.current) {
+      window.clearTimeout(timeoutTelaCpfRef.current);
+      timeoutTelaCpfRef.current = null;
+    }
+  };
+
+  const voltarParaTelaInicialCpf = () => {
+    limparTemporizadorTelaCpf();
+    setCpf("");
+    setMostrarTecladoCpf(false);
+    setMostrarTelaBoasVindasCpf(true);
+    setAnimandoSaidaTelaBoasVindasCpf(false);
+  };
+
+  const reiniciarTemporizadorTelaCpf = () => {
+    limparTemporizadorTelaCpf();
+
+    if (etapaTela !== "cpf" || mostrarTelaBoasVindasCpf) {
+      return;
+    }
+
+    timeoutTelaCpfRef.current = window.setTimeout(() => {
+      voltarParaTelaInicialCpf();
+    }, TEMPO_RETORNO_TELA_CPF_MS);
   };
 
   const encerrarSessaoPorInatividade = () => {
@@ -1027,6 +1056,21 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultaTecladoTokenId,
   ]);
 
+  useEffect(() => {
+    if (!hidratado) return;
+
+    if (etapaTela !== "cpf" || mostrarTelaBoasVindasCpf) {
+      limparTemporizadorTelaCpf();
+      return;
+    }
+
+    reiniciarTemporizadorTelaCpf();
+
+    return () => {
+      limparTemporizadorTelaCpf();
+    };
+  }, [hidratado, etapaTela, mostrarTelaBoasVindasCpf]);
+
   if (!hidratado) {
     return null;
   }
@@ -1046,6 +1090,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
   const resetarTelaCpf = () => {
     limparTemporizadoresSessao();
+    limparTemporizadorTelaCpf();
     setMostrarModalInatividade(false);
     setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
 
@@ -1640,6 +1685,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   const handleCpfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const cpfFormatado = formatarCpf(event.target.value);
     setCpf(cpfFormatado);
+    reiniciarTemporizadorTelaCpf();
 
     if (normalizarCpf(cpfFormatado).length === 11) {
       void buscarConsultas(cpfFormatado);
@@ -1676,6 +1722,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     const textoColado = event.clipboardData.getData("text");
     const cpfFormatado = formatarCpf(textoColado);
     setCpf(cpfFormatado);
+    reiniciarTemporizadorTelaCpf();
 
     if (normalizarCpf(cpfFormatado).length === 11) {
       void buscarConsultas(cpfFormatado);
@@ -1690,6 +1737,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
     const cpfFormatado = formatarCpf(`${cpfAtual}${digito}`);
     setCpf(cpfFormatado);
+    reiniciarTemporizadorTelaCpf();
 
     if (normalizarCpf(cpfFormatado).length === 11) {
       void buscarConsultas(cpfFormatado);
@@ -1699,6 +1747,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   const apagarUltimoDigitoCpf = () => {
     const cpfAtual = normalizarCpf(cpf);
     setCpf(formatarCpf(cpfAtual.slice(0, -1)));
+    reiniciarTemporizadorTelaCpf();
   };
 
   const atualizarConsultaLocal = (
