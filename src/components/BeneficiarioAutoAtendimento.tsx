@@ -1639,24 +1639,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     }, 0);
   };
 
-  const apagarUltimoDigitoViaTecladoInline = (idEvento: number) => {
-    let proximoToken = "";
-
-    setTokenDigitadoPorConsulta((prev) => {
-      proximoToken = String(prev[idEvento] || "").slice(0, -1);
-      return {
-        ...prev,
-        [idEvento]: proximoToken,
-      };
-    });
-
-    limparMensagemTokenInline(idEvento);
-    setTimeout(
-      () => focarCampoTokenInline(idEvento, Math.min(proximoToken.length, 3)),
-      0,
-    );
-  };
-
   const limparTokenViaTecladoInline = (idEvento: number) => {
     setTokenDigitadoPorConsulta((prev) => ({
       ...prev,
@@ -2687,8 +2669,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
         const tokenDigitado =
           tokenDigitadoPorConsulta[consulta.idEvento] || "";
-        const tokenErro = tokenErroPorConsulta[consulta.idEvento] || "";
-        const tokenFeedback = tokenFeedbackPorConsulta[consulta.idEvento];
         const reenviandoToken =
           consultaReenviandoTokenId === consulta.idEvento;
         const validandoToken =
@@ -2969,8 +2949,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                   <TokenInlinePanel
                     consulta={consulta}
                     tokenDigitado={tokenDigitado}
-                    tokenErro={tokenErro}
-                    tokenFeedback={tokenFeedback}
                     tecladoTokenAberto={tecladoTokenAberto}
                     reenviandoToken={reenviandoToken}
                     validandoToken={validandoToken}
@@ -3142,3 +3120,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
+
+
+

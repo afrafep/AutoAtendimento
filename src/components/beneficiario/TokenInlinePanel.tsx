@@ -1,10 +1,5 @@
 ﻿import type { ClipboardEvent, KeyboardEvent } from "react";
 
-interface TokenFeedbackInlineProps {
-  tipo: "success" | "error" | "info";
-  mensagem: string;
-}
-
 interface ConsultaTokenInlineProps {
   idEvento: number;
   profissionalNome: string;
@@ -14,8 +9,6 @@ interface ConsultaTokenInlineProps {
 interface TokenInlinePanelProps {
   consulta: ConsultaTokenInlineProps;
   tokenDigitado: string;
-  tokenErro: string;
-  tokenFeedback?: TokenFeedbackInlineProps;
   tecladoTokenAberto: boolean;
   reenviandoToken: boolean;
   validandoToken: boolean;
@@ -155,6 +148,7 @@ export default function TokenInlinePanel({
     </div>
   );
 }
+
 
 
 
