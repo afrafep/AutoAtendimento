@@ -7,6 +7,7 @@ import {
   FaBriefcaseMedical,
   FaClinicMedical,
   FaClipboardList,
+  FaHandPointer,
   FaHeartbeat,
   FaNotesMedical,
   FaShieldAlt,
@@ -2628,7 +2629,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                       <button
                         type="button"
                         onClick={abrirEntradaCpf}
-                        className={`group relative min-h-[28rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-6 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[30rem] md:px-8 md:py-7 ${
+                        className={`group relative min-h-[26rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-5 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[28rem] md:px-8 md:py-6 ${
                           animandoSaidaTelaBoasVindasCpf
                             ? "-translate-y-[110%] opacity-0"
                             : "translate-y-0 opacity-100"
@@ -2677,7 +2678,21 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             </span>
                           </div>
 
-                          <div className="mt-5 grid w-full gap-3 md:grid-cols-3">
+                          <div className="mt-4 w-full max-w-3xl rounded-[1.7rem] border-2 border-cyan-100 bg-white/96 px-5 py-4 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)]">
+                            <div className="flex flex-col items-center gap-3">
+                              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)]">
+                                <FaHandPointer className="text-[1.3rem]" />
+                              </span>
+                              <p className="text-[1.08rem] font-black text-[#16357f] md:text-[1.24rem]">
+                                Toque na tela para digitar o CPF
+                              </p>
+                              <p className="max-w-2xl text-[0.88rem] leading-relaxed text-slate-600 md:text-[0.96rem]">
+                                Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 grid w-full gap-3 md:grid-cols-3">
                             {[
                               {
                                 icon: FaClinicMedical,
@@ -2699,7 +2714,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                               return (
                                 <div
                                   key={item.titulo}
-                                  className="rounded-[1.45rem] border border-white/85 bg-white/92 px-5 py-4 text-left shadow-[0_16px_28px_rgba(15,23,42,0.08)]"
+                                  className="rounded-[1.45rem] border border-white/85 bg-white/92 px-5 py-3.5 text-left shadow-[0_16px_28px_rgba(15,23,42,0.08)]"
                                   style={{
                                     animation: "floatDance 5s ease-in-out infinite",
                                     animationDelay: `${indice * 0.35}s`,
@@ -2719,7 +2734,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             })}
                           </div>
 
-                          <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
                             {[
                               FaHeartbeat,
                               FaClinicMedical,
@@ -2741,24 +2756,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             ))}
                           </div>
 
-                          <div className="mt-5 flex w-full max-w-3xl flex-col items-center gap-3 pb-1">
-                            <div className="rounded-[1.35rem] border border-cyan-100 bg-white/92 px-5 py-2.5 text-center shadow-[0_14px_28px_rgba(15,23,42,0.07)]">
-                              <p className="text-[0.94rem] font-black text-[#16357f] md:text-[1.05rem]">
-                                Toque em qualquer lugar desta tela para habilitar
-                                a digitação do CPF
-                              </p>
-                              <p className="mt-1.5 text-[0.84rem] text-slate-600 md:text-[0.92rem]">
-                                Depois do toque, o campo do CPF será exibido
-                                automaticamente.
-                              </p>
-                            </div>
-
-                            <div className="inline-flex min-h-[3.1rem] items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] px-7 py-2.5 text-white shadow-[0_18px_34px_rgba(0,51,141,0.22)] transition group-hover:scale-[1.02]">
-                              <span className="text-[0.9rem] font-black uppercase tracking-[0.14em] md:text-[1rem]">
-                                Toque na tela para digitar o CPF
-                              </span>
-                            </div>
-                          </div>
                         </div>
 
                         <style>{`
