@@ -3,7 +3,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
-import { FaClipboardList, FaUserCircle, FaUserMd } from "react-icons/fa";
+import {
+  FaBriefcaseMedical,
+  FaClinicMedical,
+  FaClipboardList,
+  FaHeartbeat,
+  FaNotesMedical,
+  FaShieldAlt,
+  FaStethoscope,
+  FaUserCircle,
+  FaUserMd,
+} from "react-icons/fa";
 import AtendimentoResumoCard from "./AtendimentoResumoCard";
 import { TokenEnviar } from "./TokenEnviar";
 import { TokenValidar } from "./TokenValidar";
@@ -670,6 +680,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const locaisProfissionaisPorDataCacheRef = useRef<
     Record<string, Promise<LocalProfissionalDia[]>>
   >({});
+  const inputCpfRef = useRef<HTMLInputElement | null>(null);
   const [hidratado, setHidratado] = useState(false);
   const [cpf, setCpf] = useState("");
   const [pacienteNome, setPacienteNome] = useState("");
@@ -692,6 +703,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   >(null);
   const [indiceConsultaAtual, setIndiceConsultaAtual] = useState(0);
   const [etapaTela, setEtapaTela] = useState<EtapaTelaAutoAtendimento>("cpf");
+  const [mostrarTelaBoasVindasCpf, setMostrarTelaBoasVindasCpf] =
+    useState(true);
+  const [animandoSaidaTelaBoasVindasCpf, setAnimandoSaidaTelaBoasVindasCpf] =
+    useState(false);
   const [mostrarTecladoCpf, setMostrarTecladoCpf] = useState(false);
   const [horaCabecalhoAtual, setHoraCabecalhoAtual] = useState(() =>
     formatarHoraAtual(),
@@ -1107,6 +1122,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setIniciarAutorizacaoAutomaticamente(false);
     setConsultaSelecionadaId(null);
     setIndiceConsultaAtual(0);
+    setMostrarTelaBoasVindasCpf(true);
+    setAnimandoSaidaTelaBoasVindasCpf(false);
     setSenhasPainelDigitadas({});
     setMostrarTecladoCpf(false);
     setConsultaTokenAbertaId(null);
@@ -2527,6 +2544,23 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     });
   };
 
+  const abrirEntradaCpf = () => {
+    if (animandoSaidaTelaBoasVindasCpf) return;
+
+    setAnimandoSaidaTelaBoasVindasCpf(true);
+
+    window.setTimeout(() => {
+      setMostrarTelaBoasVindasCpf(false);
+      setAnimandoSaidaTelaBoasVindasCpf(false);
+      setMostrarTecladoCpf(true);
+
+      window.setTimeout(() => {
+        inputCpfRef.current?.focus();
+        inputCpfRef.current?.click();
+      }, 120);
+    }, 520);
+  };
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#eaf3ff_0%,#ffffff_28%,#eef6ff_100%)] text-slate-900">
       <main className="relative z-10 flex min-h-screen w-full flex-col">
@@ -2548,66 +2582,234 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
         <div className="w-full transition-all duration-200">
           {etapaTela === "cpf" && (
             <section className="w-full">
-              <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
-                <div className="mx-auto max-w-5xl px-2 md:px-3">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div className="text-center md:text-left">
-                      <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
-                        {"Digite o CPF do benefici\u00e1rio"}
-                      </h2>
-                      <p className="mt-3 max-w-136 text-[1.6rem] text-blue-100">
-                        Localize os agendamentos de hoje.
-                      </p>
-                    </div>
-                    <div className="flex justify-center md:justify-end">
-                      <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
-                        <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
-                          {`JO\u00c3O PESSOA - ${dataCabecalhoAtual}`}
+              {!mostrarTelaBoasVindasCpf ? (
+                <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
+                  <div className="mx-auto max-w-5xl px-2 md:px-3">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="text-center md:text-left">
+                        <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
+                          {"Digite o CPF do benefici\u00e1rio"}
+                        </h2>
+                        <p className="mt-3 max-w-136 text-[1.6rem] text-blue-100">
+                          Localize os agendamentos de hoje.
                         </p>
-                        <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
-                          {`Hor\u00e1rio Atual: ${horaCabecalhoAtual}`}
-                        </p>
+                      </div>
+                      <div className="flex justify-center md:justify-end">
+                        <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
+                          <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
+                            {`JO\u00c3O PESSOA - ${dataCabecalhoAtual}`}
+                          </p>
+                          <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
+                            {`Hor\u00e1rio Atual: ${horaCabecalhoAtual}`}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : null}
 
-              <div className="flex-1 overflow-hidden px-3 py-2 md:px-6 md:py-3">
+              <div
+                className={`flex-1 px-3 md:px-6 ${
+                  mostrarTelaBoasVindasCpf ? "overflow-visible" : "overflow-hidden"
+                } ${
+                  mostrarTelaBoasVindasCpf
+                    ? "py-4 md:py-5"
+                    : "py-2 md:py-3"
+                }`}
+              >
                 <div className="mx-auto max-w-6xl">
-                  <div className="flex min-h-0 h-full flex-col gap-3">
-                    <div>
-                      <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)] md:p-2.5">
-                        <input
-                          id="beneficiario-cpf"
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={14}
-                          value={cpf}
-                          onChange={handleCpfChange}
-                          onFocus={() => setMostrarTecladoCpf(true)}
-                          onClick={() => setMostrarTecladoCpf(true)}
-                          onKeyDown={(event) => {
-                            handleCpfKeyDown(event);
-                            if (event.key === "Enter") {
-                              void buscarConsultas();
-                            }
-                          }}
-                          onPaste={handleCpfPaste}
-                          placeholder="000.000.000-00"
-                          pattern="[0-9]*"
-                          className="h-[4.25rem] w-full border-0 bg-slate-50 px-6 text-center text-[1.26rem] font-black tracking-[0.12em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[4.75rem] md:text-[1.62rem]"
-                        />
-                      </div>
-                    </div>
+                  <div
+                    className={`flex flex-col gap-3 ${
+                      mostrarTelaBoasVindasCpf ? "min-h-fit h-auto pb-6" : "min-h-0 h-full"
+                    }`}
+                  >
+                    {mostrarTelaBoasVindasCpf ? (
+                      <button
+                        type="button"
+                        onClick={abrirEntradaCpf}
+                        className={`group relative min-h-[28rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-6 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[30rem] md:px-8 md:py-7 ${
+                          animandoSaidaTelaBoasVindasCpf
+                            ? "-translate-y-[110%] opacity-0"
+                            : "translate-y-0 opacity-100"
+                        }`}
+                      >
+                        <div className="pointer-events-none absolute inset-0">
+                          <div className="absolute left-[10%] top-[14%] h-24 w-24 rounded-full bg-cyan-200/35 blur-2xl md:h-32 md:w-32" />
+                          <div className="absolute right-[12%] top-[18%] h-20 w-20 rounded-full bg-blue-200/35 blur-2xl md:h-28 md:w-28" />
+                          <div className="absolute bottom-[10%] left-[24%] h-28 w-28 rounded-full bg-sky-100/50 blur-3xl md:h-36 md:w-36" />
+                        </div>
 
-                    {mostrarTecladoCpf ? (
-                      <CpfTecladoNumerico
-                        loading={loading}
-                        onAdicionarDigito={adicionarDigitoCpf}
-                        onApagarUltimo={apagarUltimoDigitoCpf}
-                      />
-                    ) : null}
+                        <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center">
+                          <div className="mb-4 inline-flex items-center gap-3 rounded-full border border-[#00338d]/10 bg-white/88 px-4 py-2 shadow-[0_10px_24px_rgba(0,51,141,0.08)]">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_100%)] text-white shadow-[0_8px_18px_rgba(0,51,141,0.24)]">
+                              <FaHeartbeat className="text-[1.05rem]" />
+                            </span>
+                            <div className="text-left">
+                              <p className="text-[0.74rem] font-black uppercase tracking-[0.18em] text-[#4f7bc6]">
+                                TELA INICIAL
+                              </p>
+                              <p className="text-[1.18rem] font-black tracking-[0.03em] text-[#00338d] md:text-[1.45rem]">
+                                Autoatendimento Afrafep
+                              </p>
+                            </div>
+                          </div>
+
+                          <h2 className="max-w-3xl text-[1.75rem] font-black tracking-tight text-[#0f2d78] md:text-[2.45rem]">
+                            Bem-vindo ao autoatendimento
+                          </h2>
+                          <p className="mt-2 max-w-3xl text-[0.95rem] leading-relaxed text-slate-600 md:text-[1.08rem]">
+                            Toque na tela para abrir o campo do CPF e localizar
+                            seus agendamentos de hoje.
+                          </p>
+
+                          <div className="mt-4 inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-cyan-100 bg-white/92 px-5 py-2.5 text-[#16357f] shadow-[0_12px_24px_rgba(15,23,42,0.07)]">
+                            <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
+                              Joao Pessoa
+                            </span>
+                            <span className="hidden h-1.5 w-1.5 rounded-full bg-cyan-300 md:inline-flex" />
+                            <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
+                              {dataCabecalhoAtual}
+                            </span>
+                            <span className="hidden h-1.5 w-1.5 rounded-full bg-cyan-300 md:inline-flex" />
+                            <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
+                              {`Horario atual: ${horaCabecalhoAtual}`}
+                            </span>
+                          </div>
+
+                          <div className="mt-5 grid w-full gap-3 md:grid-cols-3">
+                            {[
+                              {
+                                icon: FaClinicMedical,
+                                titulo: "Consultas do dia",
+                                texto: "Veja rapidamente os atendimentos agendados.",
+                              },
+                              {
+                                icon: FaShieldAlt,
+                                titulo: "Acesso simples",
+                                texto: "Fluxo claro, com letras grandes e interação fácil.",
+                              },
+                              {
+                                icon: FaNotesMedical,
+                                titulo: "Orientação guiada",
+                                texto: "A tela mostra cada passo até iniciar o atendimento.",
+                              },
+                            ].map((item, indice) => {
+                              const Icone = item.icon;
+                              return (
+                                <div
+                                  key={item.titulo}
+                                  className="rounded-[1.45rem] border border-white/85 bg-white/92 px-5 py-4 text-left shadow-[0_16px_28px_rgba(15,23,42,0.08)]"
+                                  style={{
+                                    animation: "floatDance 5s ease-in-out infinite",
+                                    animationDelay: `${indice * 0.35}s`,
+                                  }}
+                                >
+                                  <span className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-[#0f4db7]">
+                                    <Icone className="text-[1.2rem]" />
+                                  </span>
+                                  <p className="text-[1rem] font-black text-[#16357f] md:text-[1.08rem]">
+                                    {item.titulo}
+                                  </p>
+                                  <p className="mt-1.5 text-[0.88rem] leading-relaxed text-slate-600 md:text-[0.95rem]">
+                                    {item.texto}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                            {[
+                              FaHeartbeat,
+                              FaClinicMedical,
+                              FaShieldAlt,
+                              FaStethoscope,
+                              FaNotesMedical,
+                              FaBriefcaseMedical,
+                            ].map((Icone, indice) => (
+                              <span
+                                key={`icone-saude-${indice}`}
+                                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/85 bg-white/90 text-[#0f4db7] shadow-[0_12px_22px_rgba(15,23,42,0.08)] md:h-14 md:w-14"
+                                style={{
+                                  animation: "pulseSeal 4.8s ease-in-out infinite",
+                                  animationDelay: `${indice * 0.18}s`,
+                                }}
+                              >
+                                <Icone className="text-[1.05rem] md:text-[1.2rem]" />
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="mt-5 flex w-full max-w-3xl flex-col items-center gap-3 pb-1">
+                            <div className="rounded-[1.35rem] border border-cyan-100 bg-white/92 px-5 py-2.5 text-center shadow-[0_14px_28px_rgba(15,23,42,0.07)]">
+                              <p className="text-[0.94rem] font-black text-[#16357f] md:text-[1.05rem]">
+                                Toque em qualquer lugar desta tela para habilitar
+                                a digitação do CPF
+                              </p>
+                              <p className="mt-1.5 text-[0.84rem] text-slate-600 md:text-[0.92rem]">
+                                Depois do toque, o campo do CPF será exibido
+                                automaticamente.
+                              </p>
+                            </div>
+
+                            <div className="inline-flex min-h-[3.1rem] items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] px-7 py-2.5 text-white shadow-[0_18px_34px_rgba(0,51,141,0.22)] transition group-hover:scale-[1.02]">
+                              <span className="text-[0.9rem] font-black uppercase tracking-[0.14em] md:text-[1rem]">
+                                Toque na tela para digitar o CPF
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <style>{`
+                          @keyframes floatDance {
+                            0%, 100% { transform: translateY(0px) rotate(0deg); }
+                            50% { transform: translateY(-10px) rotate(-1.5deg); }
+                          }
+
+                          @keyframes pulseSeal {
+                            0%, 100% { transform: scale(1); }
+                            50% { transform: scale(1.04); }
+                          }
+                        `}</style>
+                      </button>
+                    ) : (
+                      <>
+                        <div>
+                          <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)] md:p-2.5">
+                            <input
+                              ref={inputCpfRef}
+                              id="beneficiario-cpf"
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={14}
+                              value={cpf}
+                              onChange={handleCpfChange}
+                              onFocus={() => setMostrarTecladoCpf(true)}
+                              onClick={() => setMostrarTecladoCpf(true)}
+                              onKeyDown={(event) => {
+                                handleCpfKeyDown(event);
+                                if (event.key === "Enter") {
+                                  void buscarConsultas();
+                                }
+                              }}
+                              onPaste={handleCpfPaste}
+                              placeholder="000.000.000-00"
+                              pattern="[0-9]*"
+                              className="h-[4.25rem] w-full border-0 bg-slate-50 px-6 text-center text-[1.26rem] font-black tracking-[0.12em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[4.75rem] md:text-[1.62rem]"
+                            />
+                          </div>
+                        </div>
+
+                        {mostrarTecladoCpf ? (
+                          <CpfTecladoNumerico
+                            loading={loading}
+                            onAdicionarDigito={adicionarDigitoCpf}
+                            onApagarUltimo={apagarUltimoDigitoCpf}
+                          />
+                        ) : null}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
