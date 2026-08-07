@@ -178,7 +178,7 @@ const formatarHoraAtual = () => {
 const TEMPO_INATIVIDADE_MS = 50 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
 const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
-const BLOQUEIO_REENVIO_TOKEN_MS = 40 * 1000;
+const BLOQUEIO_REENVIO_TOKEN_MS = 23 * 1000;
 
 const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
   [...consultas].sort((a, b) =>
@@ -661,7 +661,7 @@ const normalizarMensagemTokenInline = (mensagem?: string) => {
     textoLower.includes("token inv\u00e1lido") ||
     textoLower.includes("ora-20400")
   ) {
-    return "Token inv\u00e1lido";
+    return "Token errado. Insira um token correto.";
   }
   return texto;
 };
@@ -730,6 +730,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const intervaloSessaoRef = useRef<number | null>(null);
   const intervaloModalInatividadeRef = useRef<number | null>(null);
   const expiracaoSessaoRef = useRef(Date.now() + TEMPO_INATIVIDADE_MS);
+  const pausaInatividadeRef = useRef(false);
 
   const consultaSelecionada =
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) ||
@@ -852,11 +853,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     let maiorIndiceLiberado = 0;
 
     cardsConsultasFluxo.forEach((item, indice) => {
-      if (
-        item.autorizacaoConcluida ||
-        item.guiaGerada ||
-        item.senhaAutorizacaoPreenchida
-      ) {
+      if (item.autorizacaoConcluida) {
         maiorIndiceLiberado = Math.min(
           indice + 1,
           cardsConsultasFluxo.length - 1,
@@ -868,6 +865,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   }, [cardsConsultasFluxo]);
 
   const consultaFluxoAtual = cardsConsultasFluxo[indiceConsultaAtual] || null;
+  const possuiModalAbertoQuePausaInatividade = Boolean(
+    consultaAutorizacaoAberta ||
+      mostrarTecladoCpf ||
+      consultaTecladoTokenId !== null,
+  );
 
   const dataConsultasCabecalho = useMemo(
     () => formatarData(cardsConsultas[0]?.consultaBase.dataInicio),
@@ -917,6 +919,18 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
 
     intervaloSessaoRef.current = window.setInterval(() => {
+      const devePausarInatividade =
+        pausaInatividadeRef.current || Swal.isVisible();
+
+      if (devePausarInatividade) {
+        expiracaoSessaoRef.current += 1000;
+        setMostrarModalInatividade(false);
+        setSegundosRestantesInatividade(
+          CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
+        );
+        return;
+      }
+
       const restante = Math.max(
         0,
         Math.ceil((expiracaoSessaoRef.current - Date.now()) / 1000),
@@ -1024,6 +1038,17 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultaFluxoAtual?.autorizado,
     consultaFluxoAtual?.autorizacaoConcluida,
   ]);
+
+  useEffect(() => {
+    pausaInatividadeRef.current = possuiModalAbertoQuePausaInatividade;
+
+    if (possuiModalAbertoQuePausaInatividade) {
+      setMostrarModalInatividade(false);
+      setSegundosRestantesInatividade(
+        CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
+      );
+    }
+  }, [possuiModalAbertoQuePausaInatividade]);
 
   useEffect(() => {
     if (!hidratado) return;
@@ -1391,8 +1416,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     idEvento: number,
     mensagem: string,
   ) => {
-    const mensagemNormalizada = String(mensagem || "").trim();
-    const titulo =
+  const mensagemNormalizada = String(mensagem || "").trim();
+  const titulo =
+      mensagemNormalizada.toLowerCase() ===
+        "token errado. insira um token correto." ||
       mensagemNormalizada.toLowerCase() === "token inv\u00e1lido" ||
       mensagemNormalizada.toLowerCase() === "token invalido"
         ? "TOKEN INV\u00c1LIDO"
@@ -1402,7 +1429,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       title: titulo,
       text:
         titulo === "TOKEN INV\u00c1LIDO"
-          ? "O c\u00f3digo digitado est\u00e1 incorreto. Feche esta mensagem e digite novamente o c\u00f3digo que chegou no seu celular, pelo aplicativo ou por SMS."
+          ? "Token errado. Insira um token correto."
           : mensagemNormalizada ||
             "N\u00e3o foi poss\u00edvel validar o token.",
       icon: "error",
@@ -1537,9 +1564,32 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     await exibirModalSucessoELiberarConsulta(consulta);
 
   } catch (error: any) {
-    const mensagemErro = String(error?.response?.data?.mensagem || error?.message || "").toLowerCase();
-    
-    if (mensagemErro.includes("ora-20400") || mensagemErro.includes("já foi enviada com sucesso")) {
+    const mensagemErro = String(
+      error?.response?.data?.mensagem || error?.message || "",
+    ).toLowerCase();
+    const tokenInvalido =
+      mensagemErro.includes("token invalido") ||
+      mensagemErro.includes("token inv\u00e1lido") ||
+      mensagemErro.includes("ora-20400");
+    const tokenJaConfirmado =
+      mensagemErro.includes("senha ja validada com envio de token") ||
+      mensagemErro.includes("senha j\u00e1 validada com envio de token") ||
+      (mensagemErro.includes("transação") &&
+        mensagemErro.includes("já foi enviada com sucesso")) ||
+      (mensagemErro.includes("transacao") &&
+        mensagemErro.includes("ja foi enviada com sucesso"));
+
+    if (tokenInvalido) {
+      const mensagem = "Token errado. Insira um token correto.";
+      setTokenErroPorConsulta((prev) => ({
+        ...prev,
+        [consulta.idEvento]: mensagem,
+      }));
+      await exibirModalErroTokenInline(consulta.idEvento, mensagem);
+      return;
+    }
+
+    if (tokenJaConfirmado) {
       try {
         const { data: consultaAtual } = await api.get(`/sisclinic/agenda/${consulta.idEvento}`);
         
@@ -2757,7 +2807,11 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
               </div>
 
               {/* Container centralizado - Ocupa todo o espaço disponível */}
-                <div className="flex-1 flex flex-col items-center justify-center text-center gap-1 py-1">
+                <div
+                  className={`flex-1 flex flex-col items-center justify-center text-center py-1 ${
+                    tokenInlineVisivel ? "gap-0" : "gap-1"
+                  }`}
+                >
                 {/* HORÁRIO */}
                 {cardConsulta.agrupadoUltrassom ? (
                   <p className="font-black uppercase tracking-[0.05em] text-[#00338d] text-[1.8rem] md:text-[2.2rem] leading-tight">
@@ -2766,23 +2820,47 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     ) || "Horários do dia"}
                   </p>
                 ) : (
-                  <p className="font-black tracking-tight text-[#00338d] text-[4.4rem] md:text-[5.3rem] leading-none">
+                  <p
+                    className={`font-black tracking-tight text-[#00338d] leading-none ${
+                      tokenInlineVisivel
+                        ? "text-[3.3rem] md:text-[4rem]"
+                        : "text-[4.4rem] md:text-[5.3rem]"
+                    }`}
+                  >
                     {formatarHora(consulta.horaInicio)}
                   </p>
                 )}
 
                 {/* PROFISSIONAL */}
-                <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[2.3rem] md:text-[2.75rem] mt-0.5 leading-tight">
+                <p
+                    className={`mt-0.5 font-black uppercase tracking-[0.02em] text-slate-900 leading-tight ${
+                      tokenInlineVisivel
+                        ? "text-[1.55rem] md:text-[1.85rem]"
+                        : "text-[2.3rem] md:text-[2.75rem]"
+                    }`}
+                >
                   {consulta.profissionalNome}
                 </p>
 
                 {/* ESPECIALIDADE */}
-                <p className="font-black uppercase text-[#180539] text-[1.35rem] md:text-[2.05rem] leading-tight">
+                <p
+                    className={`font-black uppercase text-[#180539] leading-tight ${
+                      tokenInlineVisivel
+                        ? "text-[0.95rem] md:text-[1.3rem]"
+                        : "text-[1.35rem] md:text-[2.05rem]"
+                    }`}
+                >
                   {consulta.especialidadeNome}
                 </p>
 
                 {/* LOCAL - Dinâmico baseado na especialidade */}
-                <p className="font-black text-[#00338d] text-[2.8rem] md:text-[3.2rem] mt-0.5 leading-tight">
+                <p
+                    className={`mt-0.5 font-black text-[#00338d] leading-tight ${
+                      tokenInlineVisivel
+                        ? "text-[1.9rem] md:text-[2.2rem]"
+                        : "text-[2.8rem] md:text-[3.2rem]"
+                    }`}
+                >
                   {(() => {
                     const especialidade =
                       consulta.especialidadeNome?.toLowerCase() || "";
