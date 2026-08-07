@@ -1,6 +1,4 @@
-﻿import { useEffect, useRef } from "react";
-import type { ClipboardEvent, KeyboardEvent } from "react";
-import { toast } from "react-toastify";
+﻿import type { ClipboardEvent, KeyboardEvent } from "react";
 
 interface TokenFeedbackInlineProps {
   tipo: "success" | "error" | "info";
@@ -48,7 +46,6 @@ export default function TokenInlinePanel({
   onFecharTeclado,
   onPreencherDigito,
   onLimparToken,
-  onApagarUltimoDigito,
   onReenviar,
   onValidar,
 }: TokenInlinePanelProps) {

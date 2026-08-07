@@ -1468,7 +1468,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
     const mensagemLower = mensagem.toLowerCase();
     
-    // ✅ VERIFICA SE O TOKEN FOI VALIDADO OU SE JÁ FOI ENVIADO ANTERIORMENTE
     const tokenValidado =
       mensagemLower.includes("token validado com sucesso") ||
       mensagemLower.includes("senha ja validada com envio de token") ||
@@ -1500,261 +1499,29 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     );
     setConsultaTokenAbertaId(null);
     setConsultaTecladoTokenId(null);
+    setConsultaProcessandoSenhaId(null);
 
-    // Buscar consultas atualizadas
     await buscarConsultas();
+    await exibirModalSucessoELiberarConsulta(consulta);
 
-    // Função auxiliar para obter o local baseado na especialidade
-    const obterLocalPorEspecialidade = (
-      consultaItem: ConsultaAutoAtendimento,
-    ): string => {
-      const especialidade =
-        consultaItem.especialidadeNome?.toLowerCase() || "";
-
-      const localMap: Record<string, string> = {
-        // SUBSOLO
-        fisioterapeuta: "SUBSOLO (Fisioterapia)",
-        "fisioterapeuta sad": "SUBSOLO (Fisioterapia)",
-        "fisoterapeuta sad": "SUBSOLO (Fisioterapia)",
-        "terapeuta ocupacional": "SUBSOLO (Terapia Ocupacional)",
-        "terapeuta ocupacional infantil":
-          "SUBSOLO (Terapia Ocupacional Infantil)",
-        "terapia ocupacional": "SUBSOLO (Terapia Ocupacional)",
-        "terapia ocupacional infantil":
-          "SUBSOLO (Terapia Ocupacional Infantil)",
-        osteopatia: "SUBSOLO (Osteopatia)",
-        quiropata: "SUBSOLO (Quiropraxia)",
-
-        // 1º ANDAR
-        dermatologista: "1º ANDAR (Dermatologia)",
-        psicologo: "1º ANDAR (Psicologia)",
-        "psicologo sad": "1º ANDAR (Psicologia)",
-        "psicologia infantil": "1º ANDAR (Psicologia Infantil)",
-        psiquiatra: "1º ANDAR (Psiquiatria)",
-        "psiquiatra infantil": "1º ANDAR (Psiquiatria Infantil)",
-        fonoaudiologo: "1º ANDAR (Fonoaudiologia)",
-        "fonoaudiologo sad": "1º ANDAR (Fonoaudiologia)",
-        foniatra: "1º ANDAR (Foniatria)",
-        nutricionista: "1º ANDAR (Nutrição)",
-        "nutricionista sad": "1º ANDAR (Nutrição)",
-        "nutri maternoinfantil": "1º ANDAR (Nutrição Maternoinfantil)",
-        ortoptista: "1º ANDAR (Ortoptista)",
-
-        // TÉRREO
-        ultrassonografista: "TÉRREO (Ultrassonografia)",
-        "medico ultrassonografista": "TÉRREO (Ultrassonografia)",
-        ecocardiograma: "TÉRREO (Ecocardiograma)",
-        "teste ergométrico": "TÉRREO (Teste Ergométrico)",
-        mapa: "TÉRREO (Mapa)",
-        holter: "TÉRREO (Holter)",
-        vacinação: "TÉRREO (Vacinação)",
-        "vacinação influenza jp": "TÉRREO (Vacinação)",
-        "vacinação prevenar 13- jp": "TÉRREO (Vacinação)",
-        "vacinacao herpes zoster": "TÉRREO (Vacinação)",
-        "vacina herpes zoster": "TÉRREO (Vacinação)",
-        "exame antígeno": "TÉRREO (Exame Antígeno)",
-        "procedimento dermatologico": "TÉRREO (Dermatologia)",
-        oftalmologista: "TÉRREO (Oftalmologia)",
-        "oftalmologista infantil": "TÉRREO (Oftalmologia Infantil)",
-        "procedimento oftalmologico": "TÉRREO (Oftalmologia)",
-        cardiologista: "TÉRREO (Cardiologia)",
-        "clinico geral": "TÉRREO (Clínico Geral)",
-        "clinico geral / cardiologia": "TÉRREO (Clínico Geral / Cardiologia)",
-        "medico da familia": "TÉRREO (Medicina da Família)",
-        "medico da família": "TÉRREO (Medicina da Família)",
-        "medico da dor": "TÉRREO (Medicina da Dor)",
-        "procedimento medico da dor": "TÉRREO (Medicina da Dor)",
-        ginecologista: "TÉRREO (Ginecologia)",
-        obstetra: "TÉRREO (Obstetrícia)",
-        "ginecologista / obstetra": "TÉRREO (Ginecologia / Obstetrícia)",
-        urologista: "TÉRREO (Urologia)",
-        otorrinolaringologista: "TÉRREO (Otorrinolaringologia)",
-        ortopedista: "TÉRREO (Ortopedia)",
-        neurologista: "TÉRREO (Neurologia)",
-        "neurologista infantil": "TÉRREO (Neurologia Infantil)",
-        neurocirurgiao: "TÉRREO (Neurocirurgia)",
-        endocrinologista: "TÉRREO (Endocrinologia)",
-        "endocrinologia infantil": "TÉRREO (Endocrinologia Infantil)",
-        gastroenterologista: "TÉRREO (Gastroenterologia)",
-        endoscopista: "TÉRREO (Endoscopia)",
-        "endoscopia e colonoscopia": "TÉRREO (Endoscopia e Colonoscopia)",
-        pneumologista: "TÉRREO (Pneumologia)",
-        reumatologista: "TÉRREO (Reumatologia)",
-        nefrologista: "TÉRREO (Nefrologia)",
-        infectologista: "TÉRREO (Infectologia)",
-        hematologista: "TÉRREO (Hematologia)",
-        "oncologista clinico": "TÉRREO (Oncologia Clínica)",
-        "oncologista cirurgico": "TÉRREO (Oncologia Cirúrgica)",
-        "oncologista pediatrico": "TÉRREO (Oncologia Pediátrica)",
-        radiologista: "TÉRREO (Radiologia)",
-        radioterapeuta: "TÉRREO (Radioterapia)",
-        anestesista: "TÉRREO (Anestesiologia)",
-        cirurgiao: "TÉRREO (Cirurgia)",
-        "cirurgiao cardiovascular": "TÉRREO (Cirurgia Cardiovascular)",
-        "cirurgiao de cabeca e pescoco":
-          "TÉRREO (Cirurgia de Cabeça e Pescoço)",
-        "cirurgiao de mao": "TÉRREO (Cirurgia de Mão)",
-        "cirurgiao do aparelho digestivo":
-          "TÉRREO (Cirurgia do Aparelho Digestivo)",
-        "cirurgiao pediatrico": "TÉRREO (Cirurgia Pediátrica)",
-        "cirurgiao plastico": "TÉRREO (Cirurgia Plástica)",
-        "cirurgiao toracico": "TÉRREO (Cirurgia Torácica)",
-        "cirurgiao vascular": "TÉRREO (Cirurgia Vascular)",
-        angiologista: "TÉRREO (Angiologia)",
-        enfermeiro: "TÉRREO (Enfermagem)",
-        "enfermeiro sad": "TÉRREO (Enfermagem)",
-        "tecnico de enfermagem": "TÉRREO (Enfermagem)",
-        pediatra: "TÉRREO (Pediatria)",
-        geriatra: "TÉRREO (Geriatria)",
-        mastologista: "TÉRREO (Mastologia)",
-        proctologista: "TÉRREO (Proctologia)",
-        fisiatra: "TÉRREO (Fisiatria)",
-        "medico do trabalho": "TÉRREO (Medicina do Trabalho)",
-        "medico legista": "TÉRREO (Medicina Legal)",
-        "medico nuclear": "TÉRREO (Medicina Nuclear)",
-        "medico sad": "TÉRREO (Medicina SAD)",
-        plantonista: "TÉRREO (Plantão)",
-        "pericias medicas": "TÉRREO (Perícias Médicas)",
-        "saude da familia": "TÉRREO (Saúde da Família)",
-        "geral comunitario": "TÉRREO (Geral Comunitário)",
-        "alergista/imunologista": "TÉRREO (Alergologia/Imunologia)",
-        acupunturista: "TÉRREO (Acupuntura)",
-        nutrologista: "TÉRREO (Nutrologia)",
-        "nutricionista (saude em acao cg)": "TÉRREO (Nutrição)",
-        "nutricionista (saude em acao patos)": "TÉRREO (Nutrição)",
-        "outros profissionais nao classificaveis nessa tabela (padrao)":
-          "TÉRREO (Atendimento Geral)",
-        "sem preferência": "TÉRREO (Atendimento Geral)",
-        procedimento: "TÉRREO (Procedimento)",
-        sad: "TÉRREO (Atendimento SAD)",
-        medico: "TÉRREO (Atendimento Médico)",
-      };
-
-      for (const [key, value] of Object.entries(localMap)) {
-        if (especialidade.includes(key)) {
-          return value;
-        }
-      }
-
-      if (consultaItem.localidadePainel) {
-        return consultaItem.localidadePainel;
-      }
-
-      return "RECEPÇÃO PRINCIPAL (Térreo)";
-    };
-
-    // ✅ FILTRO: apenas consultas que NÃO foram autorizadas
-    const consultasRestantes = consultas.filter(
-      (c) =>
-        c.idEvento !== consulta.idEvento &&
-        c.statusAgendamento !== "FALTOU" &&
-        c.statusAgendamento !== "CANCELADO" &&
-        !c.autorizado,
-    );
-
-    const consultasRestantesCount = consultasRestantes.length;
-    const totalConsultas = consultas.length;
-    const localCorreto = obterLocalPorEspecialidade(consulta);
-    const isLastConsulta = consultasRestantesCount === 0;
-
-    let titulo = "";
-    let mensagemSucesso = "";
-
-    if (isLastConsulta) {
-      const consultasAutorizadas = consultas.filter(
-        (c) => c.autorizado && c.tokenValidado,
-      );
-
-      if (totalConsultas === 1) {
-        const consultaUnica = consultasAutorizadas[0] || consulta;
-        const local = obterLocalPorEspecialidade(consultaUnica);
-        titulo = "✅ CONSULTA LIBERADA!";
-        mensagemSucesso = `Sua consulta com ${consultaUnica.profissionalNome} (${consultaUnica.especialidadeNome}) foi liberada!\n\n📍 Aguarde no ${local}.\n\n🔔 Você já pode seguir para o atendimento.`;
-      } else {
-        titulo = "🎯 TODAS AS CONSULTAS LIBERADAS!";
-
-        let listaConsultas = "";
-        if (consultasAutorizadas.length > 0) {
-          listaConsultas = consultasAutorizadas
-            .sort((a, b) =>
-              String(a.horaInicio).localeCompare(String(b.horaInicio)),
-            )
-            .map((c, index) => {
-              const local = obterLocalPorEspecialidade(c);
-              const hora = formatarHora(c.horaInicio);
-              return `${index + 1}ª - ${hora} - ${c.profissionalNome} (${c.especialidadeNome})\n   📍 Aguarde no ${local}`;
-            })
-            .join("\n\n");
-        }
-
-        mensagemSucesso = `✅ Todas as suas ${totalConsultas} consultas foram liberadas!\n\n📋 Ordem das consultas:\n${listaConsultas}\n\n📍 Aguarde na RECEPÇÃO PRINCIPAL (Térreo) para ser direcionado.`;
-      }
-    } else {
-      titulo = "✅ CONSULTA LIBERADA!";
-
-      const proximasConsultas = consultasRestantes
-        .sort((a, b) =>
-          String(a.horaInicio).localeCompare(String(b.horaInicio)),
-        )
-        .map((c, index) => {
-          const local = obterLocalPorEspecialidade(c);
-          const hora = formatarHora(c.horaInicio);
-          return `${index + 1}ª - ${hora} - ${c.profissionalNome} (${c.especialidadeNome})\n   📍 Aguarde no ${local}`;
-        })
-        .join("\n\n");
-
-      mensagemSucesso = `👏 Consulta com ${consulta.profissionalNome} (${consulta.especialidadeNome}) liberada!\n\n📍 Aguarde no ${localCorreto}.\n\n🔄 Próximas consultas:\n${proximasConsultas}\n\n⚠️ Clique em CONTINUAR para ir para a próxima consulta.`;
-    }
-
-    // ✅ VERIFICA SE TEM MAIS CONSULTAS PARA DEFINIR O TEXTO DO BOTÃO
-    const temMaisConsultas = consultasRestantesCount > 0;
-
-    // ✅ MODAL COM TEXTO DO BOTÃO CONDICIONAL
-    await Swal.fire({
-      title: titulo,
-      text: mensagemSucesso,
-      icon: "success",
-      confirmButtonText: temMaisConsultas ? "CONTINUAR" : "SAIR",
-      allowOutsideClick: false,
-      background: "#ffffff",
-      color: "#0f172a",
-      width: "650px",
-      padding: "2rem",
-      customClass: {
-        popup: "!rounded-[1.4rem] !px-6 !py-5 !max-w-[800px] !w-full",
-        title:
-          "!text-[1.9rem] !font-black !text-emerald-700 !text-center !mb-3",
-        confirmButton:
-          "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-8 !py-3 !text-[1.5rem] !w-full !mt-3 hover:!bg-emerald-700",
-        htmlContainer:
-          "!text-[1.2rem] !leading-relaxed !text-slate-700 !whitespace-pre-line !text-left",
-      },
-    });
-
-    // ✅ AÇÃO CONDICIONAL APÓS FECHAR O MODAL
-    if (temMaisConsultas) {
-      // Tem mais consultas → CONTINUAR: avança para a próxima
-      reiniciarTemporizadorSessao(); // Reseta o timer
-      const proximaConsulta = consultasRestantes[0];
-      const indiceProxima = consultas.findIndex(
-        (c) => c.idEvento === proximaConsulta.idEvento
-      );
-      if (indiceProxima !== -1) {
-        setIndiceConsultaAtual(indiceProxima);
-      }
-    } else {
-      // Última consulta → SAIR: encerra a sessão
-      resetarTelaCpf();
-    }
   } catch (error: any) {
-    // ✅ VERIFICA SE O ERRO É O ORA-20400 (transação já enviada)
     const mensagemErro = String(error?.response?.data?.mensagem || error?.message || "").toLowerCase();
     
     if (mensagemErro.includes("ora-20400") || mensagemErro.includes("já foi enviada com sucesso")) {
-      // ✅ SE FOR O ORA-20400, CONSIDERA COMO SUCESSO E LIBERA A CONSULTA
       try {
-        await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
+        const { data: consultaAtual } = await api.get(`/sisclinic/agenda/${consulta.idEvento}`);
+        
+        if (!consultaAtual?.tokenValidado) {
+          await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
+            tokenValidado: true,
+          });
+        }
+
+        atualizarConsultaLocal(consulta.idEvento, {
           tokenValidado: true,
+          autorizado: true,
+          erroAutorizacao: false,
+          mensagemErroAutorizacao: undefined
         });
 
         setTokenDigitadoPorConsulta((prev) => ({
@@ -1764,271 +1531,29 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
         atualizarFeedbackTokenInline(
           consulta.idEvento,
           "success",
-          "Token já havia sido enviado anteriormente. Atendimento liberado!",
+          "Atendimento liberado!",
         );
         setConsultaTokenAbertaId(null);
         setConsultaTecladoTokenId(null);
+        setConsultaProcessandoSenhaId(null);
 
-        // Buscar consultas atualizadas
         await buscarConsultas();
+        await exibirModalSucessoELiberarConsulta(consulta);
 
-        // Função auxiliar para obter o local baseado na especialidade
-        const obterLocalPorEspecialidade = (
-          consultaItem: ConsultaAutoAtendimento,
-        ): string => {
-          const especialidade =
-            consultaItem.especialidadeNome?.toLowerCase() || "";
-
-          const localMap: Record<string, string> = {
-            // SUBSOLO
-            fisioterapeuta: "SUBSOLO (Fisioterapia)",
-            "fisioterapeuta sad": "SUBSOLO (Fisioterapia)",
-            "fisoterapeuta sad": "SUBSOLO (Fisioterapia)",
-            "terapeuta ocupacional": "SUBSOLO (Terapia Ocupacional)",
-            "terapeuta ocupacional infantil":
-              "SUBSOLO (Terapia Ocupacional Infantil)",
-            "terapia ocupacional": "SUBSOLO (Terapia Ocupacional)",
-            "terapia ocupacional infantil":
-              "SUBSOLO (Terapia Ocupacional Infantil)",
-            osteopatia: "SUBSOLO (Osteopatia)",
-            quiropata: "SUBSOLO (Quiropraxia)",
-
-            // 1º ANDAR
-            dermatologista: "1º ANDAR (Dermatologia)",
-            psicologo: "1º ANDAR (Psicologia)",
-            "psicologo sad": "1º ANDAR (Psicologia)",
-            "psicologia infantil": "1º ANDAR (Psicologia Infantil)",
-            psiquiatra: "1º ANDAR (Psiquiatria)",
-            "psiquiatra infantil": "1º ANDAR (Psiquiatria Infantil)",
-            fonoaudiologo: "1º ANDAR (Fonoaudiologia)",
-            "fonoaudiologo sad": "1º ANDAR (Fonoaudiologia)",
-            foniatra: "1º ANDAR (Foniatria)",
-            nutricionista: "1º ANDAR (Nutrição)",
-            "nutricionista sad": "1º ANDAR (Nutrição)",
-            "nutri maternoinfantil": "1º ANDAR (Nutrição Maternoinfantil)",
-            ortoptista: "1º ANDAR (Ortoptista)",
-
-            // TÉRREO
-            ultrassonografista: "TÉRREO (Ultrassonografia)",
-            "medico ultrassonografista": "TÉRREO (Ultrassonografia)",
-            ecocardiograma: "TÉRREO (Ecocardiograma)",
-            "teste ergométrico": "TÉRREO (Teste Ergométrico)",
-            mapa: "TÉRREO (Mapa)",
-            holter: "TÉRREO (Holter)",
-            vacinação: "TÉRREO (Vacinação)",
-            "vacinação influenza jp": "TÉRREO (Vacinação)",
-            "vacinação prevenar 13- jp": "TÉRREO (Vacinação)",
-            "vacinacao herpes zoster": "TÉRREO (Vacinação)",
-            "vacina herpes zoster": "TÉRREO (Vacinação)",
-            "exame antígeno": "TÉRREO (Exame Antígeno)",
-            "procedimento dermatologico": "TÉRREO (Dermatologia)",
-            oftalmologista: "TÉRREO (Oftalmologia)",
-            "oftalmologista infantil": "TÉRREO (Oftalmologia Infantil)",
-            "procedimento oftalmologico": "TÉRREO (Oftalmologia)",
-            cardiologista: "TÉRREO (Cardiologia)",
-            "clinico geral": "TÉRREO (Clínico Geral)",
-            "clinico geral / cardiologia": "TÉRREO (Clínico Geral / Cardiologia)",
-            "medico da familia": "TÉRREO (Medicina da Família)",
-            "medico da família": "TÉRREO (Medicina da Família)",
-            "medico da dor": "TÉRREO (Medicina da Dor)",
-            "procedimento medico da dor": "TÉRREO (Medicina da Dor)",
-            ginecologista: "TÉRREO (Ginecologia)",
-            obstetra: "TÉRREO (Obstetrícia)",
-            "ginecologista / obstetra": "TÉRREO (Ginecologia / Obstetrícia)",
-            urologista: "TÉRREO (Urologia)",
-            otorrinolaringologista: "TÉRREO (Otorrinolaringologia)",
-            ortopedista: "TÉRREO (Ortopedia)",
-            neurologista: "TÉRREO (Neurologia)",
-            "neurologista infantil": "TÉRREO (Neurologia Infantil)",
-            neurocirurgiao: "TÉRREO (Neurocirurgia)",
-            endocrinologista: "TÉRREO (Endocrinologia)",
-            "endocrinologia infantil": "TÉRREO (Endocrinologia Infantil)",
-            gastroenterologista: "TÉRREO (Gastroenterologia)",
-            endoscopista: "TÉRREO (Endoscopia)",
-            "endoscopia e colonoscopia": "TÉRREO (Endoscopia e Colonoscopia)",
-            pneumologista: "TÉRREO (Pneumologia)",
-            reumatologista: "TÉRREO (Reumatologia)",
-            nefrologista: "TÉRREO (Nefrologia)",
-            infectologista: "TÉRREO (Infectologia)",
-            hematologista: "TÉRREO (Hematologia)",
-            "oncologista clinico": "TÉRREO (Oncologia Clínica)",
-            "oncologista cirurgico": "TÉRREO (Oncologia Cirúrgica)",
-            "oncologista pediatrico": "TÉRREO (Oncologia Pediátrica)",
-            radiologista: "TÉRREO (Radiologia)",
-            radioterapeuta: "TÉRREO (Radioterapia)",
-            anestesista: "TÉRREO (Anestesiologia)",
-            cirurgiao: "TÉRREO (Cirurgia)",
-            "cirurgiao cardiovascular": "TÉRREO (Cirurgia Cardiovascular)",
-            "cirurgiao de cabeca e pescoco":
-              "TÉRREO (Cirurgia de Cabeça e Pescoço)",
-            "cirurgiao de mao": "TÉRREO (Cirurgia de Mão)",
-            "cirurgiao do aparelho digestivo":
-              "TÉRREO (Cirurgia do Aparelho Digestivo)",
-            "cirurgiao pediatrico": "TÉRREO (Cirurgia Pediátrica)",
-            "cirurgiao plastico": "TÉRREO (Cirurgia Plástica)",
-            "cirurgiao toracico": "TÉRREO (Cirurgia Torácica)",
-            "cirurgiao vascular": "TÉRREO (Cirurgia Vascular)",
-            angiologista: "TÉRREO (Angiologia)",
-            enfermeiro: "TÉRREO (Enfermagem)",
-            "enfermeiro sad": "TÉRREO (Enfermagem)",
-            "tecnico de enfermagem": "TÉRREO (Enfermagem)",
-            pediatra: "TÉRREO (Pediatria)",
-            geriatra: "TÉRREO (Geriatria)",
-            mastologista: "TÉRREO (Mastologia)",
-            proctologista: "TÉRREO (Proctologia)",
-            fisiatra: "TÉRREO (Fisiatria)",
-            "medico do trabalho": "TÉRREO (Medicina do Trabalho)",
-            "medico legista": "TÉRREO (Medicina Legal)",
-            "medico nuclear": "TÉRREO (Medicina Nuclear)",
-            "medico sad": "TÉRREO (Medicina SAD)",
-            plantonista: "TÉRREO (Plantão)",
-            "pericias medicas": "TÉRREO (Perícias Médicas)",
-            "saude da familia": "TÉRREO (Saúde da Família)",
-            "geral comunitario": "TÉRREO (Geral Comunitário)",
-            "alergista/imunologista": "TÉRREO (Alergologia/Imunologia)",
-            acupunturista: "TÉRREO (Acupuntura)",
-            nutrologista: "TÉRREO (Nutrologia)",
-            "nutricionista (saude em acao cg)": "TÉRREO (Nutrição)",
-            "nutricionista (saude em acao patos)": "TÉRREO (Nutrição)",
-            "outros profissionais nao classificaveis nessa tabela (padrao)":
-              "TÉRREO (Atendimento Geral)",
-            "sem preferência": "TÉRREO (Atendimento Geral)",
-            procedimento: "TÉRREO (Procedimento)",
-            sad: "TÉRREO (Atendimento SAD)",
-            medico: "TÉRREO (Atendimento Médico)",
-          };
-
-          for (const [key, value] of Object.entries(localMap)) {
-            if (especialidade.includes(key)) {
-              return value;
-            }
-          }
-
-          if (consultaItem.localidadePainel) {
-            return consultaItem.localidadePainel;
-          }
-
-          return "RECEPÇÃO PRINCIPAL (Térreo)";
-        };
-
-        // ✅ FILTRO: apenas consultas que NÃO foram autorizadas
-        const consultasRestantes = consultas.filter(
-          (c) =>
-            c.idEvento !== consulta.idEvento &&
-            c.statusAgendamento !== "FALTOU" &&
-            c.statusAgendamento !== "CANCELADO" &&
-            !c.autorizado,
-        );
-
-        const consultasRestantesCount = consultasRestantes.length;
-        const totalConsultas = consultas.length;
-        const localCorreto = obterLocalPorEspecialidade(consulta);
-        const isLastConsulta = consultasRestantesCount === 0;
-
-        let titulo = "";
-        let mensagemSucesso = "";
-
-        if (isLastConsulta) {
-          const consultasAutorizadas = consultas.filter(
-            (c) => c.autorizado && c.tokenValidado,
-          );
-
-          if (totalConsultas === 1) {
-            const consultaUnica = consultasAutorizadas[0] || consulta;
-            const local = obterLocalPorEspecialidade(consultaUnica);
-            titulo = "✅ CONSULTA LIBERADA!";
-            mensagemSucesso = `Sua consulta com ${consultaUnica.profissionalNome} (${consultaUnica.especialidadeNome}) foi liberada!\n\n📍 Aguarde no ${local}.\n\n🔔 Você já pode seguir para o atendimento.`;
-          } else {
-            titulo = "🎯 TODAS AS CONSULTAS LIBERADAS!";
-
-            let listaConsultas = "";
-            if (consultasAutorizadas.length > 0) {
-              listaConsultas = consultasAutorizadas
-                .sort((a, b) =>
-                  String(a.horaInicio).localeCompare(String(b.horaInicio)),
-                )
-                .map((c, index) => {
-                  const local = obterLocalPorEspecialidade(c);
-                  const hora = formatarHora(c.horaInicio);
-                  return `${index + 1}ª - ${hora} - ${c.profissionalNome} (${c.especialidadeNome})\n   📍 Aguarde no ${local}`;
-                })
-                .join("\n\n");
-            }
-
-            mensagemSucesso = `✅ Todas as suas ${totalConsultas} consultas foram liberadas!\n\n📋 Ordem das consultas:\n${listaConsultas}\n\n📍 Aguarde na RECEPÇÃO PRINCIPAL (Térreo) para ser direcionado.`;
-          }
-        } else {
-          titulo = "✅ CONSULTA LIBERADA!";
-
-          const proximasConsultas = consultasRestantes
-            .sort((a, b) =>
-              String(a.horaInicio).localeCompare(String(b.horaInicio)),
-            )
-            .map((c, index) => {
-              const local = obterLocalPorEspecialidade(c);
-              const hora = formatarHora(c.horaInicio);
-              return `${index + 1}ª - ${hora} - ${c.profissionalNome} (${c.especialidadeNome})\n   📍 Aguarde no ${local}`;
-            })
-            .join("\n\n");
-
-          mensagemSucesso = `👏 Consulta com ${consulta.profissionalNome} (${consulta.especialidadeNome}) liberada!\n\n📍 Aguarde no ${localCorreto}.\n\n🔄 Próximas consultas:\n${proximasConsultas}\n\n⚠️ Clique em CONTINUAR para ir para a próxima consulta.`;
-        }
-
-        // ✅ VERIFICA SE TEM MAIS CONSULTAS PARA DEFINIR O TEXTO DO BOTÃO
-        const temMaisConsultas = consultasRestantesCount > 0;
-
-        // ✅ MODAL COM TEXTO DO BOTÃO CONDICIONAL
-        await Swal.fire({
-          title: titulo,
-          text: mensagemSucesso,
-          icon: "success",
-          confirmButtonText: temMaisConsultas ? "CONTINUAR" : "SAIR",
-          allowOutsideClick: false,
-          background: "#ffffff",
-          color: "#0f172a",
-          width: "650px",
-          padding: "2rem",
-          customClass: {
-            popup: "!rounded-[1.4rem] !px-6 !py-5 !max-w-[800px] !w-full",
-            title:
-              "!text-[1.9rem] !font-black !text-emerald-700 !text-center !mb-3",
-            confirmButton:
-              "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-8 !py-3 !text-[1.5rem] !w-full !mt-3 hover:!bg-emerald-700",
-            htmlContainer:
-              "!text-[1.2rem] !leading-relaxed !text-slate-700 !whitespace-pre-line !text-left",
-          },
-        });
-
-        // ✅ AÇÃO CONDICIONAL APÓS FECHAR O MODAL
-        if (temMaisConsultas) {
-          // Tem mais consultas → CONTINUAR: avança para a próxima
-          reiniciarTemporizadorSessao(); // Reseta o timer
-          const proximaConsulta = consultasRestantes[0];
-          const indiceProxima = consultas.findIndex(
-            (c) => c.idEvento === proximaConsulta.idEvento
-          );
-          if (indiceProxima !== -1) {
-            setIndiceConsultaAtual(indiceProxima);
-          }
-        } else {
-          // Última consulta → SAIR: encerra a sessão
-          resetarTelaCpf();
-        }
       } catch (patchError) {
         console.error("Erro ao atualizar tokenValidado:", patchError);
-        setTokenErroPorConsulta((prev) => ({
-          ...prev,
-          [consulta.idEvento]: "Erro ao liberar a consulta. Procure a recepção.",
-        }));
-        await exibirModalErroTokenInline(
-          consulta.idEvento,
-          "Erro ao liberar a consulta. Procure a recepção.",
-        );
+        try {
+          await exibirModalSucessoELiberarConsulta(consulta);
+        } catch (modalError) {
+          setTokenErroPorConsulta((prev) => ({
+            ...prev,
+            [consulta.idEvento]: "Consulta liberada! Procure a recepção.",
+          }));
+        }
       }
       return;
     }
 
-    // Se for outro erro, trata normalmente
     const retornoApi = extrairRetornoApiToken(error?.response?.data);
     const mensagem = normalizarMensagemTokenInline(
       retornoApi.mensagem || error?.message || "Erro ao validar token",
@@ -3444,9 +2969,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     }
                     onLimparToken={() =>
                       limparTokenViaTecladoInline(consulta.idEvento)
-                    }
-                    onApagarUltimoDigito={() =>
-                      apagarUltimoDigitoViaTecladoInline(consulta.idEvento)
                     }
                     onReenviar={() => void reenviarTokenInline(consulta)}
                     onValidar={() => void validarTokenInline(consulta)}
