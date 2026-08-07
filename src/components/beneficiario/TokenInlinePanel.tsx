@@ -2,8 +2,6 @@
 
 interface ConsultaTokenInlineProps {
   idEvento: number;
-  profissionalNome: string;
-  especialidadeNome: string;
 }
 
 interface TokenInlinePanelProps {

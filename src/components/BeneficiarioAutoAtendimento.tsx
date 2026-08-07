@@ -23,7 +23,6 @@ import CpfTecladoNumerico from "./beneficiario/CpfTecladoNumerico";
 import SessaoExpiracaoCard from "./beneficiario/SessaoExpiracaoCard";
 import AutorizacaoPreparandoCard from "./beneficiario/AutorizacaoPreparandoCard";
 import TokenInlinePanel from "./beneficiario/TokenInlinePanel";
-import ConsultaProfissionalResumoCard from "./beneficiario/ConsultaProfissionalResumoCard";
 import ConsultaFluxoNavegacao from "./beneficiario/ConsultaFluxoNavegacao";
 import SenhaAutorizacaoAcoes from "./beneficiario/SenhaAutorizacaoAcoes";
 import { api } from "../config/configApi";
@@ -186,7 +185,7 @@ const formatarHoraAtual = () => {
   return `${horas}:${minutos}`;
 };
 
-const TEMPO_INATIVIDADE_MS = 50 * 1000;
+const TEMPO_INATIVIDADE_MS = 60 * 1000;
 const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
 const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
 const BLOQUEIO_REENVIO_TOKEN_MS = 23 * 1000;
@@ -882,9 +881,9 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
   const consultaFluxoAtual = cardsConsultasFluxo[indiceConsultaAtual] || null;
   const possuiModalAbertoQuePausaInatividade = Boolean(
-    consultaAutorizacaoAberta ||
-      mostrarTecladoCpf ||
-      consultaTecladoTokenId !== null,
+    // Pausa apenas em modais realmente bloqueantes. Teclados virtuais
+    // continuam contando inatividade para que o aviso de expiração apareça.
+    consultaAutorizacaoAberta,
   );
 
   const dataConsultasCabecalho = useMemo(
@@ -931,6 +930,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     limparTemporizadoresSessao();
     setMostrarModalInatividade(false);
     setSegundosRestantesInatividade(CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS);
+
+    if (etapaTela === "cpf") {
+      return;
+    }
 
     expiracaoSessaoRef.current = Date.now() + TEMPO_INATIVIDADE_MS;
 
@@ -1068,6 +1071,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
   useEffect(() => {
     if (!hidratado) return;
+
+    if (etapaTela === "cpf") {
+      limparTemporizadoresSessao();
+      setMostrarModalInatividade(false);
+      setSegundosRestantesInatividade(
+        CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
+      );
+      return;
+    }
 
     reiniciarTemporizadorSessao();
 
@@ -2580,6 +2592,13 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           toastClassName="!rounded-[1rem] !border !border-slate-200 !bg-white !shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
         />
 
+        <SessaoExpiracaoCard
+          mostrarModalInatividade={mostrarModalInatividade}
+          segundosRestantesInatividade={segundosRestantesInatividade}
+          formatarTempoSessao={formatarTempoSessao}
+          onContinuar={reiniciarTemporizadorSessao}
+        />
+
         <div className="w-full transition-all duration-200">
           {etapaTela === "cpf" && (
             <section className="w-full">
@@ -2824,13 +2843,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                   />
                 </div>
 
-                <SessaoExpiracaoCard
-                  mostrarModalInatividade={mostrarModalInatividade}
-                  segundosRestantesInatividade={segundosRestantesInatividade}
-                  formatarTempoSessao={formatarTempoSessao}
-                  onContinuar={reiniciarTemporizadorSessao}
-                />
-
                 <div className="flex-1 overflow-hidden px-3 pb-2 pt-2 md:px-5 md:pb-3 md:pt-2.5">
                   <div className="mx-auto flex h-full max-w-6xl flex-col gap-1.5 overflow-hidden">
                     <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-2.5">
@@ -2860,7 +2872,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                             // CASO 3: Consultas intermediárias
                             return isAutorizada
-                              ? "✅ Autorizado. Próxima consulta liberada."
+                              ? "✅ Autorizado. Consulta liberada."
                               : "Finalize o autoatendimento para liberar a próxima consulta.";
                           })()}
                         </p>
@@ -3217,10 +3229,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
               {/* BOTÃO - Fixo na parte inferior */}
               {autorizacaoConcluida ? null : processandoSenha ? (
-                <AutorizacaoPreparandoCard
-                  profissionalNome={consulta.profissionalNome}
-                  especialidadeNome={consulta.especialidadeNome}
-                />
+                <AutorizacaoPreparandoCard />
               ) : tokenInlineVisivel ? (
                 <div className="shrink-0">
                   <TokenInlinePanel

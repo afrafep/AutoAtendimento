@@ -34,7 +34,7 @@ export default function SessaoExpiracaoCard({
           {"Aten\u00e7\u00e3o"}
         </p>
         <p className="mt-3 text-[1rem] font-bold leading-relaxed text-blue-50 md:text-[1.18rem]">
-          Encerrando por falta de interatividade. Toque na tela para permanecer.
+          Este atendimento sera encerrado por falta de interatividade. Toque na tela para permanecer.
         </p>
 
         <div className="mt-6 rounded-[1.4rem] border border-amber-200/55 bg-white/10 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
