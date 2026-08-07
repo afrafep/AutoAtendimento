@@ -234,15 +234,6 @@ export const TokenValidar = async ({
       syncHiddenToken();
     };
 
-    const clearAllDigits = () => {
-      clearValidationMessage();
-      freshInputs.forEach((input) => {
-        input.value = "";
-      });
-      syncHiddenToken();
-      freshInputs[0]?.focus();
-    };
-
     freshInputs.forEach((input, idx) => {
       input.addEventListener("input", (e) => {
         const target = e.target as HTMLInputElement;

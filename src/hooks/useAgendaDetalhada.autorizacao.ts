@@ -227,8 +227,6 @@ export const createAgendaDetalhadaAutorizacao = ({
     const emojiPaciente = getEmojiPaciente(paciente.flSexo);
 
     // VERIFICAR SE JÁ ESTÁ AUTORIZADO E COM TOKEN CONFIRMADO
-    const jaAutorizadoComToken =
-      evento.autorizado === true && evento.tokenValidado === true;
     // MODAL INICIAL COM DUAS OPCOES (QUANDO NAO ESTA COMPLETO)
     const opcaoSelecionada = opcoes?.pularEscolhaTipo
       ? opcoes?.tipoAutorizacao || "tiss-sadt"
@@ -1188,15 +1186,6 @@ export const createAgendaDetalhadaAutorizacao = ({
         payloadTissSadt,
       );
 
-      const numeroGuiaGeradoPersistencia = String(
-        responseTiss.data?.numeroGuiaGerado || "",
-      ).trim();
-      const numeroGuiaOperadoraPersistencia = Number(
-        responseTiss.data?.numeroGuiaOperadora || 0,
-      );
-      const senhaGuiaPersistencia = String(
-        responseTiss.data?.senhaGuia || numeroGuiaOperadoraPersistencia || "",
-      ).trim();
 
       // CORREÇÃO: Verificar se houve erro na resposta
       if (responseTiss.data?.sucesso === false) {

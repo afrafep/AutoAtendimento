@@ -122,28 +122,6 @@ const formatarCpf = (valor?: string) => {
   return `${cpfNumerico.slice(0, 3)}.${cpfNumerico.slice(3, 6)}.${cpfNumerico.slice(6, 9)}-${cpfNumerico.slice(9)}`;
 };
 
-const mascararCpfConfirmacao = (valor?: string) => {
-  const cpfFormatado = formatarCpf(valor);
-  if (cpfFormatado.length !== 14) return cpfFormatado;
-  return `${cpfFormatado.slice(0, 3)}.***.***-${cpfFormatado.slice(-2)}`;
-};
-
-const formatarCpfComLacuna = (
-  valor: string,
-  inicioOculto: number,
-  tamanho = 2,
-) => {
-  const digitos = normalizarCpf(valor).split("");
-
-  for (let i = 0; i < tamanho; i += 1) {
-    if (digitos[inicioOculto + i] !== undefined) {
-      digitos[inicioOculto + i] = "_";
-    }
-  }
-
-  return `${digitos.slice(0, 3).join("")}.${digitos.slice(3, 6).join("")}.${digitos.slice(6, 9).join("")}-${digitos.slice(9, 11).join("")}`;
-};
-
 const normalizarBoolean = (valor: unknown) => {
   if (typeof valor === "boolean") return valor;
   if (typeof valor === "number") return valor === 1;
@@ -220,61 +198,6 @@ const obterExecutanteConsulta = (consulta: ConsultaAutoAtendimento) =>
   String(
     consulta.idProfissionalRealizaProcedimento || consulta.idProfissional || "",
   );
-
-const obterDescricaoProcedimentoConsulta = (
-  consulta: ConsultaAutoAtendimento,
-) => {
-  const procedimentos = Array.isArray(consulta.procedimentos)
-    ? consulta.procedimentos
-    : [];
-
-  const nomes = procedimentos
-    .map((proc: any) => String(proc?.nmProcedimento || "").trim())
-    .filter(Boolean);
-
-  if (nomes.length > 0) {
-    return nomes.join(" / ");
-  }
-
-  return String(
-    consulta.descricaoEvento ||
-      consulta.nomeEvento ||
-      "Procedimento n\u00e3o informado",
-  ).trim();
-};
-
-const agruparProcedimentosRelacionados = (
-  consultas: ConsultaAutoAtendimento[],
-) => {
-  const mapa = new Map<
-    string,
-    { descricao: string; horarios: string[]; quantidade: number; chave: string }
-  >();
-
-  consultas.forEach((consulta) => {
-    const descricao = obterDescricaoProcedimentoConsulta(consulta);
-    const chave = descricao.trim().toUpperCase();
-    const existente = mapa.get(chave);
-
-    if (existente) {
-      existente.horarios.push(formatarHora(consulta.horaInicio));
-      existente.quantidade += 1;
-      return;
-    }
-
-    mapa.set(chave, {
-      descricao,
-      horarios: [formatarHora(consulta.horaInicio)],
-      quantidade: 1,
-      chave,
-    });
-  });
-
-  return Array.from(mapa.values()).map((item) => ({
-    ...item,
-    horarios: item.horarios.sort((a, b) => a.localeCompare(b)),
-  }));
-};
 
 const obterFaixaHorariosConsultas = (consultas: ConsultaAutoAtendimento[]) => {
   if (!consultas.length) return "";
@@ -719,10 +642,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [tokenDigitadoPorConsulta, setTokenDigitadoPorConsulta] = useState<
     Record<number, string>
   >({});
-  const [tokenErroPorConsulta, setTokenErroPorConsulta] = useState<
-    Record<number, string>
-  >({});
-  const [tokenFeedbackPorConsulta, setTokenFeedbackPorConsulta] = useState<
+  const [, setTokenErroPorConsulta] = useState<Record<number, string>>({});
+  const [, setTokenFeedbackPorConsulta] = useState<
     Record<number, TokenFeedbackInline | undefined>
   >({});
   const [consultaReenviandoTokenId, setConsultaReenviandoTokenId] = useState<
@@ -1226,63 +1147,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     if (digito && indice < 3) {
       setTimeout(() => focarCampoTokenInline(idEvento, indice + 1), 0);
     }
-  };
-
-  // Função auxiliar para obter o local baseado na especialidade
-  const obterLocalPorEspecialidade = (
-    consulta: ConsultaAutoAtendimento,
-  ): string => {
-    const especialidade = consulta.especialidadeNome?.toLowerCase() || "";
-
-    const localMap: Record<string, string> = {
-      fisioterapeuta: "SUBSOLO (Fisioterapia)",
-      "fisioterapeuta sad": "SUBSOLO (Fisioterapia)",
-      "terapeuta ocupacional": "SUBSOLO (Terapia Ocupacional)",
-      "terapia ocupacional": "SUBSOLO (Terapia Ocupacional)",
-      osteopatia: "SUBSOLO (Osteopatia)",
-      quiropata: "SUBSOLO (Quiropraxia)",
-      psicologo: "1º ANDAR (Psicologia)",
-      "psicologo sad": "1º ANDAR (Psicologia)",
-      "psicologia infantil": "1º ANDAR (Psicologia Infantil)",
-      psiquiatra: "1º ANDAR (Psiquiatria)",
-      "psiquiatra infantil": "1º ANDAR (Psiquiatria Infantil)",
-      fonoaudiologo: "1º ANDAR (Fonoaudiologia)",
-      "fonoaudiologo sad": "1º ANDAR (Fonoaudiologia)",
-      nutricionista: "1º ANDAR (Nutrição)",
-      "nutricionista sad": "1º ANDAR (Nutrição)",
-      ultrassonografista: "TÉRREO (Ultrassonografia)",
-      "medico ultrassonografista": "TÉRREO (Ultrassonografia)",
-      ecocardiograma: "TÉRREO (Ecocardiograma)",
-      "teste ergométrico": "TÉRREO (Teste Ergométrico)",
-      mapa: "TÉRREO (Mapa)",
-      holter: "TÉRREO (Holter)",
-      vacinação: "TÉRREO (Vacinação)",
-      dermatologista: "TÉRREO (Dermatologia)",
-      oftalmologista: "TÉRREO (Oftalmologia)",
-      cardiologista: "TÉRREO (Cardiologia)",
-      "clinico geral": "TÉRREO (Clínico Geral)",
-      ginecologista: "TÉRREO (Ginecologia)",
-      obstetra: "TÉRREO (Obstetrícia)",
-      ortopedista: "TÉRREO (Ortopedia)",
-      neurologista: "TÉRREO (Neurologia)",
-      pediatra: "TÉRREO (Pediatria)",
-      enfermeiro: "TÉRREO (Enfermagem)",
-      "tecnico de enfermagem": "TÉRREO (Enfermagem)",
-    };
-
-    // Verifica se a especialidade está no mapeamento
-    for (const [key, value] of Object.entries(localMap)) {
-      if (especialidade.includes(key)) {
-        return value;
-      }
-    }
-
-    // Se tiver um local específico cadastrado, usa ele
-    if (consulta.localidadePainel) {
-      return consulta.localidadePainel;
-    }
-
-    return "RECEPÇÃO PRINCIPAL (Térreo)";
   };
 
   const handleTokenInlineKeyDown = (
@@ -2470,52 +2334,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const marcarCompareceu = async (consulta: ConsultaAutoAtendimento) => {
-    const confirmacao = await Swal.fire({
-      title: "Confirmar comparecimento?",
-      text: `Deseja marcar ${consulta.pacienteNome} como compareceu?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sim, confirmar",
-      cancelButtonText: "Cancelar",
-    });
-
-    if (!confirmacao.isConfirmed) return;
-
-    try {
-      await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
-        statusAgendamento: "COMPARECEU",
-      });
-
-      atualizarConsultaLocal(consulta.idEvento, {
-        statusAgendamento: "COMPARECEU",
-      });
-
-      persistirTelaConsultas(
-        normalizarCpf(cpf),
-        pacienteNome || consulta.pacienteNome,
-        consultas.map((item) =>
-          item.idEvento === consulta.idEvento
-            ? { ...item, statusAgendamento: "COMPARECEU" }
-            : item,
-        ),
-      );
-
-      await Swal.fire(
-        "Sucesso",
-        "Comparecimento registrado com sucesso.",
-        "success",
-      );
-    } catch (error) {
-      console.error("Erro ao marcar compareceu:", error);
-      await Swal.fire(
-        "Erro",
-        "N\u00e3o foi poss\u00edvel atualizar o comparecimento.",
-        "error",
-      );
     }
   };
 

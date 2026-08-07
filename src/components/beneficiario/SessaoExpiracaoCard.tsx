@@ -34,7 +34,7 @@ export default function SessaoExpiracaoCard({
           {"Aten\u00e7\u00e3o"}
         </p>
         <p className="mt-3 text-[1rem] font-bold leading-relaxed text-blue-50 md:text-[1.18rem]">
-          Este atendimento sera encerrado por falta de interatividade. Toque na tela para permanecer.
+          Sua sess\u00e3o est\u00e1 quase encerrando. Toque para continuar.
         </p>
 
         <div className="mt-6 rounded-[1.4rem] border border-amber-200/55 bg-white/10 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
@@ -51,7 +51,7 @@ export default function SessaoExpiracaoCard({
           onClick={onContinuar}
           className="mt-6 flex h-14 w-full items-center justify-center rounded-[1.1rem] bg-white px-4 text-[0.95rem] font-black uppercase tracking-[0.04em] text-[#00338d] shadow-[0_16px_30px_rgba(255,255,255,0.2)] transition hover:brightness-95 md:text-[1rem]"
         >
-          TOQUE EM QUALQUER PARTE DA TELA PARA PERMANECER
+          TOCAR PARA CONTINUAR
         </button>
       </div>
     </div>
