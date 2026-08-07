@@ -2707,9 +2707,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                   <p
                     className={`inline-flex ${
                       tokenInlineVisivel
-                        ? "min-h-6 px-2 py-0.5 text-[0.6rem] md:text-[0.65rem]"
-                        : "min-h-7 px-3 py-1 text-[0.65rem] md:text-[0.7rem]"
-                    } items-center gap-1.5 rounded-full border text-center font-black uppercase tracking-[0.06em] shadow-[0_8px_14px_rgba(15,23,42,0.08)] ${
+                        ? "min-h-7 px-3 py-1 text-[0.75rem] md:text-[0.85rem]"
+                        : "min-h-9 px-4 py-1.5 text-[0.82rem] md:text-[0.96rem]"
+                    } items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.06em] shadow-[0_8px_14px_rgba(15,23,42,0.08)] ${
                       faltouConsulta
                         ? "border-red-200 bg-red-50 text-red-700"
                         : consulta.erroAutorizacao === true
@@ -2724,7 +2724,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     {!autorizacaoConcluida ? (
                       <span
                         aria-hidden="true"
-                        className={`inline-flex h-2 w-2 rounded-full ${
+                        className={`inline-flex h-2.5 w-2.5 rounded-full ${
                           faltouConsulta
                             ? "bg-red-500"
                             : consulta.erroAutorizacao === true
@@ -2757,7 +2757,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
               </div>
 
               {/* Container centralizado - Ocupa todo o espaço disponível */}
-              <div className="flex-1 flex flex-col items-center justify-center text-center gap-0.5 py-1">
+                <div className="flex-1 flex flex-col items-center justify-center text-center gap-1 py-1">
                 {/* HORÁRIO */}
                 {cardConsulta.agrupadoUltrassom ? (
                   <p className="font-black uppercase tracking-[0.05em] text-[#00338d] text-[1.8rem] md:text-[2.2rem] leading-tight">
@@ -2766,23 +2766,23 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     ) || "Horários do dia"}
                   </p>
                 ) : (
-                  <p className="font-black tracking-tight text-[#00338d] text-[3.5rem] md:text-[4rem] leading-none">
+                  <p className="font-black tracking-tight text-[#00338d] text-[4.4rem] md:text-[5.3rem] leading-none">
                     {formatarHora(consulta.horaInicio)}
                   </p>
                 )}
 
                 {/* PROFISSIONAL */}
-                <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[1.8rem] md:text-[1.8rem] mt-0.5 leading-tight">
+                <p className="font-black uppercase tracking-[0.02em] text-slate-900 text-[2.3rem] md:text-[2.75rem] mt-0.5 leading-tight">
                   {consulta.profissionalNome}
                 </p>
 
                 {/* ESPECIALIDADE */}
-                <p className="font-black uppercase text-[#180539] text-[0.85rem] md:text-[1.8rem] leading-tight">
+                <p className="font-black uppercase text-[#180539] text-[1.35rem] md:text-[2.05rem] leading-tight">
                   {consulta.especialidadeNome}
                 </p>
 
                 {/* LOCAL - Dinâmico baseado na especialidade */}
-                <p className="font-black text-[#00338d] text-[2.4rem] md:text-[2.4rem] mt-0.5 leading-tight">
+                <p className="font-black text-[#00338d] text-[2.8rem] md:text-[3.2rem] mt-0.5 leading-tight">
                   {(() => {
                     const especialidade =
                       consulta.especialidadeNome?.toLowerCase() || "";
