@@ -2642,7 +2642,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                         <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center">
                           <div className="mb-4 inline-flex items-center gap-3 rounded-full border border-[#00338d]/10 bg-white/88 px-4 py-2 shadow-[0_10px_24px_rgba(0,51,141,0.08)]">
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_100%)] text-white shadow-[0_8px_18px_rgba(0,51,141,0.24)]">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#c81e3a_0%,#ef4444_100%)] text-white shadow-[0_8px_18px_rgba(200,30,58,0.28)]">
                               <FaHeartbeat className="text-[1.05rem]" />
                             </span>
                             <div className="text-left">
@@ -2650,7 +2650,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                                 TELA INICIAL
                               </p>
                               <p className="text-[1.18rem] font-black tracking-[0.03em] text-[#00338d] md:text-[1.45rem]">
-                                Autoatendimento Afrafep
+                                Afrafep Saúde
                               </p>
                             </div>
                           </div>
