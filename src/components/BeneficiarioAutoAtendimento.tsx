@@ -4,14 +4,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import {
-  FaBriefcaseMedical,
-  FaClinicMedical,
   FaClipboardList,
   FaHandPointer,
   FaHeartbeat,
-  FaNotesMedical,
-  FaShieldAlt,
-  FaStethoscope,
   FaUserCircle,
   FaUserMd,
 } from "react-icons/fa";
@@ -2545,74 +2540,21 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                           <h2 className="max-w-3xl text-[1.72rem] font-black tracking-tight text-[#0f2d78] md:text-[2.32rem]">
                             Bem-vindo ao autoatendimento
                           </h2>
-                          <p className="mt-2 max-w-3xl text-[0.92rem] leading-relaxed text-slate-600 md:text-[1.02rem]">
-                            Toque na tela para abrir o campo do CPF e localizar
-                            seus agendamentos de hoje.
-                          </p>
-
-                          <div className="mt-3 inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-cyan-100 bg-white/92 px-5 py-2.5 text-[#16357f] shadow-[0_12px_24px_rgba(15,23,42,0.07)]">
-                            <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
-                              Joao Pessoa
-                            </span>
-                            <span className="hidden h-1.5 w-1.5 rounded-full bg-cyan-300 md:inline-flex" />
-                            <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
-                              {dataCabecalhoAtual}
-                            </span>
-                            <span className="hidden h-1.5 w-1.5 rounded-full bg-cyan-300 md:inline-flex" />
-                            <span className="text-[0.82rem] font-black uppercase tracking-[0.14em] md:text-[0.9rem]">
-                              {`Horario atual: ${horaCabecalhoAtual}`}
-                            </span>
-                          </div>
-
-                          <div className="mt-5 w-full max-w-5xl rounded-[1.9rem] border-2 border-cyan-100 bg-white/96 px-6 py-8 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[21rem] md:px-10 md:py-12">
-                            <div className="flex h-full flex-col items-center justify-center gap-4">
-                              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-20 md:w-20">
-                                <FaHandPointer className="text-[1.35rem] md:text-[1.65rem]" />
+                          <div className="mt-8 w-full max-w-5xl rounded-[2.2rem] border-2 border-cyan-100 bg-white/96 px-6 py-10 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[28rem] md:px-12 md:py-16">
+                            <div className="flex h-full flex-col items-center justify-center gap-5">
+                              <span className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-24 md:w-24">
+                                <FaHandPointer className="text-[1.7rem] md:text-[2rem]" />
                               </span>
-                              <p className="text-[1.28rem] font-black text-[#16357f] md:text-[1.8rem]">
+                              <p className="text-[1.45rem] font-black text-[#16357f] md:text-[2.2rem]">
                                 Toque na tela para digitar o CPF
                               </p>
-                              <p className="max-w-3xl text-[1rem] font-black leading-relaxed text-slate-700 md:text-[1.25rem]">
+                              <p className="max-w-3xl text-[1.08rem] font-black leading-relaxed text-slate-700 md:text-[1.42rem]">
                                 Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
                               </p>
                             </div>
                           </div>
 
-                          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
-                            {[
-                              FaHeartbeat,
-                              FaClinicMedical,
-                              FaShieldAlt,
-                              FaStethoscope,
-                              FaNotesMedical,
-                              FaBriefcaseMedical,
-                            ].map((Icone, indice) => (
-                              <span
-                                key={`icone-saude-${indice}`}
-                                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/85 bg-white/90 text-[#0f4db7] shadow-[0_12px_22px_rgba(15,23,42,0.08)] md:h-12 md:w-12"
-                                style={{
-                                  animation: "pulseSeal 4.8s ease-in-out infinite",
-                                  animationDelay: `${indice * 0.18}s`,
-                                }}
-                              >
-                                 <Icone className="text-[1rem] md:text-[1.08rem]" />
-                              </span>
-                            ))}
-                          </div>
-
                         </div>
-
-                        <style>{`
-                          @keyframes floatDance {
-                            0%, 100% { transform: translateY(0px) rotate(0deg); }
-                            50% { transform: translateY(-10px) rotate(-1.5deg); }
-                          }
-
-                          @keyframes pulseSeal {
-                            0%, 100% { transform: scale(1); }
-                            50% { transform: scale(1.04); }
-                          }
-                        `}</style>
                       </button>
                     ) : (
                       <>
