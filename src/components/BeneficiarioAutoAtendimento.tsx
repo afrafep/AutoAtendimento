@@ -2461,9 +2461,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           onContinuar={reiniciarTemporizadorSessao}
         />
 
-        <div className="w-full transition-all duration-200">
+        <div className="flex w-full flex-1 transition-all duration-200">
           {etapaTela === "cpf" && (
-            <section className="w-full">
+            <section className="flex min-h-[100dvh] w-full flex-col">
               {!mostrarTelaBoasVindasCpf ? (
                 <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
                   <div className="mx-auto max-w-5xl px-2 md:px-3">
@@ -2500,9 +2500,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     : "py-2 md:py-3"
                 }`}
               >
-                <div className="mx-auto max-w-6xl">
+                <div className="mx-auto flex h-full max-w-6xl flex-col">
                   <div
-                    className={`flex flex-col gap-3 ${
+                    className={`flex flex-1 flex-col gap-3 ${
                       mostrarTelaBoasVindasCpf ? "min-h-0 h-full" : "min-h-0 h-full"
                     }`}
                   >
@@ -2510,7 +2510,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                       <button
                         type="button"
                         onClick={abrirEntradaCpf}
-                        className={`group relative min-h-[24rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-4 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[25.5rem] md:px-7 md:py-4 ${
+                        className={`group relative flex min-h-[24rem] h-full w-full flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-4 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[25.5rem] md:px-7 md:py-4 ${
                           animandoSaidaTelaBoasVindasCpf
                             ? "-translate-y-[110%] opacity-0"
                             : "translate-y-0 opacity-100"
@@ -2522,7 +2522,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                           <div className="absolute bottom-[10%] left-[24%] h-28 w-28 rounded-full bg-sky-100/50 blur-3xl md:h-36 md:w-36" />
                         </div>
 
-                        <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center">
+                        <div className="relative mx-auto flex h-full max-w-5xl flex-1 flex-col items-center text-center">
                           <div className="mb-4 inline-flex items-center gap-3 rounded-full border border-[#00338d]/10 bg-white/88 px-4 py-2 shadow-[0_10px_24px_rgba(0,51,141,0.08)]">
                             <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#c81e3a_0%,#ef4444_100%)] text-white shadow-[0_8px_18px_rgba(200,30,58,0.28)]">
                               <FaHeartbeat className="text-[1.05rem]" />
@@ -2540,7 +2540,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                           <h2 className="max-w-3xl text-[1.72rem] font-black tracking-tight text-[#0f2d78] md:text-[2.32rem]">
                             Bem-vindo ao autoatendimento
                           </h2>
-                          <div className="mt-6 w-full max-w-5xl rounded-[2.2rem] border-2 border-cyan-100 bg-white/96 px-6 py-8 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[22rem] md:px-10 md:py-10">
+                          <div className="mt-6 flex w-full max-w-5xl flex-1 flex-col justify-center rounded-[2.2rem] border-2 border-cyan-100 bg-white/96 px-6 py-8 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[22rem] md:px-10 md:py-10">
                             <div className="flex h-full flex-col items-center justify-center gap-4">
                               <span className="inline-flex h-18 w-18 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-20 md:w-20">
                                 <FaHandPointer className="text-[1.7rem] md:text-[2rem]" />
