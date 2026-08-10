@@ -23,6 +23,35 @@ export const createAgendaDetalhadaStatus = ({
   setEventoSelecionado,
   setModalRemarcarAberto,
 }: StatusContext) => {
+  const buildHorarioLivrePayload = (evento: AgendaEvento) => ({
+    horario: String(evento.horaInicio || "").slice(0, 5),
+    nomeEvento: "HORÁRIO LIVRE",
+    descricaoEvento: "",
+    dataInicio: evento.dataInicio,
+    horaInicio: evento.horaInicio,
+    horaFim: evento.horaFim,
+    categoria: evento.categoria || "CONSULTA",
+    statusAgendamento: "LIVRE",
+    corEvento: "#e1e1e1",
+    celularContato: "",
+    nuCpf: "",
+    cdPaciente: null,
+    paciente: null,
+    procedimentos: [],
+    localAgendamento: evento.localAgendamento || "CENTRO_MEDICO",
+    retorno: false,
+    senhaPainel: "",
+    prioridadePainel: "",
+    localidadePainel: "",
+    numeroGuiaGerado: null,
+    numeroGuiaOperadora: null,
+    profissionalSolicitante: null,
+    nrConselhoProfSolicitante: "",
+    conselhoProfSolicitante: null,
+    ufConselhoProfSolicitante: null,
+    ...AUTH_DEFAULTS,
+  });
+
   const atualizarStatusEmLote = async (
     idEventoAlterado: number,
     novoStatus: string,
@@ -328,25 +357,32 @@ export const createAgendaDetalhadaStatus = ({
         setModalRemarcarAberto(true);
       } else if (result.isDenied) {
         try {
-          const payload = {
-            nomeEvento: "HORÁRIO LIVRE",
-            descricaoEvento: " ",
-            statusAgendamento: "LIVRE", // MUDANÇA: string direta
-            cdPaciente: null,
-            paciente: null,
-            nuCpf: "",
-            celularContato: "",
-            protocolo_agendamento: null,
-            procedimentos: [{ cdProcedimento: 0, nmProcedimento: "" }],
-            localAgendamento: "CENTRO_MEDICO",
-            corEvento: "#e1e1e1",
-            ...AUTH_DEFAULTS,
-          };
+          const payload = buildHorarioLivrePayload(evento);
           await api.patch(`/sisclinic/agenda/${evento.idEvento}`, payload, {
             headers: {
               "Content-Type": "application/json",
             },
           });
+
+          setAgenda((prev: AgendaEvento[]) =>
+            prev.map((item) =>
+              item.idEvento === evento.idEvento
+                ? {
+                    ...item,
+                    ...payload,
+                    nomeEvento: "HORÁRIO LIVRE",
+                    descricaoEvento: "",
+                    statusAgendamento: "LIVRE",
+                    corEvento: "#e1e1e1",
+                    paciente: null,
+                    celularContato: "",
+                    nuCpf: "",
+                    procedimentos: [],
+                  }
+                : item,
+            ),
+          );
+
           Swal.fire(
             "Sucesso!",
             "O horário foi liberado com sucesso.",
@@ -359,6 +395,7 @@ export const createAgendaDetalhadaStatus = ({
       }
     });
   };
+
   return {
     atualizarStatusEmLote,
     fetchAgenda,
