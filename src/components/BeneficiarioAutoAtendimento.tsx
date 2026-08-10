@@ -2564,60 +2564,18 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                             </span>
                           </div>
 
-                          <div className="mt-4 w-full max-w-3xl rounded-[1.6rem] border-2 border-cyan-100 bg-white/96 px-5 py-4.5 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)]">
-                            <div className="flex flex-col items-center gap-2.5">
-                              <span className="inline-flex h-13 w-13 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-14 md:w-14">
-                                <FaHandPointer className="text-[1.18rem]" />
+                          <div className="mt-5 w-full max-w-5xl rounded-[1.9rem] border-2 border-cyan-100 bg-white/96 px-6 py-8 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[21rem] md:px-10 md:py-12">
+                            <div className="flex h-full flex-col items-center justify-center gap-4">
+                              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-20 md:w-20">
+                                <FaHandPointer className="text-[1.35rem] md:text-[1.65rem]" />
                               </span>
-                              <p className="text-[1.08rem] font-black text-[#16357f] md:text-[1.2rem]">
+                              <p className="text-[1.28rem] font-black text-[#16357f] md:text-[1.8rem]">
                                 Toque na tela para digitar o CPF
                               </p>
-                              <p className="max-w-2xl text-[0.88rem] font-black leading-relaxed text-slate-700 md:text-[0.96rem]">
+                              <p className="max-w-3xl text-[1rem] font-black leading-relaxed text-slate-700 md:text-[1.25rem]">
                                 Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
                               </p>
                             </div>
-                          </div>
-
-                          <div className="mt-4 grid w-full gap-3.5 md:grid-cols-3">
-                            {[
-                              {
-                                icon: FaClinicMedical,
-                                titulo: "Consultas do dia",
-                                texto: "Veja rapidamente os atendimentos agendados.",
-                              },
-                              {
-                                icon: FaShieldAlt,
-                                titulo: "Acesso simples",
-                                texto: "Fluxo claro, com letras grandes e interação fácil.",
-                              },
-                              {
-                                icon: FaNotesMedical,
-                                titulo: "Orientação guiada",
-                                texto: "A tela mostra cada passo até iniciar o atendimento.",
-                              },
-                            ].map((item, indice) => {
-                              const Icone = item.icon;
-                              return (
-                                <div
-                                  key={item.titulo}
-                                  className="rounded-[1.4rem] border border-white/85 bg-white/92 px-4 py-4 text-left shadow-[0_16px_28px_rgba(15,23,42,0.08)]"
-                                  style={{
-                                    animation: "floatDance 5s ease-in-out infinite",
-                                    animationDelay: `${indice * 0.35}s`,
-                                  }}
-                                >
-                                  <span className="mb-2.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-[#0f4db7] md:h-11 md:w-11">
-                                    <Icone className="text-[1.08rem]" />
-                                  </span>
-                                  <p className="text-[0.98rem] font-black text-[#16357f] md:text-[1.03rem]">
-                                    {item.titulo}
-                                  </p>
-                                  <p className="mt-1 text-[0.84rem] leading-relaxed text-slate-600 md:text-[0.9rem]">
-                                    {item.texto}
-                                  </p>
-                                </div>
-                              );
-                            })}
                           </div>
 
                           <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
