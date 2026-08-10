@@ -32,7 +32,7 @@ export default function ConsultaFluxoNavegacao({
             onClick={onAvancar}
             className="min-w-[200px] rounded-[1rem] border border-blue-200/60 bg-[linear-gradient(135deg,#00338d_0%,#1d4ed8_58%,#38bdf8_100%)] px-4 py-2 text-[1.20rem] font-black uppercase text-white shadow-[0_10px_20px_rgba(0,51,141,0.16)] transition hover:brightness-105"
           >
-            {"Pr\u00f3ximo"}
+            Próximo
           </button>
         ) : (
           <div className="min-w-[200px]" aria-hidden="true" />

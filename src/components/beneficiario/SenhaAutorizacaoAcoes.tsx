@@ -35,7 +35,7 @@ export default function SenhaAutorizacaoAcoes({
         </button>
       ) : autorizado && tokenValidado ? (
         <div className="flex h-14 items-center justify-center bg-emerald-600 px-5 text-[0.9rem] font-black text-white">
-          {"AUTORIZA\u00c7\u00c3O CONCLU\u00cdDA"}
+          {"AUTORIZAÇÃO CONCLUÍDA"}
         </div>
       ) : null}
 

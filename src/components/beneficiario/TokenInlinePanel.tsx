@@ -1,4 +1,4 @@
-﻿import type { ClipboardEvent, KeyboardEvent } from "react";
+import type { ClipboardEvent, KeyboardEvent } from "react";
 
 interface ConsultaTokenInlineProps {
   idEvento: number;
@@ -21,7 +21,6 @@ interface TokenInlinePanelProps {
   onReenviar: () => void;
   onValidar: () => void;
 }
-
 
 export default function TokenInlinePanel({
   consulta,
@@ -48,7 +47,7 @@ export default function TokenInlinePanel({
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-1.25 text-center">
         <div>
           <p className="text-[0.88rem] font-black uppercase tracking-[0.03em] text-slate-900 md:text-[1rem]">
-            {"Digite os 4 d\u00edgitos do seu token enviado para o Aplicativo ou sms."}
+            Digite os 4 dígitos do seu token enviado para o Aplicativo ou sms.
           </p>
         </div>
 
@@ -77,7 +76,7 @@ export default function TokenInlinePanel({
             <div className="pointer-events-auto rounded-[1rem] border border-slate-200 bg-white/98 p-3.5 shadow-[0_18px_38px_rgba(15,23,42,0.18)] backdrop-blur">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-[0.8rem] font-black uppercase tracking-[0.12em] text-slate-600">
-                  {"TECLADO NUM\u00c9RICO"}
+                  TECLADO NUMÉRICO
                 </p>
                 <button
                   type="button"
@@ -111,13 +110,13 @@ export default function TokenInlinePanel({
                   className="h-[3.55rem] rounded-[0.95rem] bg-slate-900 text-[1.55rem] font-black text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
                 >
                   0
-                </button>              
+                </button>
               </div>
             </div>
           </div>
         ) : null}
         <div className="rounded-[0.8rem] border border-sky-100 bg-sky-50/70 px-3 py-1 text-[0.72rem] text-sky-800">
-          {"N\u00e3o recebeu? Toque em reenviar token."}
+          Não recebeu? Toque em reenviar token.
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
@@ -127,11 +126,7 @@ export default function TokenInlinePanel({
             disabled={reenviandoToken || validandoToken || reenvioBloqueado}
             className="h-9 rounded-[0.70rem] border border-orange-600 bg-orange-500 px-4 text-[0.78rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60 md:h-[2.5rem]"
           >
-            {reenviandoToken
-              ? "REENVIANDO..."
-              : reenvioBloqueado
-                ? `REENVIAR TOKEN`
-                : "REENVIAR TOKEN"}
+            {reenviandoToken ? "REENVIANDO..." : "REENVIAR TOKEN"}
           </button>
           <button
             type="button"
@@ -146,10 +141,3 @@ export default function TokenInlinePanel({
     </div>
   );
 }
-
-
-
-
-
-
-

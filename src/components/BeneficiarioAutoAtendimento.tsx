@@ -133,7 +133,7 @@ const formatarHora = (hora?: string) =>
 
 const formatarStatus = (status?: string) => {
   const statusSeguro = String(status || "").trim();
-  return statusSeguro || "N\u00c3O INFORMADO";
+  return statusSeguro || "NÃO INFORMADO";
 };
 
 const formatarData = (data?: string) => {
@@ -210,7 +210,7 @@ const obterFaixaHorariosConsultas = (consultas: ConsultaAutoAtendimento[]) => {
   if (!horarioInicial) return "";
   if (!horarioFinal || horarioFinal === horarioInicial) return horarioInicial;
 
-  return `${horarioInicial} at\u00e9 ${horarioFinal}`;
+  return `${horarioInicial} até ${horarioFinal}`;
 };
 
 const criarEventoBaseDaConsulta = (
@@ -310,8 +310,8 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
   const iniciarFluxoAgenda = async (mostrarAvisoCarregando = true) => {
     if (!consulta.idProfissional) {
       await Swal.fire(
-        "Aten\u00e7\u00e3o",
-        "N\u00e3o foi poss\u00edvel identificar o profissional desse atendimento.",
+        "Atenção",
+        "Não foi possível identificar o profissional desse atendimento.",
         "warning",
       );
       return;
@@ -356,7 +356,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
     if (!eventoParaFluxo) {
       await Swal.fire(
         "Carregando dados",
-        "Aguarde a agenda completa carregar antes de iniciar a autoriza\u00e7\u00e3o.",
+        "Aguarde a agenda completa carregar antes de iniciar a autorização.",
         "info",
       );
       return;
@@ -405,7 +405,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
               <FaClipboardList size={28} />
             </div>
             <h2 className="text-[1.45rem] font-black tracking-tight">
-              {"Autoriza\u00e7\u00e3o TISS SADT"}
+              {"Autorização TISS SADT"}
             </h2>
           </div>
 
@@ -420,7 +420,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
                 </h3>
                 <div className="mt-1 text-[0.72rem] text-blue-200">
                   {"Carteira: "}
-                  {consulta.nrCarteiraPlano || "N\u00e3o informada"}
+                  {consulta.nrCarteiraPlano || "Não informada"}
                 </div>
               </div>
             </div>
@@ -461,7 +461,7 @@ const ModalAutorizacaoBeneficiario: React.FC<ModalAutorizacaoProps> = ({
             >
               {loading
                 ? "Carregando agenda..."
-                : "Iniciar Autoriza\u00e7\u00e3o"}
+                : "Iniciar Autorização"}
             </button>
             <button
               onClick={onClose}
@@ -587,7 +587,7 @@ const normalizarMensagemTokenInline = (mensagem?: string) => {
 
   if (
     textoLower.includes("token invalido") ||
-    textoLower.includes("token inv\u00e1lido") ||
+    textoLower.includes("token inválido") ||
     textoLower.includes("ora-20400")
   ) {
     return "Token errado. Insira um token correto.";
@@ -1271,11 +1271,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       setTokenErroPorConsulta((prev) => ({
         ...prev,
         [consulta.idEvento]:
-          "N\u00e3o encontramos a senha da guia para reenviar o token.",
+          "Não encontramos a senha da guia para reenviar o token.",
       }));
       await exibirModalErroTokenInline(
         consulta.idEvento,
-        "N\u00e3o encontramos a senha da guia para reenviar o token.",
+        "Não encontramos a senha da guia para reenviar o token.",
       );
     }
 
@@ -1297,11 +1297,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         setTokenErroPorConsulta((prev) => ({
           ...prev,
           [consulta.idEvento]:
-            "N\u00e3o foi poss\u00edvel reenviar o token agora.",
+            "Não foi possível reenviar o token agora.",
         }));
         await exibirModalErroTokenInline(
           consulta.idEvento,
-          "N\u00e3o foi poss\u00edvel reenviar o token agora.",
+          "Não foi possível reenviar o token agora.",
         );
         return;
       }
@@ -1314,11 +1314,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       atualizarFeedbackTokenInline(
         consulta.idEvento,
         "success",
-        "Token reenviado com sucesso. Veja o novo c\u00f3digo no celular.",
+        "Token reenviado com sucesso. Veja o novo código no celular.",
       );
       await Swal.fire({
         title: "TOKEN REENVIADO",
-        text: "Um novo c\u00f3digo foi enviado para o seu celular, pelo aplicativo ou por SMS.",
+        text: "Um novo código foi enviado para o seu celular, pelo aplicativo ou por SMS.",
         icon: "success",
         confirmButtonText: "Fechar",
         allowOutsideClick: false,
@@ -1335,11 +1335,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       setTokenErroPorConsulta((prev) => ({
         ...prev,
         [consulta.idEvento]:
-          "N\u00e3o foi poss\u00edvel reenviar o token agora.",
+          "Não foi possível reenviar o token agora.",
       }));
       await exibirModalErroTokenInline(
         consulta.idEvento,
-        "N\u00e3o foi poss\u00edvel reenviar o token agora.",
+        "Não foi possível reenviar o token agora.",
       );
     } finally {
       setConsultaReenviandoTokenId(null);
@@ -1354,18 +1354,18 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const titulo =
       mensagemNormalizada.toLowerCase() ===
         "token errado. insira um token correto." ||
-      mensagemNormalizada.toLowerCase() === "token inv\u00e1lido" ||
+      mensagemNormalizada.toLowerCase() === "token inválido" ||
       mensagemNormalizada.toLowerCase() === "token invalido"
-        ? "TOKEN INV\u00c1LIDO"
+        ? "TOKEN INVÁLIDO"
         : "ERRO AO VALIDAR TOKEN";
 
     await Swal.fire({
       title: titulo,
       text:
-        titulo === "TOKEN INV\u00c1LIDO"
+        titulo === "TOKEN INVÁLIDO"
           ? "Token errado. Insira um token correto."
           : mensagemNormalizada ||
-            "N\u00e3o foi poss\u00edvel validar o token.",
+            "Não foi possível validar o token.",
       icon: "error",
       confirmButtonText: "FECHAR",
       allowOutsideClick: false,
@@ -1439,11 +1439,11 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     setTokenErroPorConsulta((prev) => ({
       ...prev,
       [consulta.idEvento]:
-        "N\u00e3o encontramos a senha da guia para validar o token.",
+        "Não encontramos a senha da guia para validar o token.",
     }));
     await exibirModalErroTokenInline(
       consulta.idEvento,
-      "N\u00e3o encontramos a senha da guia para validar o token.",
+      "Não encontramos a senha da guia para validar o token.",
     );
     return;
   }
@@ -1468,7 +1468,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
     if (!tokenValidado) {
       const mensagemErro =
-        mensagem || "N\u00e3o foi poss\u00edvel validar o token informado.";
+        mensagem || "Não foi possível validar o token informado.";
       setTokenErroPorConsulta((prev) => ({
         ...prev,
         [consulta.idEvento]: mensagemErro,
@@ -1503,11 +1503,11 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     ).toLowerCase();
     const tokenInvalido =
       mensagemErro.includes("token invalido") ||
-      mensagemErro.includes("token inv\u00e1lido") ||
+      mensagemErro.includes("token inválido") ||
       mensagemErro.includes("ora-20400");
     const tokenJaConfirmado =
       mensagemErro.includes("senha ja validada com envio de token") ||
-      mensagemErro.includes("senha j\u00e1 validada com envio de token") ||
+      mensagemErro.includes("senha já validada com envio de token") ||
       (mensagemErro.includes("transação") &&
         mensagemErro.includes("já foi enviada com sucesso")) ||
       (mensagemErro.includes("transacao") &&
@@ -1661,7 +1661,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       console.error("Erro ao gerar senha do painel:", error);
       await Swal.fire(
         "Erro",
-        "N\u00e3o foi poss\u00edvel gerar e vincular a senha deste atendimento.",
+        "Não foi possível gerar e vincular a senha deste atendimento.",
         "error",
       );
       setConsultaProcessandoSenhaId(null);
@@ -1795,7 +1795,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   ) => {
     if (!consulta.idProfissional) {
       return (
-        String(consulta.localidadePainel || "N\u00e3o informado").trim() || null
+        String(consulta.localidadePainel || "Não informado").trim() || null
       );
     }
 
@@ -1835,16 +1835,16 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
       return (
         localCompleto ||
-        String(consulta.localidadePainel || "N\u00e3o informado").trim() ||
+        String(consulta.localidadePainel || "Não informado").trim() ||
         null
       );
     } catch (error) {
       console.warn(
-        "N\u00e3o foi poss\u00edvel consultar o local do profissional:",
+        "Não foi possível consultar o local do profissional:",
         error,
       );
       return (
-        String(consulta.localidadePainel || "N\u00e3o informado").trim() || null
+        String(consulta.localidadePainel || "Não informado").trim() || null
       );
     }
   };
@@ -1914,7 +1914,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           };
         } catch (error) {
           console.warn(
-            "N\u00e3o foi poss\u00edvel carregar o local do profissional:",
+            "Não foi possível carregar o local do profissional:",
             error,
           );
           return consulta;
@@ -1966,7 +1966,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
     if (!idTipoAtendimento) {
       throw new Error(
-        "Tipo de atendimento Intelite inv\u00e1lido para emiss\u00e3o.",
+        "Tipo de atendimento Intelite inválido para emissão.",
       );
     }
 
@@ -1989,7 +1989,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       .toUpperCase();
 
     if (!senhaGerada) {
-      throw new Error("A Intelite n\u00e3o retornou a senha emitida.");
+      throw new Error("A Intelite não retornou a senha emitida.");
     }
 
     return senhaGerada;
@@ -2016,7 +2016,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     const senhaPainel = senhaPainelInformada || senhaPainelAtual;
     const localidadePainel =
       (await buscarLocalidadePainelDoProfissional(consulta)) ||
-      "N\u00e3o informado";
+      "Não informado";
 
     if (!senhaPainel) {
       setConsultaProcessandoSenhaId(null);
@@ -2118,8 +2118,8 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           [consulta.idEvento]: "",
         }));
         await Swal.fire(
-          "Aten\u00e7\u00e3o",
-          "O backend respondeu, mas a senha n\u00e3o apareceu salva na agenda. Tente atualizar e verificar novamente.",
+          "Atenção",
+          "O backend respondeu, mas a senha não apareceu salva na agenda. Tente atualizar e verificar novamente.",
           "warning",
         );
         return;
@@ -2190,7 +2190,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       console.error("Erro ao vincular senha do painel:", error);
       await Swal.fire(
         "Erro",
-        "N\u00e3o foi poss\u00edvel vincular a senha deste atendimento.",
+        "Não foi possível vincular a senha deste atendimento.",
         "error",
       );
     }
@@ -2205,8 +2205,8 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
     if (!senhaGuia) {
       await Swal.fire(
-        "Aten\u00e7\u00e3o",
-        "N\u00e3o encontramos a senha da guia para validar o token.",
+        "Atenção",
+        "Não encontramos a senha da guia para validar o token.",
         "warning",
       );
       return;
@@ -2262,8 +2262,8 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
     if (!validarCpf(cpfLimpo)) {
       await Swal.fire({
-        title: "Aten\u00e7\u00e3o",
-        html: "Digite um CPF v\u00e1lido.<br />Sequ\u00eancias como Ex: 111.111.111-11 n\u00e3o s\u00e3o permitidas.",
+        title: "Atenção",
+        html: "Digite um CPF válido.<br />Sequências como Ex: 111.111.111-11 não são permitidas.",
         icon: "warning",
       });
       return;
@@ -2302,13 +2302,13 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
             statusAgendamento: String(item.statusAgendamento || "AGENDADO"),
             profissionalNome:
               item.profissional?.nmProfissional ||
-              "Profissional n\u00e3o informado",
+              "Profissional não informado",
             especialidadeNome:
               item.profissional?.especialidade?.dsEspecialidade ||
-              "Especialidade n\u00e3o informada",
+              "Especialidade não informada",
             pacienteNome:
               item.paciente?.nmPaciente ||
-              "Benefici\u00e1rio n\u00e3o informado",
+              "Beneficiário não informado",
             nuCpf: item.paciente?.nuCpf || item.nuCpf || cpfLimpo,
             nrCarteiraPlano: String(
               item.paciente?.nrCarteiraPlano || item.nrCarteiraPlano || "",
@@ -2353,7 +2353,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
         limparEstadoTelaPersistido();
         await Swal.fire(
           "Nenhum atendimento",
-          "N\u00e3o encontramos consulta para hoje com esse CPF.",
+          "Não encontramos consulta para hoje com esse CPF.",
           "info",
         );
         resetarTelaCpf();
@@ -2361,7 +2361,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       }
 
       const nomeBeneficiario =
-        consultasOrdenadas[0]?.pacienteNome || "Benefici\u00e1rio";
+        consultasOrdenadas[0]?.pacienteNome || "Beneficiário";
       setCpf(formatarCpf(cpfLimpo));
       setConsultas(consultasOrdenadas);
       setPacienteNome(nomeBeneficiario);
@@ -2370,10 +2370,10 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       persistirTelaConsultas(cpfLimpo, nomeBeneficiario, consultasOrdenadas);
       return;
     } catch (error) {
-      console.error("Erro ao buscar consultas do benefici\u00e1rio:", error);
+      console.error("Erro ao buscar consultas do beneficiário:", error);
       await Swal.fire(
         "Erro",
-        "N\u00e3o foi poss\u00edvel localizar os atendimentos de hoje.",
+        "Não foi possível localizar os atendimentos de hoje.",
         "error",
       );
     } finally {
@@ -2399,12 +2399,12 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
         });
       } catch (error) {
         console.error(
-          "Erro ao atualizar comparecimento antes da autoriza\u00e7\u00e3o:",
+          "Erro ao atualizar comparecimento antes da autorização:",
           error,
         );
         await Swal.fire(
           "Erro",
-          "N\u00e3o foi poss\u00edvel atualizar o comparecimento antes da autoriza\u00e7\u00e3o.",
+          "Não foi possível atualizar o comparecimento antes da autorização.",
           "error",
         );
         return;
@@ -2470,7 +2470,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="text-center md:text-left">
                         <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
-                          {"Digite o CPF do benefici\u00e1rio"}
+                          {"Digite o CPF do beneficiário"}
                         </h2>
                         <p className="mt-3 max-w-136 text-[1.6rem] text-blue-100">
                           Localize os agendamentos de hoje.
@@ -2479,10 +2479,10 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                       <div className="flex justify-center md:justify-end">
                         <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
                           <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
-                            {`JO\u00c3O PESSOA - ${dataCabecalhoAtual}`}
+                            {`JOÃO PESSOA - ${dataCabecalhoAtual}`}
                           </p>
                           <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
-                            {`Hor\u00e1rio Atual: ${horaCabecalhoAtual}`}
+                            {`Horário Atual: ${horaCabecalhoAtual}`}
                           </p>
                         </div>
                       </div>
@@ -3097,11 +3097,11 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                 <div className="mx-auto max-w-6xl text-center md:text-left">
                   <div className="text-center md:text-left">
                     <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-                      {"AUTORIZA\u00c7\u00c3O"}
+                      {"AUTORIZAÇÃO"}
                     </h2>
                     <p className="mt-2 text-[1.6rem] text-blue-100">
                       {
-                        "Confira o atendimento. A senha do painel ser\u00e1 gerada e vinculada automaticamente antes de seguir, para autoriza\u00e7\u00e3o."
+                        "Confira o atendimento. A senha do painel será gerada e vinculada automaticamente antes de seguir, para autorização."
                       }
                     </p>
                     <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">

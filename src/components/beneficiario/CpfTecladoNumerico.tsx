@@ -2,7 +2,6 @@ interface CpfTecladoNumericoProps {
   loading: boolean;
   onAdicionarDigito: (digito: string) => void;
   onApagarUltimo: () => void;
-  // Remove onLimpar
 }
 
 export default function CpfTecladoNumerico({
@@ -14,7 +13,7 @@ export default function CpfTecladoNumerico({
     <div className="rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-3.5 shadow-[0_22px_36px_rgba(15,23,42,0.12)] md:p-4">
       <div className="mb-3 flex items-center justify-between px-1">
         <p className="text-[0.7rem] font-black uppercase tracking-[0.16em] text-slate-600">
-          {"Teclado num\u00e9rico"}
+          Teclado numérico
         </p>
         <p className="text-[0.76rem] font-semibold text-slate-400">
           Toque para digitar
@@ -22,7 +21,6 @@ export default function CpfTecladoNumerico({
       </div>
 
       <div className="grid grid-cols-3 gap-3 md:gap-3.5">
-        {/* Números 1-9 */}
         {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digito) => (
           <button
             key={`cpf-tecla-${digito}`}
@@ -34,7 +32,6 @@ export default function CpfTecladoNumerico({
           </button>
         ))}
 
-        {/* Botão APAGAR - ocupa 1 coluna */}
         <button
           type="button"
           onClick={onApagarUltimo}
@@ -43,7 +40,6 @@ export default function CpfTecladoNumerico({
           APAGAR
         </button>
 
-        {/* Número 0 */}
         <button
           type="button"
           onClick={() => onAdicionarDigito("0")}
@@ -52,7 +48,6 @@ export default function CpfTecladoNumerico({
           0
         </button>
 
-        {/* Espaço vazio para manter o grid de 3 colunas */}
         <div className="hidden md:block" />
       </div>
 

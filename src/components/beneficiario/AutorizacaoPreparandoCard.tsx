@@ -5,10 +5,10 @@ export default function AutorizacaoPreparandoCard() {
         <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#00338d]/20 border-t-[#00338d]" />
       </div>
       <p className="mt-3 text-[1.04rem] font-black uppercase tracking-[0.06em] text-[#00338d] md:text-[1.12rem]">
-        {"Registrando que voc\u00ea compareceu"}
+        Registrando que você compareceu
       </p>
       <p className="mt-2 text-[0.9rem] text-slate-600 md:text-[0.96rem]">
-        {"Estamos enviando seu token."}
+        Estamos enviando seu token.
       </p>
     </div>
   );
