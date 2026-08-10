@@ -39,7 +39,6 @@ export const createAgendaDetalhadaStatus = ({
     paciente: null,
     procedimentos: [],
     localAgendamento: evento.localAgendamento || "CENTRO_MEDICO",
-    retorno: false,
     senhaPainel: "",
     prioridadePainel: "",
     localidadePainel: "",
