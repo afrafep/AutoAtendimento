@@ -2493,24 +2493,24 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
               <div
                 className={`flex-1 px-3 md:px-6 ${
-                  mostrarTelaBoasVindasCpf ? "overflow-visible" : "overflow-hidden"
+                  "overflow-hidden"
                 } ${
                   mostrarTelaBoasVindasCpf
-                    ? "py-4 md:py-5"
+                    ? "py-3 md:py-4"
                     : "py-2 md:py-3"
                 }`}
               >
                 <div className="mx-auto max-w-6xl">
                   <div
                     className={`flex flex-col gap-3 ${
-                      mostrarTelaBoasVindasCpf ? "min-h-fit h-auto pb-5" : "min-h-0 h-full"
+                      mostrarTelaBoasVindasCpf ? "min-h-0 h-full" : "min-h-0 h-full"
                     }`}
                   >
                     {mostrarTelaBoasVindasCpf ? (
                       <button
                         type="button"
                         onClick={abrirEntradaCpf}
-                        className={`group relative min-h-[26rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-5 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[27.5rem] md:px-7 md:py-5 ${
+                        className={`group relative min-h-[24rem] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-4 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[25.5rem] md:px-7 md:py-4 ${
                           animandoSaidaTelaBoasVindasCpf
                             ? "-translate-y-[110%] opacity-0"
                             : "translate-y-0 opacity-100"
@@ -2540,15 +2540,15 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                           <h2 className="max-w-3xl text-[1.72rem] font-black tracking-tight text-[#0f2d78] md:text-[2.32rem]">
                             Bem-vindo ao autoatendimento
                           </h2>
-                          <div className="mt-8 w-full max-w-5xl rounded-[2.2rem] border-2 border-cyan-100 bg-white/96 px-6 py-10 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[28rem] md:px-12 md:py-16">
-                            <div className="flex h-full flex-col items-center justify-center gap-5">
-                              <span className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-24 md:w-24">
+                          <div className="mt-6 w-full max-w-5xl rounded-[2.2rem] border-2 border-cyan-100 bg-white/96 px-6 py-8 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[22rem] md:px-10 md:py-10">
+                            <div className="flex h-full flex-col items-center justify-center gap-4">
+                              <span className="inline-flex h-18 w-18 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-20 md:w-20">
                                 <FaHandPointer className="text-[1.7rem] md:text-[2rem]" />
                               </span>
-                              <p className="text-[1.45rem] font-black text-[#16357f] md:text-[2.2rem]">
+                              <p className="text-[1.35rem] font-black text-[#16357f] md:text-[2rem]">
                                 Toque na tela para digitar o CPF
                               </p>
-                              <p className="max-w-3xl text-[1.08rem] font-black leading-relaxed text-slate-700 md:text-[1.42rem]">
+                              <p className="max-w-3xl text-[1rem] font-black leading-relaxed text-slate-700 md:text-[1.25rem]">
                                 Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
                               </p>
                             </div>
