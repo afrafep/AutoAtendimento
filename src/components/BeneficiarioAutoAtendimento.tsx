@@ -2819,7 +2819,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                 <div
                   className={`flex-1 flex flex-col items-center text-center ${
                     tokenInlineVisivel
-                      ? "justify-center gap-0 py-2"
+                      ? "justify-center gap-0 py-1.5"
                       : "justify-center gap-1 py-1"
                   }`}
                 >
@@ -2844,9 +2844,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                 {/* PROFISSIONAL */}
                 <p
-                    className={`mt-0.5 max-w-[22ch] break-words font-black uppercase tracking-[0.02em] text-slate-900 leading-[1.02] ${
+                    className={`mt-0.5 max-w-[24ch] break-words font-black uppercase tracking-[0.01em] text-slate-900 leading-[0.98] ${
                       tokenInlineVisivel
-                        ? "text-[1.68rem] md:text-[2.1rem]"
+                        ? "text-[1.82rem] md:text-[2.25rem]"
                         : "text-[2.3rem] md:text-[2.75rem]"
                     }`}
                 >
@@ -2855,9 +2855,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                 {/* ESPECIALIDADE */}
                 <p
-                    className={`max-w-[22ch] break-words font-black uppercase text-[#180539] leading-[1.05] ${
+                    className={`max-w-[24ch] break-words font-black uppercase text-[#180539] leading-[1] ${
                       tokenInlineVisivel
-                        ? "text-[1.16rem] md:text-[1.46rem]"
+                        ? "text-[1.34rem] md:text-[1.72rem]"
                         : "text-[1.35rem] md:text-[2.05rem]"
                     }`}
                 >
