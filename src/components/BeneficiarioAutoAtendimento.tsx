@@ -1004,6 +1004,37 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   ]);
 
   useEffect(() => {
+    if (etapaTela !== "consultas" || !consultaFluxoAtual) {
+      return;
+    }
+
+    const { consulta, autorizacaoConcluida } = consultaFluxoAtual;
+    const deveExibirToken =
+      !autorizacaoConcluida &&
+      consulta.erroAutorizacao !== true &&
+      (consultaProcessandoSenhaId === consulta.idEvento ||
+        consultaTokenAbertaId === consulta.idEvento ||
+        normalizarBoolean(consulta.autorizado));
+
+    if (!deveExibirToken) {
+      if (consultaTecladoTokenId === consulta.idEvento) {
+        setConsultaTecladoTokenId(null);
+      }
+      return;
+    }
+
+    if (consultaTecladoTokenId !== consulta.idEvento) {
+      abrirTecladoTokenInline(consulta.idEvento);
+    }
+  }, [
+    etapaTela,
+    consultaFluxoAtual,
+    consultaProcessandoSenhaId,
+    consultaTecladoTokenId,
+    consultaTokenAbertaId,
+  ]);
+
+  useEffect(() => {
     pausaInatividadeRef.current = possuiModalAbertoQuePausaInatividade;
 
     if (possuiModalAbertoQuePausaInatividade) {
@@ -2786,8 +2817,10 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
               {/* Container centralizado - Ocupa todo o espaço disponível */}
                 <div
-                  className={`flex-1 flex flex-col items-center justify-center text-center py-1 ${
-                    tokenInlineVisivel ? "gap-0" : "gap-1"
+                  className={`flex-1 flex flex-col items-center text-center ${
+                    tokenInlineVisivel
+                      ? "justify-center gap-0 py-2"
+                      : "justify-center gap-1 py-1"
                   }`}
                 >
                 {/* HORÁRIO */}
@@ -2801,7 +2834,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                   <p
                     className={`font-black tracking-tight text-[#00338d] leading-none ${
                       tokenInlineVisivel
-                        ? "text-[3.3rem] md:text-[4rem]"
+                        ? "text-[2.65rem] md:text-[3.1rem]"
                         : "text-[4.4rem] md:text-[5.3rem]"
                     }`}
                   >
@@ -2811,9 +2844,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                 {/* PROFISSIONAL */}
                 <p
-                    className={`mt-0.5 font-black uppercase tracking-[0.02em] text-slate-900 leading-tight ${
+                    className={`mt-0.5 max-w-[22ch] break-words font-black uppercase tracking-[0.02em] text-slate-900 leading-[1.02] ${
                       tokenInlineVisivel
-                        ? "text-[1.55rem] md:text-[1.85rem]"
+                        ? "text-[1.68rem] md:text-[2.1rem]"
                         : "text-[2.3rem] md:text-[2.75rem]"
                     }`}
                 >
@@ -2822,9 +2855,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                 {/* ESPECIALIDADE */}
                 <p
-                    className={`font-black uppercase text-[#180539] leading-tight ${
+                    className={`max-w-[22ch] break-words font-black uppercase text-[#180539] leading-[1.05] ${
                       tokenInlineVisivel
-                        ? "text-[0.95rem] md:text-[1.3rem]"
+                        ? "text-[1.16rem] md:text-[1.46rem]"
                         : "text-[1.35rem] md:text-[2.05rem]"
                     }`}
                 >
@@ -2833,9 +2866,9 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
                 {/* LOCAL - Dinâmico baseado na especialidade */}
                 <p
-                    className={`mt-0.5 font-black text-[#00338d] leading-tight ${
+                    className={`mt-0.5 max-w-[14ch] font-black text-[#00338d] leading-none ${
                       tokenInlineVisivel
-                        ? "text-[1.9rem] md:text-[2.2rem]"
+                        ? "text-[1.55rem] md:text-[1.92rem]"
                         : "text-[2.8rem] md:text-[3.2rem]"
                     }`}
                 >
