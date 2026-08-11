@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import {
   FaClipboardList,
@@ -51,6 +50,7 @@ interface ConsultaAutoAtendimento {
   profissionalNome: string;
   especialidadeNome: string;
   pacienteNome: string;
+  flSexo?: string | null;
   nuCpf: string;
   nrCarteiraPlano: string;
   autorizado: boolean;
@@ -71,8 +71,28 @@ interface ConsultaCardAgrupado {
   agrupadoUltrassom: boolean;
 }
 
+interface TokenErroModalState {
+  idEvento: number;
+  titulo: string;
+  descricao: string;
+}
+
 const normalizarCpf = (valor?: string) =>
   String(valor || "").replace(/\D/g, "");
+
+const obterTextoAguardarChamada = (sexo?: string | null) => {
+  const sexoNormalizado = String(sexo || "").trim().toUpperCase();
+
+  if (sexoNormalizado === "F") {
+    return "Aguarde ser chamada no painel.";
+  }
+
+  if (sexoNormalizado === "M") {
+    return "Aguarde ser chamado no painel.";
+  }
+
+  return "Aguarde ser chamado(a) no painel.";
+};
 
 const cpfPossuiDigitosRepetidos = (cpf: string) => /^(\d)\1{10}$/.test(cpf);
 
@@ -648,6 +668,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   const [consultaValidandoTokenId, setConsultaValidandoTokenId] = useState<
     number | null
   >(null);
+  const [consultaErroToastAtivoId, setConsultaErroToastAtivoId] = useState<
+    number | null
+  >(null);
+  const [tokenErroModal, setTokenErroModal] =
+    useState<TokenErroModalState | null>(null);
   const [consultaTecladoTokenId, setConsultaTecladoTokenId] = useState<
     number | null
   >(null);
@@ -1135,6 +1160,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setConsultaProcessandoSenhaId(null);
     setConsultaReenviandoTokenId(null);
     setConsultaValidandoTokenId(null);
+    setConsultaErroToastAtivoId(null);
+    setTokenErroModal(null);
     setConsultaTecladoTokenId(null);
     setBloqueioReenvioAtePorConsulta({});
     setTokenDigitadoPorConsulta({});
@@ -1381,8 +1408,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     idEvento: number,
     mensagem: string,
   ) => {
-  const mensagemNormalizada = String(mensagem || "").trim();
-  const titulo =
+    const mensagemNormalizada = String(mensagem || "").trim();
+    const titulo =
       mensagemNormalizada.toLowerCase() ===
         "token errado. insira um token correto." ||
       mensagemNormalizada.toLowerCase() === "token inválido" ||
@@ -1390,45 +1417,49 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         ? "TOKEN INVÁLIDO"
         : "ERRO AO VALIDAR TOKEN";
 
-    await Swal.fire({
-      title: titulo,
-      text:
-        titulo === "TOKEN INVÁLIDO"
-          ? "Token errado. Insira um token correto."
-          : mensagemNormalizada ||
-            "Não foi possível validar o token.",
-      icon: "error",
-      confirmButtonText: "FECHAR",
-      allowOutsideClick: false,
-      background: "#ffffff",
-      color: "#0f172a",
-      customClass: {
-        popup: "!rounded-[1.2rem] !px-6 !py-5",
-        title: "!text-[1.4rem] !font-black !text-red-700",
-        confirmButton:
-          "!bg-red-600 !text-white !font-black !rounded-[0.9rem] !px-6 !py-3",
-      },
-    });
+    const descricao =
+      titulo === "TOKEN INVÁLIDO"
+        ? "Token errado. Insira um token correto."
+        : mensagemNormalizada || "Não foi possível validar o token.";
 
+    if (titulo === "TOKEN INVÁLIDO") {
+      setTokenDigitadoPorConsulta((prev) => ({
+        ...prev,
+        [idEvento]: "",
+      }));
+    }
+
+    setConsultaErroToastAtivoId(idEvento);
+    setTokenErroModal({ idEvento, titulo, descricao });
+    await Promise.resolve();
+  };
+
+  const fecharModalErroTokenInline = () => {
+    if (!tokenErroModal) {
+      return;
+    }
+
+    const { idEvento } = tokenErroModal;
+    setConsultaErroToastAtivoId((atual) => (atual === idEvento ? null : atual));
+    setTokenErroModal(null);
     setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
   };
 
-  const exibirModalSucessoELiberarConsulta = async (consulta: ConsultaAutoAtendimento) => {
+const exibirModalSucessoELiberarConsulta = async (consulta: ConsultaAutoAtendimento) => {
+  const textoAguardarChamada = obterTextoAguardarChamada(consulta.flSexo);
+
   await Swal.fire({
     title: "✅ ATENDIMENTO LIBERADO!",
     html: `
-      <div style="text-align: left; padding: 8px 0;">
-        <p style="font-size: 1.1rem; margin-bottom: 8px;"><strong>${consulta.pacienteNome}</strong></p>
-        <p style="color: #475569; margin-bottom: 4px;">📋 ${consulta.profissionalNome}</p>
-        <p style="color: #475569; margin-bottom: 4px;">🏥 ${consulta.especialidadeNome}</p>
-        <p style="color: #00338d; font-weight: bold; font-size: 1.2rem; margin-top: 8px;">
+      <div style="text-align: center; padding: 12px 0 8px;">
+        <p style="font-size: 2.2rem; line-height: 1.15; margin-bottom: 18px;"><strong>${consulta.pacienteNome}</strong></p>
+        <p style="color: #475569; font-size: 1.8rem; line-height: 1.26; margin-bottom: 10px;">📋 ${consulta.profissionalNome}</p>
+        <p style="color: #475569; font-size: 1.68rem; line-height: 1.26; margin-bottom: 10px;">🏥 ${consulta.especialidadeNome}</p>
+        <p style="color: #00338d; font-weight: bold; font-size: 2.2rem; margin-top: 14px; margin-bottom: 12px;">
           🕐 ${formatarHora(consulta.horaInicio)}
         </p>
-        <p style="color: #16a34a; font-weight: bold; margin-top: 8px;">
-          ✅ Token validado com sucesso!
-        </p>
-        <p style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">
-          Aguarde ser chamado(a) no painel.
+        <p style="color: #64748b; font-size: 2rem; font-weight: 800; line-height: 1.18; margin-top: 14px;">
+          ${textoAguardarChamada}
         </p>
       </div>
     `,
@@ -1438,9 +1469,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     background: "#ffffff",
     color: "#0f172a",
     customClass: {
-      popup: "!rounded-[1.2rem] !px-6 !py-5",
-      title: "!text-[1.5rem] !font-black !text-emerald-700",
-      confirmButton: "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-6 !py-3",
+      popup:
+        "!rounded-[1.75rem] !w-[min(92vw,56rem)] !max-w-[56rem] !px-10 !py-8 !flex !flex-col !justify-center",
+      title: "!text-[2.85rem] !leading-tight !font-black !text-emerald-700",
+      confirmButton:
+        "!bg-emerald-600 !text-white !font-black !rounded-[1rem] !px-12 !py-4 !text-[1.35rem] !mt-5",
     },
   });
 };
@@ -2340,6 +2373,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
             pacienteNome:
               item.paciente?.nmPaciente ||
               "Beneficiário não informado",
+            flSexo: item.paciente?.flSexo ?? null,
             nuCpf: item.paciente?.nuCpf || item.nuCpf || cpfLimpo,
             nrCarteiraPlano: String(
               item.paciente?.nrCarteiraPlano || item.nrCarteiraPlano || "",
@@ -2474,16 +2508,31 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           id="beneficiario-modal-root"
           className="pointer-events-none absolute inset-0 z-40 overflow-hidden"
         />
-        <ToastContainer
-          position="top-right"
-          autoClose={4000}
-          newestOnTop
-          closeOnClick
-          pauseOnHover
-          draggable
-          theme="light"
-          toastClassName="!rounded-[1rem] !border !border-slate-200 !bg-white !shadow-[0_18px_38px_rgba(15,23,42,0.16)]"
-        />
+
+        {tokenErroModal ? (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/28 px-6">
+            <div className="w-full max-w-[42rem] rounded-[1.8rem] border border-red-100 bg-white px-8 py-8 shadow-[0_28px_58px_rgba(15,23,42,0.28)]">
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-22 w-22 items-center justify-center rounded-full border-[5px] border-red-200 bg-red-50 text-[3rem] font-black text-red-500">
+                  ×
+                </div>
+                <h3 className="mt-6 text-[2.2rem] font-black uppercase tracking-[0.01em] text-red-700">
+                  {tokenErroModal.titulo}
+                </h3>
+                <p className="mt-4 max-w-[26rem] text-[1.45rem] leading-8 text-slate-800">
+                  {tokenErroModal.descricao}
+                </p>
+                <button
+                  type="button"
+                  onClick={fecharModalErroTokenInline}
+                  className="mt-8 h-[4rem] min-w-[14rem] rounded-[1.1rem] bg-red-600 px-8 text-[1.2rem] font-black uppercase tracking-[0.04em] text-white transition hover:bg-red-700"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <SessaoExpiracaoCard
           mostrarModalInatividade={mostrarModalInatividade}
@@ -2732,6 +2781,8 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           consultaReenviandoTokenId === consulta.idEvento;
         const validandoToken =
           consultaValidandoTokenId === consulta.idEvento;
+        const reenvioDesabilitadoPorErro =
+          consultaErroToastAtivoId === consulta.idEvento;
         const tecladoTokenAberto =
           consultaTecladoTokenId === consulta.idEvento;
         const segundosRestantesReenvio = Math.max(
@@ -3038,6 +3089,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
                     tecladoTokenAberto={tecladoTokenAberto}
                     reenviandoToken={reenviandoToken}
                     validandoToken={validandoToken}
+                    reenvioDesabilitadoPorErro={reenvioDesabilitadoPorErro}
                     segundosRestantesReenvio={segundosRestantesReenvio}
                     onTokenChange={(indiceToken, valor) =>
                       atualizarTokenDigitadoInline(

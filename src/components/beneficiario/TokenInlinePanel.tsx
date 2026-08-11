@@ -10,6 +10,7 @@ interface TokenInlinePanelProps {
   tecladoTokenAberto: boolean;
   reenviandoToken: boolean;
   validandoToken: boolean;
+  reenvioDesabilitadoPorErro: boolean;
   segundosRestantesReenvio: number;
   onTokenChange: (indice: number, valor: string) => void;
   onTokenKeyDown: (indice: number, event: KeyboardEvent<HTMLInputElement>) => void;
@@ -28,6 +29,7 @@ export default function TokenInlinePanel({
   tecladoTokenAberto,
   reenviandoToken,
   validandoToken,
+  reenvioDesabilitadoPorErro,
   segundosRestantesReenvio,
   onTokenChange,
   onTokenKeyDown,
@@ -78,7 +80,12 @@ export default function TokenInlinePanel({
             <button
               type="button"
               onClick={onReenviar}
-              disabled={reenviandoToken || validandoToken || reenvioBloqueado}
+              disabled={
+                reenviandoToken ||
+                validandoToken ||
+                reenvioBloqueado ||
+                reenvioDesabilitadoPorErro
+              }
               className="h-[2.35rem] rounded-[0.75rem] border border-orange-500 bg-orange-500 px-4 text-[0.76rem] font-black uppercase tracking-[0.03em] text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {reenviandoToken ? "REENVIANDO..." : "REENVIAR TOKEN"}
