@@ -2,80 +2,24 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import {
-  FaClipboardList,
-  FaHandPointer,
-  FaHeartbeat,
-  FaUserCircle,
-  FaUserMd,
-} from "react-icons/fa";
-import AtendimentoResumoCard from "./AtendimentoResumoCard";
+import { FaClipboardList, FaUserCircle, FaUserMd } from "react-icons/fa";
 import { TokenEnviar } from "./TokenEnviar";
 import { TokenValidar } from "./TokenValidar";
-import ConsultasHeader from "./beneficiario/ConsultasHeader";
-import CpfTecladoNumerico from "./beneficiario/CpfTecladoNumerico";
 import SessaoExpiracaoCard from "./beneficiario/SessaoExpiracaoCard";
-import AutorizacaoPreparandoCard from "./beneficiario/AutorizacaoPreparandoCard";
-import TokenInlinePanel from "./beneficiario/TokenInlinePanel";
-import ConsultaFluxoNavegacao from "./beneficiario/ConsultaFluxoNavegacao";
-import SenhaAutorizacaoAcoes from "./beneficiario/SenhaAutorizacaoAcoes";
+import TokenErroModal from "./beneficiario/TokenErroModal";
+import BeneficiarioCpfScreen from "./beneficiario/BeneficiarioCpfScreen";
+import BeneficiarioConsultaFluxoCard from "./beneficiario/BeneficiarioConsultaFluxoCard";
+import BeneficiarioConsultasScreen from "./beneficiario/BeneficiarioConsultasScreen";
+import BeneficiarioSenhaScreen from "./beneficiario/BeneficiarioSenhaScreen";
+import type {
+  ConsultaAutoAtendimento,
+  ConsultaCardAgrupado,
+  TokenErroModalState,
+} from "./beneficiario/autoatendimentoTypes";
 import { api } from "../config/configApi";
 import { useAgendaDetalhada } from "../hooks/useAgendaDetalhada";
 import { inteliteSenhaService } from "../services/inteliteSenhaService";
 import type { AgendaEvento } from "../types/agenda";
-
-interface ConsultaAutoAtendimento {
-  idEvento: number;
-  idProfissional: number | string;
-  nomeEvento?: string | null;
-  descricaoEvento?: string | null;
-  dataInicio: string;
-  horaInicio: string;
-  dataFim?: string | null;
-  horaFim?: string | null;
-  categoria?: string | null;
-  statusAgendamento: string;
-  corEvento?: string | null;
-  celularContato?: string | null;
-  idProfissionalRealizaProcedimento?: number | null;
-  retorno?: boolean;
-  localAgendamento?: string | null;
-  criadoEm?: string | null;
-  atualizadoEm?: string | null;
-  usuarioCriacao?: string | null;
-  usuarioUpdate?: string | null;
-  prioridadePainel?: string | null;
-  cdPaciente?: number | null;
-  procedimentos?: any[];
-  profissionalNome: string;
-  especialidadeNome: string;
-  pacienteNome: string;
-  flSexo?: string | null;
-  nuCpf: string;
-  nrCarteiraPlano: string;
-  autorizado: boolean;
-  tokenValidado: boolean;
-  senhaAutorizacao: string;
-  numeroGuiaOperadora?: number | null;
-  numeroGuiaGerado?: string | null;
-  senhaPainel?: string | null;
-  localidadePainel?: string | null;
-  erroAutorizacao?: boolean; // NOVO
-  mensagemErroAutorizacao?: string; // NOVO
-}
-
-interface ConsultaCardAgrupado {
-  chave: string;
-  consultaBase: ConsultaAutoAtendimento;
-  consultasRelacionadas: ConsultaAutoAtendimento[];
-  agrupadoUltrassom: boolean;
-}
-
-interface TokenErroModalState {
-  idEvento: number;
-  titulo: string;
-  descricao: string;
-}
 
 const normalizarCpf = (valor?: string) =>
   String(valor || "").replace(/\D/g, "");
@@ -833,6 +777,29 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     () => formatarData(cardsConsultas[0]?.consultaBase.dataInicio),
     [cardsConsultas],
   );
+
+  const mensagemFluxoConsultas = useMemo(() => {
+    const totalConsultas = cardsConsultasFluxo.length;
+    const consultaAtual = consultaFluxoAtual;
+    const isAutorizada = consultaAtual?.autorizacaoConcluida;
+    const isUltimaConsulta = indiceConsultaAtual === totalConsultas - 1;
+
+    if (totalConsultas === 1) {
+      return isAutorizada
+        ? "✅ Consulta autorizada, aguarde para ser atendido!"
+        : "Finalize o autoatendimento para liberar sua consulta.";
+    }
+
+    if (isUltimaConsulta) {
+      return isAutorizada
+        ? "✅ Todas as consultas autorizadas! Aguarde o atendimento."
+        : "Finalize o autoatendimento para liberar a última consulta.";
+    }
+
+    return isAutorizada
+      ? "✅ Autorizado. Consulta liberada."
+      : "Finalize o autoatendimento para liberar a próxima consulta.";
+  }, [cardsConsultasFluxo.length, consultaFluxoAtual, indiceConsultaAtual]);
   const dataCabecalhoAtual = useMemo(() => formatarDataAtual(), []);
 
   const formatarTempoSessao = (segundos: number) => {
@@ -2509,30 +2476,10 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           className="pointer-events-none absolute inset-0 z-40 overflow-hidden"
         />
 
-        {tokenErroModal ? (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/28 px-6">
-            <div className="w-full max-w-[42rem] rounded-[1.8rem] border border-red-100 bg-white px-8 py-8 shadow-[0_28px_58px_rgba(15,23,42,0.28)]">
-              <div className="flex flex-col items-center text-center">
-                <div className="flex h-22 w-22 items-center justify-center rounded-full border-[5px] border-red-200 bg-red-50 text-[3rem] font-black text-red-500">
-                  ×
-                </div>
-                <h3 className="mt-6 text-[2.2rem] font-black uppercase tracking-[0.01em] text-red-700">
-                  {tokenErroModal.titulo}
-                </h3>
-                <p className="mt-4 max-w-[26rem] text-[1.45rem] leading-8 text-slate-800">
-                  {tokenErroModal.descricao}
-                </p>
-                <button
-                  type="button"
-                  onClick={fecharModalErroTokenInline}
-                  className="mt-8 h-[4rem] min-w-[14rem] rounded-[1.1rem] bg-red-600 px-8 text-[1.2rem] font-black uppercase tracking-[0.04em] text-white transition hover:bg-red-700"
-                >
-                  Fechar
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
+        <TokenErroModal
+          tokenErroModal={tokenErroModal}
+          onClose={fecharModalErroTokenInline}
+        />
 
         <SessaoExpiracaoCard
           mostrarModalInatividade={mostrarModalInatividade}
@@ -2543,697 +2490,157 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
         <div className="flex w-full flex-1 transition-all duration-200">
           {etapaTela === "cpf" && (
-            <section className="flex min-h-[100dvh] w-full flex-col">
-              {!mostrarTelaBoasVindasCpf ? (
-                <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
-                  <div className="mx-auto max-w-5xl px-2 md:px-3">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="text-center md:text-left">
-                        <h2 className="text-[1.45rem] font-black tracking-tight text-white md:text-[2.2rem]">
-                          {"Digite o CPF do beneficiário"}
-                        </h2>
-                        <p className="mt-3 max-w-136 text-[1.6rem] text-blue-100">
-                          Localize os agendamentos de hoje.
-                        </p>
-                      </div>
-                      <div className="flex justify-center md:justify-end">
-                        <div className="inline-flex min-h-10 flex-col items-center rounded-full border border-white/20 bg-white/10 px-5 py-2 text-white">
-                          <p className="text-[0.96rem] font-black uppercase tracking-[0.16em] text-white md:text-[1.02rem]">
-                            {`JOÃO PESSOA - ${dataCabecalhoAtual}`}
-                          </p>
-                          <p className="mt-1 text-[0.86rem] font-bold uppercase tracking-[0.12em] text-blue-50 md:text-[0.92rem]">
-                            {`Horário Atual: ${horaCabecalhoAtual}`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              <div
-                className={`flex-1 px-3 md:px-6 ${
-                  "overflow-hidden"
-                } ${
-                  mostrarTelaBoasVindasCpf
-                    ? "py-3 md:py-4"
-                    : "py-2 md:py-3"
-                }`}
-              >
-                <div className="mx-auto flex h-full max-w-6xl flex-col">
-                  <div
-                    className={`flex flex-1 flex-col gap-3 ${
-                      mostrarTelaBoasVindasCpf ? "min-h-0 h-full" : "min-h-0 h-full"
-                    }`}
-                  >
-                    {mostrarTelaBoasVindasCpf ? (
-                      <button
-                        type="button"
-                        onClick={abrirEntradaCpf}
-                        className={`group relative flex min-h-[24rem] h-full w-full flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-4 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[25.5rem] md:px-7 md:py-4 ${
-                          animandoSaidaTelaBoasVindasCpf
-                            ? "-translate-y-[110%] opacity-0"
-                            : "translate-y-0 opacity-100"
-                        }`}
-                      >
-                        <div className="pointer-events-none absolute inset-0">
-                          <div className="absolute left-[10%] top-[14%] h-24 w-24 rounded-full bg-cyan-200/35 blur-2xl md:h-32 md:w-32" />
-                          <div className="absolute right-[12%] top-[18%] h-20 w-20 rounded-full bg-blue-200/35 blur-2xl md:h-28 md:w-28" />
-                          <div className="absolute bottom-[10%] left-[24%] h-28 w-28 rounded-full bg-sky-100/50 blur-3xl md:h-36 md:w-36" />
-                        </div>
-
-                        <div className="relative mx-auto flex h-full max-w-5xl flex-1 flex-col items-center text-center">
-                          <div className="mb-4 inline-flex items-center gap-3 rounded-full border border-[#00338d]/10 bg-white/88 px-4 py-2 shadow-[0_10px_24px_rgba(0,51,141,0.08)]">
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#c81e3a_0%,#ef4444_100%)] text-white shadow-[0_8px_18px_rgba(200,30,58,0.28)]">
-                              <FaHeartbeat className="text-[1.05rem]" />
-                            </span>
-                            <div className="text-left">
-                              <p className="text-[0.74rem] font-black uppercase tracking-[0.18em] text-[#4f7bc6]">
-                                TELA INICIAL
-                              </p>
-                              <p className="text-[1.18rem] font-black tracking-[0.03em] text-[#00338d] md:text-[1.45rem]">
-                                Afrafep Saúde
-                              </p>
-                            </div>
-                          </div>
-
-                          <h2 className="max-w-3xl text-[1.72rem] font-black tracking-tight text-[#0f2d78] md:text-[2.32rem]">
-                            Bem-vindo ao autoatendimento
-                          </h2>
-                          <div className="mt-6 flex w-full max-w-5xl flex-1 flex-col justify-center rounded-[2.2rem] border-2 border-cyan-100 bg-white/96 px-6 py-8 text-center shadow-[0_18px_34px_rgba(15,23,42,0.08)] md:min-h-[22rem] md:px-10 md:py-10">
-                            <div className="flex h-full flex-col items-center justify-center gap-4">
-                              <span className="inline-flex h-18 w-18 items-center justify-center rounded-full bg-[linear-gradient(135deg,#123a97_0%,#2957d3_52%,#3eb6f4_100%)] text-white shadow-[0_16px_28px_rgba(0,51,141,0.20)] md:h-20 md:w-20">
-                                <FaHandPointer className="text-[1.7rem] md:text-[2rem]" />
-                              </span>
-                              <p className="text-[1.35rem] font-black text-[#16357f] md:text-[2rem]">
-                                Toque na tela para digitar o CPF
-                              </p>
-                              <p className="max-w-3xl text-[1rem] font-black leading-relaxed text-slate-700 md:text-[1.25rem]">
-                                Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
-                              </p>
-                            </div>
-                          </div>
-
-                        </div>
-                      </button>
-                    ) : (
-                      <>
-                        <div>
-                          <div className="bg-white p-2 shadow-[0_10px_24px_rgba(15,23,42,0.06)] md:p-2.5">
-                            <input
-                              ref={inputCpfRef}
-                              id="beneficiario-cpf"
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={14}
-                              value={cpf}
-                              onChange={handleCpfChange}
-                              onFocus={() => setMostrarTecladoCpf(true)}
-                              onClick={() => setMostrarTecladoCpf(true)}
-                              onKeyDown={(event) => {
-                                handleCpfKeyDown(event);
-                                if (event.key === "Enter") {
-                                  void buscarConsultas();
-                                }
-                              }}
-                              onPaste={handleCpfPaste}
-                              placeholder="000.000.000-00"
-                              pattern="[0-9]*"
-                              className="h-[4.25rem] w-full border-0 bg-slate-50 px-6 text-center text-[1.26rem] font-black tracking-[0.12em] text-slate-900 outline-none transition focus:bg-white focus:ring-4 focus:ring-[#00338d]/10 md:h-[4.75rem] md:text-[1.62rem]"
-                            />
-                          </div>
-                        </div>
-
-                        {mostrarTecladoCpf ? (
-                          <CpfTecladoNumerico
-                            loading={loading}
-                            onAdicionarDigito={adicionarDigitoCpf}
-                            onApagarUltimo={apagarUltimoDigitoCpf}
-                          />
-                        ) : null}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
+            <BeneficiarioCpfScreen
+              mostrarTelaBoasVindasCpf={mostrarTelaBoasVindasCpf}
+              animandoSaidaTelaBoasVindasCpf={animandoSaidaTelaBoasVindasCpf}
+              abrirEntradaCpf={abrirEntradaCpf}
+              dataCabecalhoAtual={dataCabecalhoAtual}
+              horaCabecalhoAtual={horaCabecalhoAtual}
+              inputCpfRef={inputCpfRef}
+              cpf={cpf}
+              handleCpfChange={handleCpfChange}
+              handleCpfKeyDown={handleCpfKeyDown}
+              handleCpfPaste={handleCpfPaste}
+              buscarConsultas={buscarConsultas}
+              setMostrarTecladoCpf={setMostrarTecladoCpf}
+              mostrarTecladoCpf={mostrarTecladoCpf}
+              loading={loading}
+              adicionarDigitoCpf={adicionarDigitoCpf}
+              apagarUltimoDigitoCpf={apagarUltimoDigitoCpf}
+            />
           )}
 
           {etapaTela === "consultas" && (
-            <>
-              <section className="relative flex h-[100dvh] w-full flex-col overflow-hidden">
-                <div className="sticky top-0 z-30 w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-4 text-white shadow-[0_14px_28px_rgba(15,23,42,0.14)] backdrop-blur supports-[backdrop-filter]:bg-[linear-gradient(135deg,rgba(0,51,141,0.94)_0%,rgba(15,77,183,0.94)_52%,rgba(26,120,214,0.94)_100%)] md:px-8 md:py-5">
-                  <ConsultasHeader
-                    pacienteNome={pacienteNome}
-                    dataConsultasCabecalho={dataConsultasCabecalho}
-                    onSair={() => void confirmarEncerramentoAutoAtendimento()}
-                  />
-                </div>
+            <BeneficiarioConsultasScreen
+              pacienteNome={pacienteNome}
+              dataConsultasCabecalho={dataConsultasCabecalho}
+              onSair={() => void confirmarEncerramentoAutoAtendimento()}
+              mensagemFluxo={mensagemFluxoConsultas}
+              totalConsultas={cardsConsultasFluxo.length}
+              indiceConsultaAtual={indiceConsultaAtual}
+              indiceMaximoLiberado={indiceMaximoLiberado}
+              setIndiceConsultaAtual={setIndiceConsultaAtual}
+            >
+              {consultaFluxoAtual
+                ? (() => {
+                    const {
+                      cardConsulta,
+                      consulta,
+                      autorizacaoConcluida,
+                    } = consultaFluxoAtual;
+                    const statusAtual = String(
+                      consulta.statusAgendamento || "",
+                    ).toUpperCase();
+                    const faltouConsulta = statusAtual === "FALTOU";
+                    const compareceuConsulta = statusAtual === "COMPARECEU";
+                    const podeAutorizar = [
+                      "AGENDADO",
+                      "CONFIRMADO",
+                      "COMPARECEU",
+                    ].includes(statusAtual);
+                    const processandoSenha =
+                      consultaProcessandoSenhaId === consulta.idEvento;
+                    const tokenAberto =
+                      consultaTokenAbertaId === consulta.idEvento;
+                    const deveProcurarRecepcao =
+                      !normalizarBoolean(consulta.autorizado) &&
+                      !normalizarBoolean(consulta.tokenValidado) &&
+                      (possuiSenhaAutorizacao(consulta.senhaAutorizacao) ||
+                        consulta.erroAutorizacao === true);
+                    const tokenInlineVisivel =
+                      !autorizacaoConcluida &&
+                      consulta.erroAutorizacao !== true &&
+                      (processandoSenha ||
+                        tokenAberto ||
+                        normalizarBoolean(consulta.autorizado));
+                    const tokenEnviadoNoFluxo =
+                      normalizarBoolean(consulta.autorizado) &&
+                      !autorizacaoConcluida;
+                    const podeSeguir =
+                      podeAutorizar ||
+                      tokenInlineVisivel ||
+                      autorizacaoConcluida;
+                    const tokenDigitado =
+                      tokenDigitadoPorConsulta[consulta.idEvento] || "";
+                    const reenviandoToken =
+                      consultaReenviandoTokenId === consulta.idEvento;
+                    const validandoToken =
+                      consultaValidandoTokenId === consulta.idEvento;
+                    const reenvioDesabilitadoPorErro =
+                      consultaErroToastAtivoId === consulta.idEvento;
+                    const tecladoTokenAberto =
+                      consultaTecladoTokenId === consulta.idEvento;
+                    const segundosRestantesReenvio = Math.max(
+                      0,
+                      Math.ceil(
+                        ((bloqueioReenvioAtePorConsulta[consulta.idEvento] ||
+                          0) -
+                          agoraReenvioToken) /
+                          1000,
+                      ),
+                    );
 
-                <div className="flex-1 overflow-hidden px-3 pb-2 pt-2 md:px-5 md:pb-3 md:pt-2.5">
-                  <div className="mx-auto flex h-full max-w-6xl flex-col gap-1.5 overflow-hidden">
-                    <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-[1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] px-3 py-2 shadow-[0_12px_24px_rgba(15,23,42,0.05)] md:px-4 md:py-2.5">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[1.08rem] font-bold leading-[1.45] text-slate-700 md:text-[1.52rem]">
-                          {(() => {
-                            const totalConsultas = cardsConsultasFluxo.length;
-                            const consultaAtual = consultaFluxoAtual;
-                            const isAutorizada =
-                              consultaAtual?.autorizacaoConcluida;
-                            const isUltimaConsulta =
-                              indiceConsultaAtual === totalConsultas - 1;
-
-                            // CASO 1: Apenas 1 consulta no total
-                            if (totalConsultas === 1) {
-                              return isAutorizada
-                                ? "✅ Consulta autorizada, aguarde para ser atendido!"
-                                : "Finalize o autoatendimento para liberar sua consulta.";
-                            }
-
-                            // CASO 2: Última consulta da lista
-                            if (isUltimaConsulta) {
-                              return isAutorizada
-                                ? "✅ Todas as consultas autorizadas! Aguarde o atendimento."
-                                : "Finalize o autoatendimento para liberar a última consulta.";
-                            }
-
-                            // CASO 3: Consultas intermediárias
-                            return isAutorizada
-                              ? "✅ Autorizado. Consulta liberada."
-                              : "Finalize o autoatendimento para liberar a próxima consulta.";
-                          })()}
-                        </p>
-
-                        {/* CONTAGEM 1/2 NO CANTO DIREITO */}
-                        {cardsConsultasFluxo.length > 1 && (
-                          <span className="text-[1.4rem] font-black text-[#00338d] md:text-[2rem]">
-                            {indiceConsultaAtual + 1}/
-                            {cardsConsultasFluxo.length}
-                          </span>
-                        )}
-                      </div>
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-  {consultaFluxoAtual
-    ? (() => {
-        const {
-          cardConsulta,
-          consulta,
-          autorizacaoConcluida,
-        } = consultaFluxoAtual;
-        const statusAtual = String(
-          consulta.statusAgendamento || "",
-        ).toUpperCase();
-        const faltouConsulta = statusAtual === "FALTOU";
-        const compareceuConsulta = statusAtual === "COMPARECEU";
-        const podeAutorizar = [
-          "AGENDADO",
-          "CONFIRMADO",
-          "COMPARECEU",
-        ].includes(statusAtual);
-        const processandoSenha =
-          consultaProcessandoSenhaId === consulta.idEvento;
-        const tokenAberto = consultaTokenAbertaId === consulta.idEvento;
-
-        // VERIFICA SE DEVE MOSTRAR "PROCURE A RECEPÇÃO"
-        const deveProcurarRecepcao =
-          !normalizarBoolean(consulta.autorizado) &&
-          !normalizarBoolean(consulta.tokenValidado) &&
-          (possuiSenhaAutorizacao(consulta.senhaAutorizacao) ||
-            consulta.erroAutorizacao === true);
-
-        // TOKEN INLINE VISÍVEL - NÃO MOSTRAR SE HOUVER ERRO
-        const tokenInlineVisivel =
-          !autorizacaoConcluida &&
-          consulta.erroAutorizacao !== true &&
-          (processandoSenha || tokenAberto || normalizarBoolean(consulta.autorizado));
-
-        // VERIFICA SE O TOKEN JÁ FOI ENVIADO NO FLUXO
-        const tokenEnviadoNoFluxo =
-          normalizarBoolean(consulta.autorizado) && !autorizacaoConcluida;
-
-        // VERIFICA SE PODE SEGUIR
-        const podeSeguir =
-          podeAutorizar || tokenInlineVisivel || autorizacaoConcluida;
-
-        const tokenDigitado =
-          tokenDigitadoPorConsulta[consulta.idEvento] || "";
-        const reenviandoToken =
-          consultaReenviandoTokenId === consulta.idEvento;
-        const validandoToken =
-          consultaValidandoTokenId === consulta.idEvento;
-        const reenvioDesabilitadoPorErro =
-          consultaErroToastAtivoId === consulta.idEvento;
-        const tecladoTokenAberto =
-          consultaTecladoTokenId === consulta.idEvento;
-        const segundosRestantesReenvio = Math.max(
-          0,
-          Math.ceil(
-            ((bloqueioReenvioAtePorConsulta[consulta.idEvento] || 0) -
-              agoraReenvioToken) /
-              1000,
-          ),
-        );
-
-        return (
-          <article
-            key={cardConsulta.chave}
-            className={`relative flex min-h-0 flex-1 flex-col border ${
-              tokenInlineVisivel ? "p-2" : "p-2"
-            } shadow-[0_12px_24px_rgba(15,23,42,0.05)] transition ${
-              autorizacaoConcluida
-                ? "border-emerald-200 bg-emerald-50/55 opacity-75"
-                : consulta.erroAutorizacao === true
-                ? "border-red-300 bg-red-50/50"
-                : "border-slate-200 bg-white"
-            }`}
-          >
-            <div className="flex min-h-0 flex-1 flex-col">
-              {/* Status - canto superior direito */}
-              <div className="flex justify-end shrink-0">
-                {!compareceuConsulta ||
-                tokenEnviadoNoFluxo ||
-                autorizacaoConcluida ||
-                faltouConsulta ? (
-                  <p
-                    className={`inline-flex ${
-                      tokenInlineVisivel
-                        ? "min-h-7 px-3 py-1 text-[0.75rem] md:text-[0.85rem]"
-                        : "min-h-9 px-4 py-1.5 text-[0.82rem] md:text-[0.96rem]"
-                    } items-center gap-2 rounded-full border text-center font-black uppercase tracking-[0.06em] shadow-[0_8px_14px_rgba(15,23,42,0.08)] ${
-                      faltouConsulta
-                        ? "border-red-200 bg-red-50 text-red-700"
-                        : consulta.erroAutorizacao === true
-                        ? "border-red-400 bg-red-100 text-red-700"
-                        : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                        ? "border-amber-200 bg-amber-50 text-amber-800"
-                        : autorizacaoConcluida
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : "border-blue-200 bg-blue-50 text-[#00338d]"
-                    }`}
-                  >
-                    {!autorizacaoConcluida ? (
-                      <span
-                        aria-hidden="true"
-                        className={`inline-flex h-2.5 w-2.5 rounded-full ${
-                          faltouConsulta
-                            ? "bg-red-500"
-                            : consulta.erroAutorizacao === true
-                            ? "bg-red-500"
-                            : tokenEnviadoNoFluxo
-                            ? "bg-amber-500"
-                            : "bg-[#00338d]"
-                        }`}
+                    return (
+                      <BeneficiarioConsultaFluxoCard
+                        cardConsulta={cardConsulta}
+                        consulta={consulta}
+                        autorizacaoConcluida={autorizacaoConcluida}
+                        processandoSenha={processandoSenha}
+                        tokenInlineVisivel={tokenInlineVisivel}
+                        tokenEnviadoNoFluxo={tokenEnviadoNoFluxo}
+                        faltouConsulta={faltouConsulta}
+                        compareceuConsulta={compareceuConsulta}
+                        deveProcurarRecepcao={deveProcurarRecepcao}
+                        podeSeguir={podeSeguir}
+                        tokenDigitado={tokenDigitado}
+                        reenviandoToken={reenviandoToken}
+                        validandoToken={validandoToken}
+                        reenvioDesabilitadoPorErro={
+                          reenvioDesabilitadoPorErro
+                        }
+                        tecladoTokenAberto={tecladoTokenAberto}
+                        segundosRestantesReenvio={segundosRestantesReenvio}
+                        formatarHora={formatarHora}
+                        formatarStatus={formatarStatus}
+                        obterFaixaHorariosConsultas={
+                          obterFaixaHorariosConsultas
+                        }
+                        atualizarTokenDigitadoInline={
+                          atualizarTokenDigitadoInline
+                        }
+                        handleTokenInlineKeyDown={handleTokenInlineKeyDown}
+                        handleTokenInlinePaste={handleTokenInlinePaste}
+                        abrirTecladoTokenInline={abrirTecladoTokenInline}
+                        fecharTecladoTokenInline={fecharTecladoTokenInline}
+                        preencherTokenViaTecladoInline={
+                          preencherTokenViaTecladoInline
+                        }
+                        limparTokenViaTecladoInline={
+                          limparTokenViaTecladoInline
+                        }
+                        reenviarTokenInline={reenviarTokenInline}
+                        validarTokenInline={validarTokenInline}
+                        abrirEtapaSenha={abrirEtapaSenha}
                       />
-                    ) : null}
-                    {autorizacaoConcluida ? (
-                      <span
-                        aria-hidden="true"
-                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[0.6rem] text-white"
-                      >
-                        {"\u2713"}
-                      </span>
-                    ) : null}
-                    {faltouConsulta
-                      ? "Consulta não realizada"
-                      : consulta.erroAutorizacao === true
-                      ? "PROCURE A RECEPÇÃO"
-                      : tokenEnviadoNoFluxo && !autorizacaoConcluida
-                      ? "AGUARDANDO SEU TOKEN"
-                      : autorizacaoConcluida
-                      ? "Atendimento liberado"
-                      : formatarStatus(consulta.statusAgendamento)}
-                  </p>
-                ) : null}
-              </div>
-
-              {/* Container centralizado - Ocupa todo o espaço disponível */}
-                <div
-                  className={`flex-1 flex flex-col items-center text-center ${
-                    tokenInlineVisivel
-                      ? "justify-center gap-0 py-1.5"
-                      : "justify-center gap-1 py-1"
-                  }`}
-                >
-                {/* HORÁRIO */}
-                {cardConsulta.agrupadoUltrassom ? (
-                  <p className="font-black uppercase tracking-[0.05em] text-[#00338d] text-[1.8rem] md:text-[2.2rem] leading-tight">
-                    {obterFaixaHorariosConsultas(
-                      cardConsulta.consultasRelacionadas,
-                    ) || "Horários do dia"}
-                  </p>
-                ) : (
-                  <p
-                    className={`font-black tracking-tight text-[#00338d] leading-none ${
-                      tokenInlineVisivel
-                        ? "text-[2.65rem] md:text-[3.1rem]"
-                        : "text-[4.4rem] md:text-[5.3rem]"
-                    }`}
-                  >
-                    {formatarHora(consulta.horaInicio)}
-                  </p>
-                )}
-
-                {/* PROFISSIONAL */}
-                <p
-                    className={`mt-0.5 max-w-[24ch] break-words font-black uppercase tracking-[0.01em] text-slate-900 leading-[0.98] ${
-                      tokenInlineVisivel
-                        ? "text-[1.82rem] md:text-[2.25rem]"
-                        : "text-[2.3rem] md:text-[2.75rem]"
-                    }`}
-                >
-                  {consulta.profissionalNome}
-                </p>
-
-                {/* ESPECIALIDADE */}
-                <p
-                    className={`max-w-[24ch] break-words font-black uppercase text-[#180539] leading-[1] ${
-                      tokenInlineVisivel
-                        ? "text-[1.34rem] md:text-[1.72rem]"
-                        : "text-[1.35rem] md:text-[2.05rem]"
-                    }`}
-                >
-                  {consulta.especialidadeNome}
-                </p>
-
-                {/* LOCAL - Dinâmico baseado na especialidade */}
-                <p
-                    className={`mt-0.5 max-w-[14ch] font-black text-[#00338d] leading-none ${
-                      tokenInlineVisivel
-                        ? "text-[1.55rem] md:text-[1.92rem]"
-                        : "text-[2.8rem] md:text-[3.2rem]"
-                    }`}
-                >
-                  {(() => {
-                    const especialidade =
-                      consulta.especialidadeNome?.toLowerCase() || "";
-
-                    const localMap: Record<string, string> = {
-                      // SUBSOLO
-                      fisioterapeuta: "SUBSOLO",
-                      "fisioterapeuta sad": "SUBSOLO",
-                      "fisoterapeuta sad": "SUBSOLO",
-                      "terapeuta ocupacional": "SUBSOLO",
-                      "terapeuta ocupacional infantil": "SUBSOLO",
-                      "terapia ocupacional": "SUBSOLO",
-                      "terapia ocupacional infantil": "SUBSOLO",
-                      osteopatia: "SUBSOLO",
-                      quiropata: "SUBSOLO",
-
-                      // 1º ANDAR
-                      dermatologista: "1º ANDAR",
-                      psicologo: "1º ANDAR",
-                      "psicologo sad": "1º ANDAR",
-                      "psicologia infantil": "1º ANDAR",
-                      psiquiatra: "1º ANDAR",
-                      "psiquiatra infantil": "1º ANDAR",
-                      fonoaudiologo: "1º ANDAR",
-                      "fonoaudiologo sad": "1º ANDAR",
-                      foniatra: "1º ANDAR",
-                      nutricionista: "1º ANDAR",
-                      "nutricionista sad": "1º ANDAR",
-                      "nutri maternoinfantil": "1º ANDAR",
-                      ortoptista: "1º ANDAR",
-
-                      // TÉRREO
-                      ultrassonografista: "TÉRREO",
-                      "medico ultrassonografista": "TÉRREO",
-                      cardiologista: "TÉRREO",
-                      "clinico geral": "TÉRREO",
-                      "clinico geral / cardiologia": "TÉRREO",
-                      "medico da familia": "TÉRREO",
-                      "medico da família": "TÉRREO",
-                      "medico da dor": "TÉRREO",
-                      "procedimento medico da dor": "TÉRREO",
-                      enfermeiro: "TÉRREO",
-                      "enfermeiro sad": "TÉRREO",
-                      "tecnico de enfermagem": "TÉRREO",
-                      vacinação: "TÉRREO",
-                      "vacinação influenza jp": "TÉRREO",
-                      "vacinação prevenar 13- jp": "TÉRREO",
-                      "vacinacao herpes zoster": "TÉRREO",
-                      "vacina herpes zoster": "TÉRREO",
-                      "teste ergométrico": "TÉRREO",
-                      ecocardiograma: "TÉRREO",
-                      mapa: "TÉRREO",
-                      holter: "TÉRREO",
-                      "exame antígeno": "TÉRREO",
-                      "procedimento dermatologico": "TÉRREO",
-                      "procedimento oftalmologico": "TÉRREO",
-                      oftalmologista: "TÉRREO",
-                      "oftalmologista infantil": "TÉRREO",
-                      ginecologista: "TÉRREO",
-                      obstetra: "TÉRREO",
-                      "ginecologista / obstetra": "TÉRREO",
-                      urologista: "TÉRREO",
-                      otorrinolaringologista: "TÉRREO",
-                      ortopedista: "TÉRREO",
-                      neurologista: "TÉRREO",
-                      "neurologista infantil": "TÉRREO",
-                      neurocirurgiao: "TÉRREO",
-                      endocrinologista: "TÉRREO",
-                      "endocrinologia infantil": "TÉRREO",
-                      gastroenterologista: "TÉRREO",
-                      endoscopista: "TÉRREO",
-                      "endoscopia e colonoscopia": "TÉRREO",
-                      pneumologista: "TÉRREO",
-                      reumatologista: "TÉRREO",
-                      nefrologista: "TÉRREO",
-                      infectologista: "TÉRREO",
-                      hematologista: "TÉRREO",
-                      "oncologista clinico": "TÉRREO",
-                      "oncologista cirurgico": "TÉRREO",
-                      "oncologista pediatrico": "TÉRREO",
-                      radiologista: "TÉRREO",
-                      radioterapeuta: "TÉRREO",
-                      anestesista: "TÉRREO",
-                      cirurgiao: "TÉRREO",
-                      "cirurgiao cardiovascular": "TÉRREO",
-                      "cirurgiao de cabeca e pescoco": "TÉRREO",
-                      "cirurgiao de mao": "TÉRREO",
-                      "cirurgiao do aparelho digestivo": "TÉRREO",
-                      "cirurgiao pediatrico": "TÉRREO",
-                      "cirurgiao plastico": "TÉRREO",
-                      "cirurgiao toracico": "TÉRREO",
-                      "cirurgiao vascular": "TÉRREO",
-                      angiologista: "TÉRREO",
-                      "medico do trabalho": "TÉRREO",
-                      "medico legista": "TÉRREO",
-                      "medico nuclear": "TÉRREO",
-                      "medico sad": "TÉRREO",
-                      plantonista: "TÉRREO",
-                      "pericias medicas": "TÉRREO",
-                      "saude da familia": "TÉRREO",
-                      "geral comunitario": "TÉRREO",
-                      geriatra: "TÉRREO",
-                      pediatra: "TÉRREO",
-                      mastologista: "TÉRREO",
-                      proctologista: "TÉRREO",
-                      fisiatra: "TÉRREO",
-                      "alergista/imunologista": "TÉRREO",
-                      anatopatologista: "TÉRREO",
-                      broncoesofalogista: "TÉRREO",
-                      cancerologista: "TÉRREO",
-                      citopatologista: "TÉRREO",
-                      "medicina esportiva/ nutrologia": "TÉRREO",
-                      "geneticista clinico": "TÉRREO",
-                      hansenologista: "TÉRREO",
-                      hemoterapeuta: "TÉRREO",
-                      homeopata: "TÉRREO",
-                      intensivista: "TÉRREO",
-                      "patologista clinico": "TÉRREO",
-                      sanitarista: "TÉRREO",
-                      veterinario: "TÉRREO",
-                      acupunturista: "TÉRREO",
-                      nutrologista: "TÉRREO",
-                      "nutricionista (saude em acao cg)": "TÉRREO",
-                      "nutricionista (saude em acao patos)": "TÉRREO",
-                      "outros profissionais nao classificaveis nessa tabela (padrao)":
-                        "TÉRREO",
-                      "sem preferência": "TÉRREO",
-                      procedimento: "TÉRREO",
-                      sad: "TÉRREO",
-                      medico: "TÉRREO",
-                    };
-
-                    for (const [key, value] of Object.entries(localMap)) {
-                      if (especialidade.includes(key)) {
-                        return value;
-                      }
-                    }
-
-                    if (consulta.localidadePainel) {
-                      return consulta.localidadePainel;
-                    }
-
-                    return "Local não informado";
-                  })()}
-                </p>
-
-                {/* MENSAGEM DE ERRO - Exibe quando há erro de autorização */}
-                {consulta.erroAutorizacao === true &&
-                  consulta.mensagemErroAutorizacao && (
-                    <p className="text-xs text-red-500 mt-1 max-w-[90%] break-words">
-                      {consulta.mensagemErroAutorizacao}
-                    </p>
-                  )}
-              </div>
-
-              {/* BOTÃO - Fixo na parte inferior */}
-              {autorizacaoConcluida ? null : processandoSenha ? (
-                <AutorizacaoPreparandoCard />
-              ) : tokenInlineVisivel ? (
-                <div className="shrink-0">
-                  <TokenInlinePanel
-                    consulta={consulta}
-                    tokenDigitado={tokenDigitado}
-                    tecladoTokenAberto={tecladoTokenAberto}
-                    reenviandoToken={reenviandoToken}
-                    validandoToken={validandoToken}
-                    reenvioDesabilitadoPorErro={reenvioDesabilitadoPorErro}
-                    segundosRestantesReenvio={segundosRestantesReenvio}
-                    onTokenChange={(indiceToken, valor) =>
-                      atualizarTokenDigitadoInline(
-                        consulta.idEvento,
-                        indiceToken,
-                        valor,
-                      )
-                    }
-                    onTokenKeyDown={(indiceToken, event) =>
-                      handleTokenInlineKeyDown(
-                        consulta.idEvento,
-                        indiceToken,
-                        event,
-                      )
-                    }
-                    onTokenPaste={(event) =>
-                      handleTokenInlinePaste(consulta.idEvento, event)
-                    }
-                    onAbrirTeclado={(indiceToken) =>
-                      abrirTecladoTokenInline(consulta.idEvento, indiceToken)
-                    }
-                    onFecharTeclado={fecharTecladoTokenInline}
-                    onPreencherDigito={(digito) =>
-                      preencherTokenViaTecladoInline(consulta, digito)
-                    }
-                    onLimparToken={() =>
-                      limparTokenViaTecladoInline(consulta.idEvento)
-                    }
-                    onReenviar={() => void reenviarTokenInline(consulta)}
-                    onValidar={() => void validarTokenInline(consulta)}
-                  />
-                </div>
-              ) : podeSeguir ? (
-                <button
-                  onClick={() =>
-                    deveProcurarRecepcao ? undefined : void abrirEtapaSenha(consulta)
-                  }
-                  disabled={deveProcurarRecepcao}
-                  className={`mt-1.5 h-10 shrink-0 w-full px-4 text-[0.85rem] font-black text-white shadow-[0_8px_16px_rgba(0,51,141,0.14)] transition md:text-[1.3rem] ${
-                    deveProcurarRecepcao
-                      ? "cursor-not-allowed border-4 border-red-800 bg-red-600 text-white shadow-none"
-                      : "bg-[#00338d] hover:bg-[#00286f]"
-                  }`}
-                >
-                  {deveProcurarRecepcao ? "PROCURE A RECEPÇÃO" : "INICIAR CONSULTA"}
-                </button>
-              ) : (
-                <div
-                  className={`flex h-10 shrink-0 w-full items-center justify-center px-3 text-center text-[0.8rem] font-bold ${
-                    faltouConsulta
-                      ? "bg-red-50 text-red-600"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {faltouConsulta
-                    ? "Atendimento encerrado"
-                    : "Atendimento indisponível"}
-                </div>
-              )}
-            </div>
-          </article>
-        );
-      })()
-    : null}
-</div>
-                    </div>
-
-                    <ConsultaFluxoNavegacao
-                      podeVoltar={indiceConsultaAtual > 0}
-                      podeAvancar={indiceConsultaAtual < indiceMaximoLiberado}
-                      onVoltar={() =>
-                        setIndiceConsultaAtual((valorAtual) =>
-                          Math.max(valorAtual - 1, 0),
-                        )
-                      }
-                      onAvancar={() =>
-                        setIndiceConsultaAtual((valorAtual) =>
-                          Math.min(valorAtual + 1, indiceMaximoLiberado),
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-              </section>
-            </>
+                    );
+                  })()
+                : null}
+            </BeneficiarioConsultasScreen>
           )}
           {etapaTela === "senha" && consultaSelecionada && (
-            <section className="w-full">
-              <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-5 text-white md:px-8 md:py-7">
-                <div className="mx-auto max-w-6xl text-center md:text-left">
-                  <div className="text-center md:text-left">
-                    <h2 className="text-[1.18rem] font-black tracking-tight text-white md:text-[1.72rem]">
-                      {"AUTORIZAÇÃO"}
-                    </h2>
-                    <p className="mt-2 text-[1.6rem] text-blue-100">
-                      {
-                        "Confira o atendimento. A senha do painel será gerada e vinculada automaticamente antes de seguir, para autorização."
-                      }
-                    </p>
-                    <p className="mt-2 text-[0.92rem] font-bold uppercase tracking-[0.12em] text-blue-100 md:text-[1rem]">
-                      {dataConsultasCabecalho &&
-                      dataConsultasCabecalho !== "--/--/----"
-                        ? dataConsultasCabecalho
-                        : "Data do atendimento"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-4 py-5 md:px-8 md:py-6">
-                <div className="mx-auto max-w-5xl space-y-4">
-                  <AtendimentoResumoCard
-                    data={formatarData(consultaSelecionada.dataInicio)}
-                    hora={formatarHora(consultaSelecionada.horaInicio)}
-                    profissionalNome={consultaSelecionada.profissionalNome}
-                    especialidadeNome={consultaSelecionada.especialidadeNome}
-                    localidadePainel={consultaSelecionada.localidadePainel}
-                    senhaPainel={consultaSelecionada.senhaPainel}
-                    senhaPainelDigitada={
-                      senhasPainelDigitadas[consultaSelecionada.idEvento] ?? ""
-                    }
-                    onSenhaPainelChange={(value) =>
-                      atualizarTextoSenhaPainel(
-                        consultaSelecionada.idEvento,
-                        value,
-                      )
-                    }
-                  />
-
-                  <SenhaAutorizacaoAcoes
-                    autorizado={consultaSelecionada.autorizado}
-                    tokenValidado={consultaSelecionada.tokenValidado}
-                    senhaPainel={consultaSelecionada.senhaPainel}
-                    onVincularSenha={() =>
-                      void vincularSenhaPainel(consultaSelecionada)
-                    }
-                    onConfirmarToken={() =>
-                      void abrirValidacaoTokenDireta(consultaSelecionada)
-                    }
-                    onSair={voltarParaConsultas}
-                  />
-                </div>
-              </div>
-            </section>
+            <BeneficiarioSenhaScreen
+              consultaSelecionada={consultaSelecionada}
+              dataConsultasCabecalho={dataConsultasCabecalho}
+              formatarData={formatarData}
+              formatarHora={formatarHora}
+              senhaPainelDigitada={
+                senhasPainelDigitadas[consultaSelecionada.idEvento] ?? ""
+              }
+              atualizarTextoSenhaPainel={atualizarTextoSenhaPainel}
+              vincularSenhaPainel={vincularSenhaPainel}
+              abrirValidacaoTokenDireta={abrirValidacaoTokenDireta}
+              voltarParaConsultas={voltarParaConsultas}
+            />
           )}
         </div>
 
