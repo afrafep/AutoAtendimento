@@ -12,11 +12,13 @@ function getSisclinicBaseUrl() {
 
 function getSisclinicLoginToken() {
   const token =
-    process.env.SISCLINIC_LOGIN_TOKEN || process.env.SISCLINIC_API_TOKEN;
+    process.env.SISCLINIC_LOGIN_TOKEN ||
+    process.env.VITE_SISCLINIC_LOGIN_TOKEN ||
+    process.env.SISCLINIC_API_TOKEN;
 
   if (!token) {
     throw new Error(
-      "Missing SISCLINIC_LOGIN_TOKEN (or legacy SISCLINIC_API_TOKEN)",
+      "Missing SISCLINIC_LOGIN_TOKEN, VITE_SISCLINIC_LOGIN_TOKEN (or legacy SISCLINIC_API_TOKEN)",
     );
   }
 
