@@ -585,7 +585,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }
 
     if (consultaNaoRealizada) {
-      return "Consulta não finalizada, mas próxima consulta habilitada.";
+      return "Consulta não finalizada, mas próxima consulta foi liberada.";
     }
 
     return isAutorizada
