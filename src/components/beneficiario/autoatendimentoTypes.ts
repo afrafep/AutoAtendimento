@@ -45,6 +45,20 @@ export interface ConsultaCardAgrupado {
   agrupadoUltrassom: boolean;
 }
 
+export interface ConsultaFluxoItem {
+  cardConsulta: ConsultaCardAgrupado;
+  consulta: ConsultaAutoAtendimento;
+  indice: number;
+  etapaAtual: number;
+  total: number;
+  autorizado: boolean;
+  tokenValidado: boolean;
+  guiaGerada: boolean;
+  senhaAutorizacaoPreenchida: boolean;
+  tokenEnviado: boolean;
+  autorizacaoConcluida: boolean;
+}
+
 export interface TokenErroModalState {
   idEvento: number;
   titulo: string;
