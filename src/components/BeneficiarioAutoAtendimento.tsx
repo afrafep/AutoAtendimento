@@ -567,6 +567,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     const consultaAtual = consultaFluxoAtual;
     const isAutorizada = consultaAtual?.autorizacaoConcluida;
     const isUltimaConsulta = indiceConsultaAtual === totalConsultas - 1;
+    const statusConsultaAtual = String(
+      consultaAtual?.consulta.statusAgendamento || "",
+    ).toUpperCase();
+    const consultaNaoRealizada = statusConsultaAtual === "FALTOU";
 
     if (totalConsultas === 1) {
       return isAutorizada
@@ -578,6 +582,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       return isAutorizada
         ? "✅ Todas as consultas autorizadas! Aguarde o atendimento."
         : "Finalize o autoatendimento para liberar a última consulta.";
+    }
+
+    if (consultaNaoRealizada) {
+      return "Consulta não finalizada, mas próxima consulta habilitada.";
     }
 
     return isAutorizada
@@ -2373,6 +2381,3 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 };
 
 export default BeneficiarioAutoAtendimento;
-
-
-
