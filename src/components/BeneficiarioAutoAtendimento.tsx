@@ -343,53 +343,6 @@ const normalizarMensagemTokenInline = (mensagem?: string) => {
   return texto;
 };
 
-type FullscreenElementComVendor = HTMLElement & {
-  webkitRequestFullscreen?: () => Promise<void> | void;
-  msRequestFullscreen?: () => Promise<void> | void;
-};
-
-type DocumentComFullscreenVendor = Document & {
-  webkitFullscreenElement?: Element | null;
-  msFullscreenElement?: Element | null;
-};
-
-const obterElementoFullscreenAtual = () => {
-  if (typeof document === "undefined") return null;
-
-  const documento = document as DocumentComFullscreenVendor;
-  return (
-    document.fullscreenElement ||
-    documento.webkitFullscreenElement ||
-    documento.msFullscreenElement ||
-    null
-  );
-};
-
-const solicitarFullscreenAutomatico = async () => {
-  if (typeof document === "undefined") return;
-  if (obterElementoFullscreenAtual()) return;
-
-  const elemento = document.documentElement as FullscreenElementComVendor;
-
-  try {
-    if (typeof elemento.requestFullscreen === "function") {
-      await elemento.requestFullscreen();
-      return;
-    }
-
-    if (typeof elemento.webkitRequestFullscreen === "function") {
-      await elemento.webkitRequestFullscreen();
-      return;
-    }
-
-    if (typeof elemento.msRequestFullscreen === "function") {
-      await elemento.msRequestFullscreen();
-    }
-  } catch {
-    // Alguns navegadores exigem gesto do usuário antes de permitir fullscreen.
-  }
-};
-
 const BeneficiarioAutoAtendimento: React.FC = () => {
   const locaisProfissionaisPorDataCacheRef = useRef<
     Record<string, Promise<LocalProfissionalDia[]>>
@@ -586,7 +539,15 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     let maiorIndiceLiberado = 0;
 
     cardsConsultasFluxo.forEach((item, indice) => {
-      if (item.autorizacaoConcluida) {
+      const statusAtual = String(
+        item.consulta.statusAgendamento || "",
+      ).toUpperCase();
+      const podeLiberarProximaConsulta =
+        item.autorizacaoConcluida ||
+        statusAtual === "FALTOU" ||
+        statusAtual === "ATENDIDO";
+
+      if (podeLiberarProximaConsulta) {
         maiorIndiceLiberado = Math.min(
           indice + 1,
           cardsConsultasFluxo.length - 1,
@@ -618,6 +579,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       consultaAtual?.consulta.statusAgendamento || "",
     ).toUpperCase();
     const consultaNaoRealizada = statusConsultaAtual === "FALTOU";
+    const consultaAtendida = statusConsultaAtual === "ATENDIDO";
 
     if (totalConsultas === 1) {
       return isAutorizada
@@ -632,7 +594,11 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }
 
     if (consultaNaoRealizada) {
-      return "Consulta não finalizada, mas próxima consulta foi liberada.";
+      return "Consulta não finalizada, próxima consulta liberada.";
+    }
+
+    if (consultaAtendida) {
+      return "Autorizado via Aptools";
     }
 
     return isAutorizada
@@ -787,36 +753,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
 
     setHidratado(true);
   }, []);
-
-  useEffect(() => {
-    if (!hidratado) return;
-
-    void solicitarFullscreenAutomatico();
-
-    const tentarFullscreenNaInteracao = () => {
-      void solicitarFullscreenAutomatico();
-    };
-
-    window.addEventListener("pointerdown", tentarFullscreenNaInteracao, {
-      passive: true,
-    });
-    window.addEventListener("touchstart", tentarFullscreenNaInteracao, {
-      passive: true,
-    });
-    window.addEventListener("keydown", tentarFullscreenNaInteracao);
-
-    return () => {
-      window.removeEventListener(
-        "pointerdown",
-        tentarFullscreenNaInteracao,
-      );
-      window.removeEventListener(
-        "touchstart",
-        tentarFullscreenNaInteracao,
-      );
-      window.removeEventListener("keydown", tentarFullscreenNaInteracao);
-    };
-  }, [hidratado]);
 
   useEffect(() => {
     if (cardsConsultasFluxo.length === 0) {
@@ -2322,8 +2258,6 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
 
   const abrirEntradaCpf = () => {
     if (animandoSaidaTelaBoasVindasCpf) return;
-
-    void solicitarFullscreenAutomatico();
     setAnimandoSaidaTelaBoasVindasCpf(true);
 
     window.setTimeout(() => {
