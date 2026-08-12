@@ -539,7 +539,13 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     let maiorIndiceLiberado = 0;
 
     cardsConsultasFluxo.forEach((item, indice) => {
-      if (item.autorizacaoConcluida) {
+      const statusAtual = String(
+        item.consulta.statusAgendamento || "",
+      ).toUpperCase();
+      const podeAvancarMesmoSemConclusao =
+        statusAtual === "ATENDIDO" || statusAtual === "FALTOU";
+
+      if (item.autorizacaoConcluida || podeAvancarMesmoSemConclusao) {
         maiorIndiceLiberado = Math.min(
           indice + 1,
           cardsConsultasFluxo.length - 1,
@@ -567,6 +573,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     const consultaAtual = consultaFluxoAtual;
     const isAutorizada = consultaAtual?.autorizacaoConcluida;
     const isUltimaConsulta = indiceConsultaAtual === totalConsultas - 1;
+    const statusConsultaAtual = String(
+      consultaAtual?.consulta.statusAgendamento || "",
+    ).toUpperCase();
+    const consultaAtendida = statusConsultaAtual === "ATENDIDO";
 
     if (totalConsultas === 1) {
       return isAutorizada
@@ -578,6 +588,10 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       return isAutorizada
         ? "✅ Todas as consultas autorizadas! Aguarde o atendimento."
         : "Finalize o autoatendimento para liberar a última consulta.";
+    }
+
+    if (consultaAtendida) {
+      return "✅ Autorizado(Aptools) e próxima consulta liberada";
     }
 
     return isAutorizada
