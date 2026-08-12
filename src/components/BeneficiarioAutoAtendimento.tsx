@@ -590,7 +590,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         : "Finalize o autoatendimento para liberar a última consulta.";
     }
 
-    if (consultaAtendida) {
+    if (consultaAtendida && !isAutorizada) {
       return "✅ Autorizado(Aptools) e próxima consulta liberada";
     }
 
