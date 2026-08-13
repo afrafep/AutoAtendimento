@@ -11,6 +11,42 @@ import BeneficiarioConsultasScreen from "./beneficiario/BeneficiarioConsultasScr
 import BeneficiarioSenhaScreen from "./beneficiario/BeneficiarioSenhaScreen";
 import ConsultaFluxoAtualPanel from "./beneficiario/ConsultaFluxoAtualPanel";
 import ModalAutorizacaoBeneficiario from "./beneficiario/ModalAutorizacaoBeneficiario";
+import {
+  BLOQUEIO_REENVIO_TOKEN_MS,
+  CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
+  CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS,
+  criarEventoBaseDaConsulta,
+  ehMedicoUltrassonografista,
+  EtapaTelaAutoAtendimento,
+  extrairRetornoApiToken,
+  formatarCpf,
+  formatarData,
+  formatarDataAtual,
+  formatarHora,
+  formatarHoraAtual,
+  formatarStatus,
+  LIMITE_INTERVALO_ULTRASSOM_MINUTOS,
+  lerEstadoTelaPersistido,
+  limparEstadoTelaPersistido,
+  LocalProfissionalDia,
+  normalizarBoolean,
+  normalizarCpf,
+  normalizarMensagemTokenInline,
+  obterExecutanteConsulta,
+  obterFaixaHorariosConsultas,
+  obterTextoAguardarChamada,
+  ordenarPorHora,
+  possuiGuiaGerada,
+  possuiSenhaAutorizacao,
+  resolveNumeroGuiaOperadoraInline,
+  salvarEstadoTelaPersistido,
+  TEMPO_INATIVIDADE_MS,
+  TEMPO_RETORNO_TELA_CPF_MS,
+  toSafeTokenString,
+  TokenFeedbackInline,
+  converterHoraParaMinutos,
+  validarCpf,
+} from "./beneficiario/autoatendimentoHelpers";
 import type {
   ConsultaAutoAtendimento,
   ConsultaCardAgrupado,
@@ -19,329 +55,6 @@ import type {
 } from "./beneficiario/autoatendimentoTypes";
 import { api } from "../config/configApi";
 import { inteliteSenhaService } from "../services/inteliteSenhaService";
-import type { AgendaEvento } from "../types/agenda";
-
-const normalizarCpf = (valor?: string) =>
-  String(valor || "").replace(/\D/g, "");
-
-const obterTextoAguardarChamada = (sexo?: string | null) => {
-  const sexoNormalizado = String(sexo || "").trim().toUpperCase();
-
-  if (sexoNormalizado === "F") {
-    return "Aguarde ser chamada no painel.";
-  }
-
-  if (sexoNormalizado === "M") {
-    return "Aguarde ser chamado no painel.";
-  }
-
-  return "Aguarde ser chamado(a) no painel.";
-};
-
-const cpfPossuiDigitosRepetidos = (cpf: string) => /^(\d)\1{10}$/.test(cpf);
-
-const validarCpf = (valor?: string) => {
-  const cpf = normalizarCpf(valor);
-
-  if (cpf.length !== 11) return false;
-  if (cpfPossuiDigitosRepetidos(cpf)) return false;
-
-  let soma = 0;
-  for (let i = 0; i < 9; i += 1) {
-    soma += Number(cpf[i]) * (10 - i);
-  }
-
-  let resto = (soma * 10) % 11;
-  if (resto === 10) resto = 0;
-  if (resto !== Number(cpf[9])) return false;
-
-  soma = 0;
-  for (let i = 0; i < 10; i += 1) {
-    soma += Number(cpf[i]) * (11 - i);
-  }
-
-  resto = (soma * 10) % 11;
-  if (resto === 10) resto = 0;
-  if (resto !== Number(cpf[10])) return false;
-
-  return true;
-};
-
-const formatarCpf = (valor?: string) => {
-  const cpfNumerico = normalizarCpf(valor).slice(0, 11);
-
-  if (cpfNumerico.length <= 3) return cpfNumerico;
-  if (cpfNumerico.length <= 6) {
-    return `${cpfNumerico.slice(0, 3)}.${cpfNumerico.slice(3)}`;
-  }
-  if (cpfNumerico.length <= 9) {
-    return `${cpfNumerico.slice(0, 3)}.${cpfNumerico.slice(3, 6)}.${cpfNumerico.slice(6)}`;
-  }
-
-  return `${cpfNumerico.slice(0, 3)}.${cpfNumerico.slice(3, 6)}.${cpfNumerico.slice(6, 9)}-${cpfNumerico.slice(9)}`;
-};
-
-const normalizarBoolean = (valor: unknown) => {
-  if (typeof valor === "boolean") return valor;
-  if (typeof valor === "number") return valor === 1;
-  const texto = String(valor ?? "")
-    .trim()
-    .toLowerCase();
-  if (texto === "1" || texto === "true") return true;
-  if (texto === "0" || texto === "false") return false;
-  return Boolean(valor);
-};
-
-const formatarHora = (hora?: string) =>
-  String(hora || "").slice(0, 5) || "--:--";
-
-const formatarStatus = (status?: string) => {
-  const statusSeguro = String(status || "").trim();
-  return statusSeguro || "NÃO INFORMADO";
-};
-
-const formatarData = (data?: string) => {
-  if (!data) return "--/--/----";
-  const [ano, mes, dia] = String(data).split("T")[0].split("-");
-  if (!ano || !mes || !dia) return "--/--/----";
-  return `${dia}/${mes}/${ano}`;
-};
-
-const formatarDataAtual = () => {
-  const hoje = new Date();
-  const dia = String(hoje.getDate()).padStart(2, "0");
-  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-  const ano = String(hoje.getFullYear());
-  return `${dia}/${mes}/${ano}`;
-};
-
-const formatarHoraAtual = () => {
-  const agora = new Date();
-  const horas = String(agora.getHours()).padStart(2, "0");
-  const minutos = String(agora.getMinutes()).padStart(2, "0");
-  return `${horas}:${minutos}`;
-};
-
-const TEMPO_INATIVIDADE_MS = 60 * 1000;
-const TEMPO_RETORNO_TELA_CPF_MS = 60 * 1000;
-const CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS = 20;
-const CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS = 0;
-const BLOQUEIO_REENVIO_TOKEN_MS = 23 * 1000;
-
-const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
-  [...consultas].sort((a, b) =>
-    String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
-  );
-
-const converterHoraParaMinutos = (hora?: string | null) => {
-  const horaFormatada = String(hora || "").trim();
-  if (!horaFormatada) return null;
-
-  const partes = horaFormatada.split(":");
-  const horas = Number(partes[0]);
-  const minutos = Number(partes[1]);
-
-  if (Number.isNaN(horas) || Number.isNaN(minutos)) return null;
-
-  return horas * 60 + minutos;
-};
-
-const LIMITE_INTERVALO_ULTRASSOM_MINUTOS = 60;
-
-const ehMedicoUltrassonografista = (consulta: ConsultaAutoAtendimento) =>
-  String(consulta.especialidadeNome || "")
-    .trim()
-    .toUpperCase()
-    .includes("MEDICO ULTRASSONOGRAFISTA");
-
-const obterExecutanteConsulta = (consulta: ConsultaAutoAtendimento) =>
-  String(
-    consulta.idProfissionalRealizaProcedimento || consulta.idProfissional || "",
-  );
-
-const obterFaixaHorariosConsultas = (consultas: ConsultaAutoAtendimento[]) => {
-  if (!consultas.length) return "";
-
-  const consultasOrdenadas = [...consultas].sort((a, b) =>
-    String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
-  );
-
-  const primeiraConsulta = consultasOrdenadas[0];
-  const ultimaConsulta = consultasOrdenadas[consultasOrdenadas.length - 1];
-  const horarioInicial = formatarHora(primeiraConsulta?.horaInicio);
-  const horarioFinal = formatarHora(ultimaConsulta?.horaInicio);
-
-  if (!horarioInicial) return "";
-  if (!horarioFinal || horarioFinal === horarioInicial) return horarioInicial;
-
-  return `${horarioInicial} até ${horarioFinal}`;
-};
-
-const criarEventoBaseDaConsulta = (
-  consulta: ConsultaAutoAtendimento,
-): AgendaEvento => ({
-  idEvento: Number(consulta.idEvento),
-  horaInicio: String(consulta.horaInicio || ""),
-  horaFim: String(consulta.horaFim || consulta.horaInicio || ""),
-  descricaoEvento: String(
-    consulta.descricaoEvento || consulta.nomeEvento || "",
-  ),
-  categoria: String(consulta.categoria || "CONSULTA"),
-  nomeEvento: String(
-    consulta.nomeEvento || consulta.descricaoEvento || "CONSULTA",
-  ),
-  corEvento: String(consulta.corEvento || "#e1e1e1"),
-  paciente: {
-    nmPaciente: String(consulta.pacienteNome || ""),
-    dtNascimento: "",
-    nuCpf: String(consulta.nuCpf || ""),
-    cdPaciente: consulta.cdPaciente || undefined,
-    nrCarteiraPlano: String(consulta.nrCarteiraPlano || ""),
-  },
-  profissional: {
-    idProfissional: consulta.idProfissional,
-    nmProfissional: String(consulta.profissionalNome || ""),
-    especialidade: {
-      dsEspecialidade: String(consulta.especialidadeNome || ""),
-    },
-  },
-  celularContato: String(consulta.celularContato || ""),
-  statusAgendamento: String(consulta.statusAgendamento || "AGENDADO"),
-  dataInicio: String(consulta.dataInicio || ""),
-  nuCpf: String(consulta.nuCpf || ""),
-  localAgendamento: consulta.localAgendamento || null,
-  autorizado: Boolean(consulta.autorizado),
-  retorno: Boolean(consulta.retorno),
-  tokenValidado: Boolean(consulta.tokenValidado),
-  senhaAutorizacao: consulta.senhaAutorizacao || null,
-  senhaPainel: consulta.senhaPainel || null,
-  prioridadePainel: consulta.prioridadePainel || null,
-  localidadePainel: consulta.localidadePainel || null,
-  numeroGuiaGerado: consulta.numeroGuiaGerado || null,
-  numeroGuiaOperadora: consulta.numeroGuiaOperadora || null,
-  procedimentos: Array.isArray(consulta.procedimentos)
-    ? consulta.procedimentos
-    : [],
-  idProfissionalRealizaProcedimento:
-    consulta.idProfissionalRealizaProcedimento || undefined,
-});
-
-const CHAVE_ESTADO_TELA = "beneficiario:autoatendimento:estado-tela";
-
-interface EstadoTelaPersistido {
-  cpf: string;
-  pacienteNome: string;
-  consultas: ConsultaAutoAtendimento[];
-  etapaTela: "cpf" | "consultas";
-}
-
-type EtapaTelaAutoAtendimento = "boasVindas" | "cpf" | "consultas" | "senha";
-type LocalProfissionalDia = {
-  idProfissional?: number | string;
-  nomeLocal?: string;
-  nrLocal?: string;
-  status?: string;
-  data?: string;
-  periodo?: string;
-};
-
-type TokenFeedbackInline = {
-  tipo: "info" | "success" | "error";
-  mensagem: string;
-};
-
-const lerEstadoTelaPersistido = (): EstadoTelaPersistido | null => {
-  try {
-    if (typeof window === "undefined") return null;
-    const salvo = sessionStorage.getItem(CHAVE_ESTADO_TELA);
-    if (!salvo) return null;
-    const estado = JSON.parse(salvo);
-    if (!estado || typeof estado !== "object") return null;
-    return {
-      cpf: typeof estado.cpf === "string" ? estado.cpf : "",
-      pacienteNome:
-        typeof estado.pacienteNome === "string" ? estado.pacienteNome : "",
-      consultas: Array.isArray(estado.consultas)
-        ? estado.consultas.map((consulta: any) => ({
-            ...consulta,
-            autorizado: normalizarBoolean(consulta?.autorizado),
-            tokenValidado: normalizarBoolean(consulta?.tokenValidado),
-            retorno: normalizarBoolean(consulta?.retorno),
-          }))
-        : [],
-      etapaTela: estado.etapaTela === "consultas" ? "consultas" : "cpf",
-    };
-  } catch {
-    return null;
-  }
-};
-
-const salvarEstadoTelaPersistido = (estado: EstadoTelaPersistido) => {
-  try {
-    sessionStorage.setItem(CHAVE_ESTADO_TELA, JSON.stringify(estado));
-  } catch {}
-};
-
-const limparEstadoTelaPersistido = () => {
-  try {
-    sessionStorage.removeItem(CHAVE_ESTADO_TELA);
-  } catch {}
-};
-
-const toSafeTokenString = (value: unknown) => {
-  if (value == null) return "";
-  if (typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-    return String(
-      obj.value ?? obj.codigo ?? obj.id ?? obj.numero ?? obj.sigla ?? "",
-    ).trim();
-  }
-  return String(value).trim();
-};
-
-const toSafeTokenNumber = (value: unknown) => {
-  const normalized = toSafeTokenString(value);
-  const numeric = Number(normalized);
-  return Number.isFinite(numeric) ? numeric : 0;
-};
-
-const resolveNumeroGuiaOperadoraInline = (
-  senhaGuia: unknown,
-  numeroGuiaOperadora: unknown,
-) => {
-  const numeroDireto = toSafeTokenNumber(numeroGuiaOperadora);
-  if (numeroDireto > 0) return numeroDireto;
-
-  const senhaComoNumero = toSafeTokenNumber(senhaGuia);
-  if (senhaComoNumero > 0) return senhaComoNumero;
-
-  return 0;
-};
-
-const possuiGuiaGerada = (numeroGuiaGerado: unknown) =>
-  numeroGuiaGerado != null && String(numeroGuiaGerado).trim() !== "";
-
-const possuiSenhaAutorizacao = (senhaAutorizacao: unknown) =>
-  senhaAutorizacao != null && String(senhaAutorizacao).trim() !== "";
-
-const extrairRetornoApiToken = (data: any) => ({
-  status: toSafeTokenString(data?.status),
-  mensagem: toSafeTokenString(data?.mensagem || data?.message || data?.error),
-});
-
-const normalizarMensagemTokenInline = (mensagem?: string) => {
-  const texto = toSafeTokenString(mensagem);
-  const textoLower = texto.toLowerCase();
-
-  if (
-    textoLower.includes("token invalido") ||
-    textoLower.includes("token inválido") ||
-    textoLower.includes("ora-20400")
-  ) {
-    return "Token errado. Insira um token correto.";
-  }
-  return texto;
-};
 
 const BeneficiarioAutoAtendimento: React.FC = () => {
   const locaisProfissionaisPorDataCacheRef = useRef<
