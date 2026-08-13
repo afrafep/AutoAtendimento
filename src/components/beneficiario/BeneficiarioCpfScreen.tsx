@@ -153,10 +153,10 @@ const BeneficiarioCpfScreen: React.FC<BeneficiarioCpfScreenProps> = ({
                       <FaHandPointer className="text-[1.7rem] md:text-[2rem]" />
                     </span>
                     <p className="text-[1.35rem] font-black text-[#16357f] md:text-[2rem]">
-                      Toque na tela para digitar o CPF
+                      Toque ou deslize para começar
                     </p>
                     <p className="max-w-3xl text-[1rem] font-black leading-relaxed text-slate-700 md:text-[1.25rem]">
-                      Basta tocar em qualquer parte desta tela para abrir o campo do CPF automaticamente.
+                      Toque na tela ou deslize para cima para abrir o campo do CPF.
                     </p>
                   </div>
                 </div>
