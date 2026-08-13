@@ -29,7 +29,7 @@ interface BeneficiarioEtapaContentProps {
   apagarUltimoDigitoCpf: () => void;
   pacienteNome: string;
   dataConsultasCabecalho: string;
-  confirmarEncerramentoAutoAtendimento: () => Promise<void>;
+  confirmarEncerramentoAutoAtendimento: () => void;
   mensagemFluxoConsultas: string;
   cardsConsultasFluxo: ConsultaFluxoItem[];
   indiceConsultaAtual: number;
