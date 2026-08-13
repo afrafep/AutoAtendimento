@@ -86,7 +86,9 @@ interface BeneficiarioEtapaContentProps {
       abrirTokenInlineAposVinculo?: boolean;
     },
   ) => Promise<void>;
-  abrirValidacaoTokenDireta: (consulta: ConsultaAutoAtendimento) => void;
+  abrirValidacaoTokenDireta: (
+    consulta: ConsultaAutoAtendimento,
+  ) => Promise<void>;
   voltarParaConsultas: () => void;
 }
 
