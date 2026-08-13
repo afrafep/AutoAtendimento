@@ -4,13 +4,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import { TokenEnviar } from "./TokenEnviar";
 import { TokenValidar } from "./TokenValidar";
-import SessaoExpiracaoCard from "./beneficiario/SessaoExpiracaoCard";
-import TokenErroModal from "./beneficiario/TokenErroModal";
-import BeneficiarioCpfScreen from "./beneficiario/BeneficiarioCpfScreen";
-import BeneficiarioConsultasScreen from "./beneficiario/BeneficiarioConsultasScreen";
-import BeneficiarioSenhaScreen from "./beneficiario/BeneficiarioSenhaScreen";
-import ConsultaFluxoAtualPanel from "./beneficiario/ConsultaFluxoAtualPanel";
-import ModalAutorizacaoBeneficiario from "./beneficiario/ModalAutorizacaoBeneficiario";
+import BeneficiarioEtapaContent from "./beneficiario/BeneficiarioEtapaContent";
+import BeneficiarioAutorizacaoModalHost from "./beneficiario/BeneficiarioAutorizacaoModalHost";
+import BeneficiarioOverlayHost from "./beneficiario/BeneficiarioOverlayHost";
 import {
   BLOQUEIO_REENVIO_TOKEN_MS,
   CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
@@ -1987,113 +1983,97 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           className="pointer-events-none absolute inset-0 z-40 overflow-hidden"
         />
 
-        <TokenErroModal
+        <BeneficiarioOverlayHost
           tokenErroModal={tokenErroModal}
-          onClose={fecharModalErroTokenInline}
-        />
-
-        <SessaoExpiracaoCard
+          fecharModalErroTokenInline={fecharModalErroTokenInline}
           mostrarModalInatividade={mostrarModalInatividade}
           segundosRestantesInatividade={segundosRestantesInatividade}
           formatarTempoSessao={formatarTempoSessao}
-          onContinuar={reiniciarTemporizadorSessao}
+          reiniciarTemporizadorSessao={reiniciarTemporizadorSessao}
         />
 
-        <div className="flex w-full flex-1 transition-all duration-200">
-          {etapaTela === "cpf" && (
-            <BeneficiarioCpfScreen
-              mostrarTelaBoasVindasCpf={mostrarTelaBoasVindasCpf}
-              animandoSaidaTelaBoasVindasCpf={animandoSaidaTelaBoasVindasCpf}
-              abrirEntradaCpf={abrirEntradaCpf}
-              dataCabecalhoAtual={dataCabecalhoAtual}
-              horaCabecalhoAtual={horaCabecalhoAtual}
-              inputCpfRef={inputCpfRef}
-              cpf={cpf}
-              handleCpfChange={handleCpfChange}
-              handleCpfKeyDown={handleCpfKeyDown}
-              handleCpfPaste={handleCpfPaste}
-              buscarConsultas={buscarConsultas}
-              setMostrarTecladoCpf={setMostrarTecladoCpf}
-              mostrarTecladoCpf={mostrarTecladoCpf}
-              loading={loading}
-              adicionarDigitoCpf={adicionarDigitoCpf}
-              apagarUltimoDigitoCpf={apagarUltimoDigitoCpf}
-            />
-          )}
+        <BeneficiarioEtapaContent
+          etapaTela={etapaTela}
+          mostrarTelaBoasVindasCpf={mostrarTelaBoasVindasCpf}
+          animandoSaidaTelaBoasVindasCpf={animandoSaidaTelaBoasVindasCpf}
+          abrirEntradaCpf={abrirEntradaCpf}
+          dataCabecalhoAtual={dataCabecalhoAtual}
+          horaCabecalhoAtual={horaCabecalhoAtual}
+          inputCpfRef={inputCpfRef}
+          cpf={cpf}
+          handleCpfChange={handleCpfChange}
+          handleCpfKeyDown={handleCpfKeyDown}
+          handleCpfPaste={handleCpfPaste}
+          buscarConsultas={buscarConsultas}
+          setMostrarTecladoCpf={setMostrarTecladoCpf}
+          mostrarTecladoCpf={mostrarTecladoCpf}
+          loading={loading}
+          adicionarDigitoCpf={adicionarDigitoCpf}
+          apagarUltimoDigitoCpf={apagarUltimoDigitoCpf}
+          pacienteNome={pacienteNome}
+          dataConsultasCabecalho={dataConsultasCabecalho}
+          confirmarEncerramentoAutoAtendimento={
+            confirmarEncerramentoAutoAtendimento
+          }
+          mensagemFluxoConsultas={mensagemFluxoConsultas}
+          cardsConsultasFluxo={cardsConsultasFluxo}
+          indiceConsultaAtual={indiceConsultaAtual}
+          indiceMaximoLiberado={indiceMaximoLiberado}
+          setIndiceConsultaAtual={setIndiceConsultaAtual}
+          consultaFluxoAtual={consultaFluxoAtual}
+          consultaProcessandoSenhaId={consultaProcessandoSenhaId}
+          consultaTokenAbertaId={consultaTokenAbertaId}
+          tokenDigitadoPorConsulta={tokenDigitadoPorConsulta}
+          consultaReenviandoTokenId={consultaReenviandoTokenId}
+          consultaValidandoTokenId={consultaValidandoTokenId}
+          consultaErroToastAtivoId={consultaErroToastAtivoId}
+          consultaTecladoTokenId={consultaTecladoTokenId}
+          bloqueioReenvioAtePorConsulta={bloqueioReenvioAtePorConsulta}
+          agoraReenvioToken={agoraReenvioToken}
+          formatarHora={formatarHora}
+          formatarStatus={formatarStatus}
+          obterFaixaHorariosConsultas={obterFaixaHorariosConsultas}
+          atualizarTokenDigitadoInline={atualizarTokenDigitadoInline}
+          handleTokenInlineKeyDown={handleTokenInlineKeyDown}
+          handleTokenInlinePaste={handleTokenInlinePaste}
+          abrirTecladoTokenInline={abrirTecladoTokenInline}
+          fecharTecladoTokenInline={fecharTecladoTokenInline}
+          preencherTokenViaTecladoInline={preencherTokenViaTecladoInline}
+          limparTokenViaTecladoInline={limparTokenViaTecladoInline}
+          reenviarTokenInline={reenviarTokenInline}
+          validarTokenInline={validarTokenInline}
+          abrirEtapaSenha={abrirEtapaSenha}
+          consultaSelecionada={consultaSelecionada}
+          senhaPainelDigitada={
+            consultaSelecionada
+              ? senhasPainelDigitadas[consultaSelecionada.idEvento] ?? ""
+              : ""
+          }
+          formatarData={formatarData}
+          atualizarTextoSenhaPainel={atualizarTextoSenhaPainel}
+          vincularSenhaPainel={vincularSenhaPainel}
+          abrirValidacaoTokenDireta={abrirValidacaoTokenDireta}
+          voltarParaConsultas={voltarParaConsultas}
+        />
 
-          {etapaTela === "consultas" && (
-            <BeneficiarioConsultasScreen
-              pacienteNome={pacienteNome}
-              dataConsultasCabecalho={dataConsultasCabecalho}
-              onSair={() => void confirmarEncerramentoAutoAtendimento()}
-              mensagemFluxo={mensagemFluxoConsultas}
-              totalConsultas={cardsConsultasFluxo.length}
-              indiceConsultaAtual={indiceConsultaAtual}
-              indiceMaximoLiberado={indiceMaximoLiberado}
-              setIndiceConsultaAtual={setIndiceConsultaAtual}
-            >
-              <ConsultaFluxoAtualPanel
-                consultaFluxoAtual={consultaFluxoAtual}
-                consultaProcessandoSenhaId={consultaProcessandoSenhaId}
-                consultaTokenAbertaId={consultaTokenAbertaId}
-                tokenDigitadoPorConsulta={tokenDigitadoPorConsulta}
-                consultaReenviandoTokenId={consultaReenviandoTokenId}
-                consultaValidandoTokenId={consultaValidandoTokenId}
-                consultaErroToastAtivoId={consultaErroToastAtivoId}
-                consultaTecladoTokenId={consultaTecladoTokenId}
-                bloqueioReenvioAtePorConsulta={bloqueioReenvioAtePorConsulta}
-                agoraReenvioToken={agoraReenvioToken}
-                formatarHora={formatarHora}
-                formatarStatus={formatarStatus}
-                obterFaixaHorariosConsultas={obterFaixaHorariosConsultas}
-                atualizarTokenDigitadoInline={atualizarTokenDigitadoInline}
-                handleTokenInlineKeyDown={handleTokenInlineKeyDown}
-                handleTokenInlinePaste={handleTokenInlinePaste}
-                abrirTecladoTokenInline={abrirTecladoTokenInline}
-                fecharTecladoTokenInline={fecharTecladoTokenInline}
-                preencherTokenViaTecladoInline={preencherTokenViaTecladoInline}
-                limparTokenViaTecladoInline={limparTokenViaTecladoInline}
-                reenviarTokenInline={reenviarTokenInline}
-                validarTokenInline={validarTokenInline}
-                abrirEtapaSenha={abrirEtapaSenha}
-              />
-            </BeneficiarioConsultasScreen>
-          )}
-          {etapaTela === "senha" && consultaSelecionada && (
-            <BeneficiarioSenhaScreen
-              consultaSelecionada={consultaSelecionada}
-              dataConsultasCabecalho={dataConsultasCabecalho}
-              formatarData={formatarData}
-              formatarHora={formatarHora}
-              senhaPainelDigitada={
-                senhasPainelDigitadas[consultaSelecionada.idEvento] ?? ""
-              }
-              atualizarTextoSenhaPainel={atualizarTextoSenhaPainel}
-              vincularSenhaPainel={vincularSenhaPainel}
-              abrirValidacaoTokenDireta={abrirValidacaoTokenDireta}
-              voltarParaConsultas={voltarParaConsultas}
-            />
-          )}
-        </div>
-
-        {consultaAutorizacaoAberta && (
-          <ModalAutorizacaoBeneficiario
-            consulta={consultaAutorizacaoAberta}
-            onClose={() => {
-              setConsultaAutorizacaoAberta(null);
-              setIniciarAutorizacaoAutomaticamente(false);
-              setAbrirTokenInlineAposEnvio(false);
-            }}
-            onAfterFlow={() =>
-              finalizarFluxoTokenInline(consultaAutorizacaoAberta.idEvento)
-            }
-            iniciarAutomaticamente={iniciarAutorizacaoAutomaticamente}
-            abrirTokenInlineAposEnvio={abrirTokenInlineAposEnvio}
-            criarEventoBaseDaConsulta={criarEventoBaseDaConsulta}
-            formatarData={formatarData}
-            formatarHora={formatarHora}
-          />
-        )}
+        <BeneficiarioAutorizacaoModalHost
+          consulta={consultaAutorizacaoAberta}
+          onClose={() => {
+            setConsultaAutorizacaoAberta(null);
+            setIniciarAutorizacaoAutomaticamente(false);
+            setAbrirTokenInlineAposEnvio(false);
+          }}
+          onAfterFlow={() =>
+            consultaAutorizacaoAberta
+              ? finalizarFluxoTokenInline(consultaAutorizacaoAberta.idEvento)
+              : undefined
+          }
+          iniciarAutomaticamente={iniciarAutorizacaoAutomaticamente}
+          abrirTokenInlineAposEnvio={abrirTokenInlineAposEnvio}
+          criarEventoBaseDaConsulta={criarEventoBaseDaConsulta}
+          formatarData={formatarData}
+          formatarHora={formatarHora}
+        />
       </main>
     </div>
   );
