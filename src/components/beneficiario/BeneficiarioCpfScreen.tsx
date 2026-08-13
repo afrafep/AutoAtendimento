@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FaHandPointer, FaHeartbeat } from "react-icons/fa";
 import CpfTecladoNumerico from "./CpfTecladoNumerico";
 
@@ -38,8 +38,44 @@ const BeneficiarioCpfScreen: React.FC<BeneficiarioCpfScreenProps> = ({
   loading,
   adicionarDigitoCpf,
   apagarUltimoDigitoCpf,
-}) => (
-  <section className="flex min-h-[100dvh] w-full flex-col">
+}) => {
+  const touchStartYRef = useRef<number | null>(null);
+
+  const abrirCampoCpfPorGesto = () => {
+    if (!mostrarTelaBoasVindasCpf || animandoSaidaTelaBoasVindasCpf) return;
+    abrirEntradaCpf();
+  };
+
+  const handleWelcomeTouchStart = (
+    event: React.TouchEvent<HTMLButtonElement>,
+  ) => {
+    touchStartYRef.current = event.touches[0]?.clientY ?? null;
+  };
+
+  const handleWelcomeTouchMove = (
+    event: React.TouchEvent<HTMLButtonElement>,
+  ) => {
+    const startY = touchStartYRef.current;
+    const currentY = event.touches[0]?.clientY ?? null;
+
+    if (startY == null || currentY == null) return;
+
+    if (startY - currentY > 35) {
+      touchStartYRef.current = null;
+      abrirCampoCpfPorGesto();
+    }
+  };
+
+  const handleWelcomeWheel = (
+    event: React.WheelEvent<HTMLButtonElement>,
+  ) => {
+    if (event.deltaY > 18) {
+      abrirCampoCpfPorGesto();
+    }
+  };
+
+  return (
+    <section className="flex min-h-[100dvh] w-full flex-col">
     {!mostrarTelaBoasVindasCpf ? (
       <div className="w-full bg-[radial-gradient(circle_at_top_left,rgba(0,157,255,0.16),transparent_34%),linear-gradient(135deg,#00338d_0%,#0f4db7_52%,#1a78d6_100%)] px-4 py-6 text-white md:px-8 md:py-8">
         <div className="mx-auto max-w-5xl px-2 md:px-3">
@@ -78,6 +114,9 @@ const BeneficiarioCpfScreen: React.FC<BeneficiarioCpfScreenProps> = ({
             <button
               type="button"
               onClick={abrirEntradaCpf}
+              onTouchStart={handleWelcomeTouchStart}
+              onTouchMove={handleWelcomeTouchMove}
+              onWheel={handleWelcomeWheel}
               className={`group relative flex min-h-[24rem] h-full w-full flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/70 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(231,242,255,0.92)_48%,rgba(217,232,251,0.9)_100%)] px-5 py-4 text-left shadow-[0_18px_46px_rgba(15,23,42,0.08)] transition duration-500 hover:scale-[1.01] hover:shadow-[0_22px_52px_rgba(15,23,42,0.12)] md:min-h-[25.5rem] md:px-7 md:py-4 ${
                 animandoSaidaTelaBoasVindasCpf
                   ? "-translate-y-[110%] opacity-0"
@@ -164,6 +203,7 @@ const BeneficiarioCpfScreen: React.FC<BeneficiarioCpfScreenProps> = ({
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default BeneficiarioCpfScreen;
