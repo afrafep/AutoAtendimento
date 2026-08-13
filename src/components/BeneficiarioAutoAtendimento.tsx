@@ -2267,7 +2267,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eaf3ff_0%,#ffffff_28%,#eef6ff_100%)] text-slate-900">
+    <div className="autoatendimento-kiosk min-h-screen bg-[linear-gradient(180deg,#eaf3ff_0%,#ffffff_28%,#eef6ff_100%)] text-slate-900">
       <main className="relative z-10 flex min-h-screen w-full flex-col">
         <div
           id="beneficiario-modal-root"
