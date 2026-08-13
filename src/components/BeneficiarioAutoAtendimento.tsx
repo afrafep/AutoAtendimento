@@ -2066,7 +2066,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
           onAfterFlow={() =>
             consultaAutorizacaoAberta
               ? finalizarFluxoTokenInline(consultaAutorizacaoAberta.idEvento)
-              : undefined
+              : Promise.resolve()
           }
           iniciarAutomaticamente={iniciarAutorizacaoAutomaticamente}
           abrirTokenInlineAposEnvio={abrirTokenInlineAposEnvio}
