@@ -78,7 +78,14 @@ interface BeneficiarioEtapaContentProps {
   senhaPainelDigitada: string;
   formatarData: (data?: string) => string;
   atualizarTextoSenhaPainel: (idEvento: number, valor: string) => void;
-  vincularSenhaPainel: () => Promise<void>;
+  vincularSenhaPainel: (
+    consulta: ConsultaAutoAtendimento,
+    opcoes?: {
+      senhaPainelForcada?: string;
+      abrirAutorizacaoAposVinculo?: boolean;
+      abrirTokenInlineAposVinculo?: boolean;
+    },
+  ) => Promise<void>;
   abrirValidacaoTokenDireta: (consulta: ConsultaAutoAtendimento) => void;
   voltarParaConsultas: () => void;
 }
