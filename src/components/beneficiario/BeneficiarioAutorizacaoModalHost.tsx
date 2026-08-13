@@ -6,7 +6,7 @@ import type { AgendaEvento } from "../../types/agenda";
 interface BeneficiarioAutorizacaoModalHostProps {
   consulta: ConsultaAutoAtendimento | null;
   onClose: () => void;
-  onAfterFlow: () => void;
+  onAfterFlow: () => Promise<void>;
   iniciarAutomaticamente: boolean;
   abrirTokenInlineAposEnvio: boolean;
   criarEventoBaseDaConsulta: (
