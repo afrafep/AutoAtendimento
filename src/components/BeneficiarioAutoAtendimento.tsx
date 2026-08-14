@@ -835,6 +835,21 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     reiniciarTemporizadorTelaCpf();
   };
 
+  const limparCpfInvalido = () => {
+    setCpf("");
+    setPacienteNome("");
+    setConsultas([]);
+    setEtapaTela("cpf");
+    setMostrarTecladoCpf(true);
+    limparEstadoTelaPersistido();
+    reiniciarTemporizadorTelaCpf();
+
+    window.setTimeout(() => {
+      inputCpfRef.current?.focus();
+      inputCpfRef.current?.click();
+    }, 120);
+  };
+
   // Atualiza somente a consulta afetada sem depender de um novo fetch imediato.
   const atualizarConsultaLocal = (
     idEvento: number,
@@ -1125,6 +1140,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         html: "Digite um CPF válido.<br />Sequências como Ex: 111.111.111-11 não são permitidas.",
         icon: "warning",
       });
+      limparCpfInvalido();
       return;
     }
 
