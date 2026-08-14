@@ -8,6 +8,12 @@ import BeneficiarioEtapaContent from "./beneficiario/BeneficiarioEtapaContent";
 import BeneficiarioAutorizacaoModalHost from "./beneficiario/BeneficiarioAutorizacaoModalHost";
 import BeneficiarioOverlayHost from "./beneficiario/BeneficiarioOverlayHost";
 import {
+  buscarLocalidadePainelDoProfissional,
+  emitirSenhaPainelAutomaticamente,
+  preencherLocaisDasConsultas,
+} from "./beneficiario/beneficiarioAutoAtendimentoAgendaHelpers";
+import { createTokenInlineActions } from "./beneficiario/beneficiarioAutoAtendimentoTokenActions";
+import {
   BLOQUEIO_REENVIO_TOKEN_MS,
   CONTAGEM_AVISO_INATIVIDADE_SEGUNDOS,
   CONTAGEM_ENCERRAMENTO_AUTOMATICO_SEGUNDOS,
@@ -27,18 +33,14 @@ import {
   LocalProfissionalDia,
   normalizarBoolean,
   normalizarCpf,
-  normalizarMensagemTokenInline,
   obterExecutanteConsulta,
   obterFaixaHorariosConsultas,
-  obterTextoAguardarChamada,
   ordenarPorHora,
   possuiGuiaGerada,
   possuiSenhaAutorizacao,
-  resolveNumeroGuiaOperadoraInline,
   salvarEstadoTelaPersistido,
   TEMPO_INATIVIDADE_MS,
   TEMPO_RETORNO_TELA_CPF_MS,
-  toSafeTokenString,
   TokenFeedbackInline,
   converterHoraParaMinutos,
   validarCpf,
@@ -50,8 +52,9 @@ import type {
   TokenErroModalState,
 } from "./beneficiario/autoatendimentoTypes";
 import { api } from "../config/configApi";
-import { inteliteSenhaService } from "../services/inteliteSenhaService";
 
+// Orquestra o fluxo completo do kiosk: identificação por CPF, listagem das consultas,
+// emissão/vínculo de senha, autorização e validação de token.
 const BeneficiarioAutoAtendimento: React.FC = () => {
   const locaisProfissionaisPorDataCacheRef = useRef<
     Record<string, Promise<LocalProfissionalDia[]>>
@@ -131,6 +134,8 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultas.find((consulta) => consulta.idEvento === consultaSelecionadaId) ||
     null;
 
+  // Agrupa consultas em cards de navegação. Ultrassons próximos do mesmo executante
+  // são exibidos juntos para reduzir etapas repetidas no autoatendimento.
   const cardsConsultas = useMemo<ConsultaCardAgrupado[]>(() => {
     const cards: ConsultaCardAgrupado[] = [];
     const mapaEventos = new Map<string, ConsultaCardAgrupado>();
@@ -244,6 +249,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     [cardsConsultas],
   );
 
+  // Define até onde o usuário pode avançar no fluxo com base no que já foi concluído.
   const indiceMaximoLiberado = useMemo(() => {
     let maiorIndiceLiberado = 0;
 
@@ -277,6 +283,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     [cardsConsultas],
   );
 
+  // Gera a mensagem contextual exibida no topo conforme o progresso do atendimento.
   const mensagemFluxoConsultas = useMemo(() => {
     const totalConsultas = cardsConsultasFluxo.length;
     const consultaAtual = consultaFluxoAtual;
@@ -309,6 +316,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
   }, [cardsConsultasFluxo.length, consultaFluxoAtual, indiceConsultaAtual]);
   const dataCabecalhoAtual = useMemo(() => formatarDataAtual(), []);
 
+  // Converte o contador de inatividade para o formato mm:ss exibido no modal.
   const formatarTempoSessao = (segundos: number) => {
     const totalSegundos = Math.max(0, segundos);
     const minutos = String(Math.floor(totalSegundos / 60)).padStart(2, "0");
@@ -316,6 +324,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     return `${minutos}:${segundosRestantes}`;
   };
 
+  // Garante que apenas um ciclo de contagem de inatividade fique ativo por vez.
   const limparTemporizadoresSessao = () => {
     if (timeoutInatividadeRef.current) {
       window.clearTimeout(timeoutInatividadeRef.current);
@@ -348,6 +357,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setAnimandoSaidaTelaBoasVindasCpf(false);
   };
 
+  // Na tela de CPF, volta para a tela inicial caso o usuário abandone a digitação.
   const reiniciarTemporizadorTelaCpf = () => {
     limparTemporizadorTelaCpf();
 
@@ -368,6 +378,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     resetarTelaCpf();
   };
 
+  // Controla a sessão ativa após sair do CPF, exibindo aviso e encerrando por inatividade.
   const reiniciarTemporizadorSessao = () => {
     if (!hidratado) return;
 
@@ -413,6 +424,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }, 1000);
   };
 
+  // Mantém o relógio do cabeçalho sincronizado sem recriar estado a cada render.
   useEffect(() => {
     setHoraCabecalhoAtual(formatarHoraAtual());
     const intervaloHora = window.setInterval(() => {
@@ -422,6 +434,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     return () => window.clearInterval(intervaloHora);
   }, []);
 
+  // Atualiza o countdown visual do bloqueio de reenvio enquanto existir algum timer ativo.
   useEffect(() => {
     const existeBloqueioAtivo = Object.values(
       bloqueioReenvioAtePorConsulta,
@@ -437,6 +450,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     return () => window.clearInterval(intervaloReenvio);
   }, [bloqueioReenvioAtePorConsulta]);
 
+  // Reidrata o fluxo salvo em sessionStorage para evitar perder a etapa atual ao recarregar.
   useEffect(() => {
     const estadoPersistidoInicial = lerEstadoTelaPersistido();
 
@@ -456,6 +470,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     setHidratado(true);
   }, []);
 
+  // Mantém o índice atual dentro do intervalo permitido sempre que a lista muda.
   useEffect(() => {
     if (cardsConsultasFluxo.length === 0) {
       if (indiceConsultaAtual !== 0) {
@@ -473,6 +488,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
       setIndiceConsultaAtual(cardsConsultasFluxo.length - 1);
     }
   }, [cardsConsultasFluxo, indiceConsultaAtual, indiceMaximoLiberado]);
+  // Quando uma consulta já teve envio/autorização iniciado, abre o bloqueio de reenvio.
   useEffect(() => {
     if (etapaTela !== "consultas" || !consultaFluxoAtual) return;
 
@@ -502,6 +518,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultaFluxoAtual?.autorizacaoConcluida,
   ]);
 
+  // Abre automaticamente o teclado do token quando o fluxo entra na etapa de validação.
   useEffect(() => {
     if (etapaTela !== "consultas" || !consultaFluxoAtual) {
       return;
@@ -533,6 +550,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultaTokenAbertaId,
   ]);
 
+  // Alguns modais interrompem a contagem de inatividade para não expulsar o usuário no meio do fluxo.
   useEffect(() => {
     pausaInatividadeRef.current = possuiModalAbertoQuePausaInatividade;
 
@@ -544,6 +562,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }
   }, [possuiModalAbertoQuePausaInatividade]);
 
+  // Escuta interações globais para reiniciar a sessão enquanto o usuário navega nas consultas.
   useEffect(() => {
     if (!hidratado) return;
 
@@ -581,6 +600,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     consultaTecladoTokenId,
   ]);
 
+  // A tela de CPF tem um timeout próprio, separado da sessão completa do autoatendimento.
   useEffect(() => {
     if (!hidratado) return;
 
@@ -600,6 +620,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     return null;
   }
 
+  // Salva apenas o necessário para retomar a etapa de consultas após refresh.
   const persistirTelaConsultas = (
     cpfAtual: string,
     nomeAtual: string,
@@ -613,6 +634,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     });
   };
 
+  // Limpa todo o estado transitório do fluxo e devolve o kiosk à etapa inicial.
   const resetarTelaCpf = () => {
     limparTemporizadoresSessao();
     limparTemporizadorTelaCpf();
@@ -651,17 +673,6 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }));
   };
 
-  const limparMensagemTokenInline = (idEvento: number) => {
-    setTokenErroPorConsulta((prev) => ({
-      ...prev,
-      [idEvento]: "",
-    }));
-    setTokenFeedbackPorConsulta((prev) => ({
-      ...prev,
-      [idEvento]: undefined,
-    }));
-  };
-
   const atualizarFeedbackTokenInline = (
     idEvento: number,
     tipo: TokenFeedbackInline["tipo"],
@@ -677,499 +688,40 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     }));
   };
 
-  const focarCampoTokenInline = (idEvento: number, indice: number) => {
-    if (typeof document === "undefined") return;
-    const target = document.getElementById(
-      `token-inline-${idEvento}-${indice}`,
-    ) as HTMLInputElement | null;
-    target?.focus();
-    target?.select();
-  };
-
-  const abrirTecladoTokenInline = (idEvento: number, indice = 0) => {
-    setConsultaTecladoTokenId(idEvento);
-    setTimeout(() => focarCampoTokenInline(idEvento, indice), 0);
-  };
-
-  const fecharTecladoTokenInline = () => {
-    setConsultaTecladoTokenId(null);
-  };
-
-  const atualizarTokenDigitadoInline = (
-    idEvento: number,
-    indice: number,
-    valor: string,
-  ) => {
-    const digito = valor.replace(/\D/g, "").slice(-1);
-
-    setTokenDigitadoPorConsulta((prev) => {
-      const atual = Array.from(
-        { length: 4 },
-        (_, posicao) => prev[idEvento]?.[posicao] || "",
-      );
-      atual[indice] = digito;
-      return {
-        ...prev,
-        [idEvento]: atual.join("").slice(0, 4),
-      };
-    });
-
-    limparMensagemTokenInline(idEvento);
-
-    if (digito && indice < 3) {
-      setTimeout(() => focarCampoTokenInline(idEvento, indice + 1), 0);
-    }
-  };
-
-  const handleTokenInlineKeyDown = (
-    idEvento: number,
-    indice: number,
-    event: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
-    if (event.key === "Backspace") {
-      event.preventDefault();
-      const tokenAtual = tokenDigitadoPorConsulta[idEvento] || "";
-
-      if (tokenAtual[indice]) {
-        atualizarTokenDigitadoInline(idEvento, indice, "");
-        return;
-      }
-
-      if (indice > 0) {
-        atualizarTokenDigitadoInline(idEvento, indice - 1, "");
-        setTimeout(() => focarCampoTokenInline(idEvento, indice - 1), 0);
-      }
-      return;
-    }
-
-    if (event.key === "ArrowLeft" && indice > 0) {
-      event.preventDefault();
-      focarCampoTokenInline(idEvento, indice - 1);
-      return;
-    }
-
-    if (event.key === "ArrowRight" && indice < 3) {
-      event.preventDefault();
-      focarCampoTokenInline(idEvento, indice + 1);
-      return;
-    }
-
-    if (event.key === "Tab") {
-      return;
-    }
-
-    if (!/^\d$/.test(event.key)) {
-      event.preventDefault();
-    }
-  };
-
-  const handleTokenInlinePaste = (
-    idEvento: number,
-    event: React.ClipboardEvent<HTMLInputElement>,
-  ) => {
-    event.preventDefault();
-    const numeros = event.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 4);
-    setTokenDigitadoPorConsulta((prev) => ({
-      ...prev,
-      [idEvento]: numeros,
-    }));
-    limparMensagemTokenInline(idEvento);
-    const ultimoIndice = Math.min(Math.max(numeros.length - 1, 0), 3);
-    setTimeout(() => focarCampoTokenInline(idEvento, ultimoIndice), 0);
-  };
-
-  const finalizarFluxoTokenInline = async (idEvento: number) => {
-    await buscarConsultas();
-
-    setConsultaProcessandoSenhaId(null);
-    setConsultaTokenAbertaId(idEvento);
-    setBloqueioReenvioAtePorConsulta((prev) => ({
-      ...prev,
-      [idEvento]: prev[idEvento] || Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
-    }));
-    setAbrirTokenInlineAposEnvio(false);
-  };
-
-  const reenviarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
-    const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
-    const numeroGuiaOperadora = Number(
-      consulta.numeroGuiaOperadora || consulta.senhaAutorizacao || 0,
-    );
-
-    if (!senhaGuia) {
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]:
-          "Não encontramos a senha da guia para reenviar o token.",
-      }));
-      await exibirModalErroTokenInline(
-        consulta.idEvento,
-        "Não encontramos a senha da guia para reenviar o token.",
-      );
-    }
-
-    limparMensagemTokenInline(consulta.idEvento);
-    setConsultaReenviandoTokenId(consulta.idEvento);
-
-    try {
-      const reenviado = await TokenEnviar({
-        nome: consulta.pacienteNome,
-        nrCarteiraPlano: consulta.nrCarteiraPlano,
-        senhaGuia,
-        numeroGuiaGerado: consulta.numeroGuiaGerado || undefined,
-        numeroGuiaOperadora,
-        isReenvio: true,
-        silencioso: true,
-      });
-
-      if (reenviado === false) {
-        setTokenErroPorConsulta((prev) => ({
-          ...prev,
-          [consulta.idEvento]:
-            "Não foi possível reenviar o token agora.",
-        }));
-        await exibirModalErroTokenInline(
-          consulta.idEvento,
-          "Não foi possível reenviar o token agora.",
-        );
-        return;
-      }
-
-      setBloqueioReenvioAtePorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: Date.now() + BLOQUEIO_REENVIO_TOKEN_MS,
-      }));
-
-      atualizarFeedbackTokenInline(
-        consulta.idEvento,
-        "success",
-        "Token reenviado com sucesso. Veja o novo código no celular.",
-      );
-      await Swal.fire({
-        title: "TOKEN REENVIADO",
-        text: "Um novo código foi enviado para o seu celular, pelo aplicativo ou por SMS.",
-        icon: "success",
-        confirmButtonText: "Fechar",
-        allowOutsideClick: false,
-        background: "#ffffff",
-        color: "#0f172a",
-        customClass: {
-          popup: "!rounded-[1.2rem] !px-6 !py-5",
-          title: "!text-[1.5rem] !font-black !text-emerald-700",
-          confirmButton:
-            "!bg-emerald-600 !text-white !font-black !rounded-[0.9rem] !px-6 !py-3",
-        },
-      });
-    } catch (_error) {
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]:
-          "Não foi possível reenviar o token agora.",
-      }));
-      await exibirModalErroTokenInline(
-        consulta.idEvento,
-        "Não foi possível reenviar o token agora.",
-      );
-    } finally {
-      setConsultaReenviandoTokenId(null);
-    }
-  };
-
-  const exibirModalErroTokenInline = async (
-    idEvento: number,
-    mensagem: string,
-  ) => {
-    const mensagemNormalizada = String(mensagem || "").trim();
-    const titulo =
-      mensagemNormalizada.toLowerCase() ===
-        "token errado. insira um token correto." ||
-      mensagemNormalizada.toLowerCase() === "token inválido" ||
-      mensagemNormalizada.toLowerCase() === "token invalido"
-        ? "TOKEN INVÁLIDO"
-        : "ERRO AO VALIDAR TOKEN";
-
-    const descricao =
-      titulo === "TOKEN INVÁLIDO"
-        ? "Token errado. Insira um token correto."
-        : mensagemNormalizada || "Não foi possível validar o token.";
-
-    if (titulo === "TOKEN INVÁLIDO") {
-      setTokenDigitadoPorConsulta((prev) => ({
-        ...prev,
-        [idEvento]: "",
-      }));
-    }
-
-    setConsultaErroToastAtivoId(idEvento);
-    setTokenErroModal({ idEvento, titulo, descricao });
-    await Promise.resolve();
-  };
-
-  const fecharModalErroTokenInline = () => {
-    if (!tokenErroModal) {
-      return;
-    }
-
-    const { idEvento } = tokenErroModal;
-    setConsultaErroToastAtivoId((atual) => (atual === idEvento ? null : atual));
-    setTokenErroModal(null);
-    setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
-  };
-
-const exibirModalSucessoELiberarConsulta = async (consulta: ConsultaAutoAtendimento) => {
-  const textoAguardarChamada = obterTextoAguardarChamada(consulta.flSexo);
-
-  await Swal.fire({
-    title: "✅ ATENDIMENTO LIBERADO!",
-    html: `
-      <div style="text-align: center; padding: 12px 0 8px;">
-        <p style="font-size: 2.2rem; line-height: 1.15; margin-bottom: 18px;"><strong>${consulta.pacienteNome}</strong></p>
-        <p style="color: #475569; font-size: 1.8rem; line-height: 1.26; margin-bottom: 10px;">📋 ${consulta.profissionalNome}</p>
-        <p style="color: #475569; font-size: 1.68rem; line-height: 1.26; margin-bottom: 10px;">🏥 ${consulta.especialidadeNome}</p>
-        <p style="color: #00338d; font-weight: bold; font-size: 2.2rem; margin-top: 14px; margin-bottom: 12px;">
-          🕐 ${formatarHora(consulta.horaInicio)}
-        </p>
-        <p style="color: #64748b; font-size: 2rem; font-weight: 800; line-height: 1.18; margin-top: 14px;">
-          ${textoAguardarChamada}
-        </p>
-      </div>
-    `,
-    icon: "success",
-    confirmButtonText: "OK, ENTENDI",
-    allowOutsideClick: false,
-    background: "#ffffff",
-    color: "#0f172a",
-    customClass: {
-      popup:
-        "!rounded-[1.75rem] !w-[min(92vw,56rem)] !max-w-[56rem] !px-10 !py-8 !flex !flex-col !justify-center",
-      title: "!text-[2.85rem] !leading-tight !font-black !text-emerald-700",
-      confirmButton:
-        "!bg-emerald-600 !text-white !font-black !rounded-[1rem] !px-12 !py-4 !text-[1.35rem] !mt-5",
-    },
+  const {
+    abrirTecladoTokenInline,
+    atualizarTokenDigitadoInline,
+    fecharModalErroTokenInline,
+    fecharTecladoTokenInline,
+    finalizarFluxoTokenInline,
+    handleTokenInlineKeyDown,
+    handleTokenInlinePaste,
+    limparMensagemTokenInline,
+    limparTokenViaTecladoInline,
+    preencherTokenViaTecladoInline,
+    reenviarTokenInline,
+    validarTokenInline,
+  } = createTokenInlineActions({
+    tokenDigitadoPorConsulta,
+    tokenErroModal,
+    setTokenDigitadoPorConsulta,
+    setTokenErroPorConsulta,
+    setTokenFeedbackPorConsulta,
+    setConsultaReenviandoTokenId,
+    setConsultaValidandoTokenId,
+    setConsultaErroToastAtivoId,
+    setTokenErroModal,
+    setConsultaTecladoTokenId,
+    setConsultaTokenAbertaId,
+    setConsultaProcessandoSenhaId,
+    setBloqueioReenvioAtePorConsulta,
+    setAbrirTokenInlineAposEnvio,
+    buscarConsultas: async () => buscarConsultas(),
+    atualizarConsultaLocal: (idEvento, changes) =>
+      atualizarConsultaLocal(idEvento, changes),
   });
-};
 
-const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
-  const token = String(
-    tokenDigitadoPorConsulta[consulta.idEvento] || "",
-  ).replace(/\D/g, "");
-  const senhaGuia = String(consulta.senhaAutorizacao || "").trim();
-  const numeroGuiaOperadora = resolveNumeroGuiaOperadoraInline(
-    senhaGuia,
-    consulta.numeroGuiaOperadora,
-  );
-
-  if (token.length !== 4) {
-    setTokenErroPorConsulta((prev) => ({
-      ...prev,
-      [consulta.idEvento]: "Digite os 4 dígitos do token.",
-    }));
-    await exibirModalErroTokenInline(
-      consulta.idEvento,
-      "Digite os 4 dígitos do token.",
-    );
-    return;
-  }
-  if (!senhaGuia) {
-    setTokenErroPorConsulta((prev) => ({
-      ...prev,
-      [consulta.idEvento]:
-        "Não encontramos a senha da guia para validar o token.",
-    }));
-    await exibirModalErroTokenInline(
-      consulta.idEvento,
-      "Não encontramos a senha da guia para validar o token.",
-    );
-    return;
-  }
-  limparMensagemTokenInline(consulta.idEvento);
-  setConsultaValidandoTokenId(consulta.idEvento);
-
-  try {
-    const response = await api.post("/sisclinic/token/validar", {
-      token: toSafeTokenString(token),
-      cdBeneficiario: toSafeTokenString(consulta.nrCarteiraPlano),
-      numeroGuiaOperadora,
-    });
-
-    const retornoApi = extrairRetornoApiToken(response.data);
-    const mensagem = normalizarMensagemTokenInline(retornoApi.mensagem || "");
-    const mensagemLower = mensagem.toLowerCase();
-    
-    const tokenValidado =
-      mensagemLower.includes("token validado com sucesso") ||
-      mensagemLower.includes("senha ja validada com envio de token") ||
-      (mensagemLower.includes("transação") && mensagemLower.includes("já foi enviada com sucesso"));
-
-    if (!tokenValidado) {
-      const mensagemErro =
-        mensagem || "Não foi possível validar o token informado.";
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: mensagemErro,
-      }));
-      await exibirModalErroTokenInline(consulta.idEvento, mensagemErro);
-      return;
-    }
-
-    await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
-      tokenValidado: true,
-    });
-
-    setTokenDigitadoPorConsulta((prev) => ({
-      ...prev,
-      [consulta.idEvento]: "",
-    }));
-    atualizarFeedbackTokenInline(
-      consulta.idEvento,
-      "success",
-      "Token validado com sucesso. Atendimento liberado.",
-    );
-    setConsultaTokenAbertaId(null);
-    setConsultaTecladoTokenId(null);
-    setConsultaProcessandoSenhaId(null);
-
-    await buscarConsultas();
-    await exibirModalSucessoELiberarConsulta(consulta);
-
-  } catch (error: any) {
-    const mensagemErro = String(
-      error?.response?.data?.mensagem || error?.message || "",
-    ).toLowerCase();
-    const tokenInvalido =
-      mensagemErro.includes("token invalido") ||
-      mensagemErro.includes("token inválido") ||
-      mensagemErro.includes("ora-20400");
-    const tokenJaConfirmado =
-      mensagemErro.includes("senha ja validada com envio de token") ||
-      mensagemErro.includes("senha já validada com envio de token") ||
-      (mensagemErro.includes("transação") &&
-        mensagemErro.includes("já foi enviada com sucesso")) ||
-      (mensagemErro.includes("transacao") &&
-        mensagemErro.includes("ja foi enviada com sucesso"));
-
-    if (tokenInvalido) {
-      const mensagem = "Token errado. Insira um token correto.";
-      setTokenErroPorConsulta((prev) => ({
-        ...prev,
-        [consulta.idEvento]: mensagem,
-      }));
-      await exibirModalErroTokenInline(consulta.idEvento, mensagem);
-      return;
-    }
-
-    if (tokenJaConfirmado) {
-      try {
-        const { data: consultaAtual } = await api.get(`/sisclinic/agenda/${consulta.idEvento}`);
-        
-        if (!consultaAtual?.tokenValidado) {
-          await api.patch(`/sisclinic/agenda/${consulta.idEvento}`, {
-            tokenValidado: true,
-          });
-        }
-
-        atualizarConsultaLocal(consulta.idEvento, {
-          tokenValidado: true,
-          autorizado: true,
-          erroAutorizacao: false,
-          mensagemErroAutorizacao: undefined
-        });
-
-        setTokenDigitadoPorConsulta((prev) => ({
-          ...prev,
-          [consulta.idEvento]: "",
-        }));
-        atualizarFeedbackTokenInline(
-          consulta.idEvento,
-          "success",
-          "Atendimento liberado!",
-        );
-        setConsultaTokenAbertaId(null);
-        setConsultaTecladoTokenId(null);
-        setConsultaProcessandoSenhaId(null);
-
-        await buscarConsultas();
-        await exibirModalSucessoELiberarConsulta(consulta);
-
-      } catch (patchError) {
-        console.error("Erro ao atualizar tokenValidado:", patchError);
-        try {
-          await exibirModalSucessoELiberarConsulta(consulta);
-        } catch (modalError) {
-          setTokenErroPorConsulta((prev) => ({
-            ...prev,
-            [consulta.idEvento]: "Consulta liberada! Procure a recepção.",
-          }));
-        }
-      }
-      return;
-    }
-
-    const retornoApi = extrairRetornoApiToken(error?.response?.data);
-    const mensagem = normalizarMensagemTokenInline(
-      retornoApi.mensagem || error?.message || "Erro ao validar token",
-    );
-    setTokenErroPorConsulta((prev) => ({
-      ...prev,
-      [consulta.idEvento]: mensagem,
-    }));
-    await exibirModalErroTokenInline(consulta.idEvento, mensagem);
-  } finally {
-    setConsultaValidandoTokenId(null);
-  }
-};
-
-  const preencherTokenViaTecladoInline = (
-    consulta: ConsultaAutoAtendimento,
-    digito: string,
-  ) => {
-    const idEvento = consulta.idEvento;
-    const numero = String(digito).replace(/\D/g, "").slice(-1);
-
-    if (!numero) {
-      return;
-    }
-
-    let proximoToken = "";
-
-    setTokenDigitadoPorConsulta((prev) => {
-      const tokenAtual = String(prev[idEvento] || "")
-        .replace(/\D/g, "")
-        .slice(0, 4);
-      if (tokenAtual.length >= 4) {
-        proximoToken = tokenAtual;
-        return prev;
-      }
-
-      proximoToken = tokenAtual + numero;
-      return {
-        ...prev,
-        [idEvento]: proximoToken,
-      };
-    });
-
-    limparMensagemTokenInline(idEvento);
-
-    setTimeout(() => {
-      focarCampoTokenInline(
-        idEvento,
-        proximoToken.length >= 4 ? 3 : proximoToken.length,
-      );
-    }, 0);
-  };
-
-  const limparTokenViaTecladoInline = (idEvento: number) => {
-    setTokenDigitadoPorConsulta((prev) => ({
-      ...prev,
-      [idEvento]: "",
-    }));
-    limparMensagemTokenInline(idEvento);
-    setTimeout(() => focarCampoTokenInline(idEvento, 0), 0);
-  };
-
+  // Inicia o fluxo operacional da consulta: garantir senha de painel e abrir a autorização.
   const abrirEtapaSenha = async (consulta: ConsultaAutoAtendimento) => {
     setConsultaTokenAbertaId(consulta.idEvento);
     limparMensagemTokenInline(consulta.idEvento);
@@ -1283,6 +835,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     reiniciarTemporizadorTelaCpf();
   };
 
+  // Atualiza somente a consulta afetada sem depender de um novo fetch imediato.
   const atualizarConsultaLocal = (
     idEvento: number,
     changes: Partial<ConsultaAutoAtendimento>,
@@ -1294,245 +847,8 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     );
   };
 
-  const buscarLocaisProfissionaisPorData = (data: string) => {
-    if (!locaisProfissionaisPorDataCacheRef.current[data]) {
-      locaisProfissionaisPorDataCacheRef.current[data] = api
-        .get<LocalProfissionalDia[]>(
-          `/sisclinic/local-atendimento-pessoas/profissionais/dia/${data}`,
-        )
-        .then((response) => response.data || [])
-        .catch((error) => {
-          delete locaisProfissionaisPorDataCacheRef.current[data];
-          throw error;
-        });
-    }
 
-    return locaisProfissionaisPorDataCacheRef.current[data];
-  };
-
-  const obterPeriodoPorHora = (hora?: string) => {
-    const horaNormalizada = String(hora || "").slice(0, 5);
-
-    if (!horaNormalizada) {
-      return "";
-    }
-
-    if (horaNormalizada < "12:00") {
-      return "MANHA";
-    }
-
-    if (horaNormalizada < "18:00") {
-      return "TARDE";
-    }
-
-    return "NOITE";
-  };
-
-  const buscarLocalidadePainelDoProfissional = async (
-    consulta: ConsultaAutoAtendimento,
-  ) => {
-    if (!consulta.idProfissional) {
-      return (
-        String(consulta.localidadePainel || "Não informado").trim() || null
-      );
-    }
-
-    try {
-      const dataReferencia =
-        String(consulta.dataInicio || "").slice(0, 10) ||
-        new Date().toISOString().slice(0, 10);
-      const locaisDoDia =
-        await buscarLocaisProfissionaisPorData(dataReferencia);
-      const periodoConsulta = obterPeriodoPorHora(consulta.horaInicio);
-      const localDoProfissional =
-        locaisDoDia.find((local) => {
-          const mesmoProfissional =
-            String(local?.idProfissional || "") ===
-            String(consulta.idProfissional || "");
-          const statusAtivo =
-            !local?.status || String(local.status).toUpperCase() === "ATIVO";
-          const mesmaData =
-            !local?.data || String(local.data).slice(0, 10) === dataReferencia;
-          const mesmoPeriodo =
-            !local?.periodo ||
-            String(local.periodo).toUpperCase() === periodoConsulta;
-
-          return mesmoProfissional && statusAtivo && mesmaData && mesmoPeriodo;
-        }) ||
-        locaisDoDia.find(
-          (local) =>
-            String(local?.idProfissional || "") ===
-            String(consulta.idProfissional || ""),
-        );
-
-      const nomeLocal = String(localDoProfissional?.nomeLocal || "").trim();
-      const numeroLocal = String(localDoProfissional?.nrLocal || "").trim();
-      const localCompleto = [nomeLocal, numeroLocal]
-        .filter(Boolean)
-        .join(" - ");
-
-      return (
-        localCompleto ||
-        String(consulta.localidadePainel || "Não informado").trim() ||
-        null
-      );
-    } catch (error) {
-      console.warn(
-        "Não foi possível consultar o local do profissional:",
-        error,
-      );
-      return (
-        String(consulta.localidadePainel || "Não informado").trim() || null
-      );
-    }
-  };
-
-  const preencherLocaisDasConsultas = async (
-    consultasOriginais: ConsultaAutoAtendimento[],
-  ) => {
-    if (consultasOriginais.length === 0) {
-      return consultasOriginais;
-    }
-
-    const consultasComLocal = await Promise.all(
-      consultasOriginais.map(async (consulta) => {
-        if (
-          String(consulta.localidadePainel || "").trim() ||
-          !consulta.idProfissional
-        ) {
-          return consulta;
-        }
-
-        const dataReferencia =
-          String(consulta.dataInicio || "").slice(0, 10) ||
-          new Date().toISOString().slice(0, 10);
-
-        try {
-          const locaisDoDia =
-            await buscarLocaisProfissionaisPorData(dataReferencia);
-          const periodoConsulta = obterPeriodoPorHora(consulta.horaInicio);
-          const localDoProfissional =
-            locaisDoDia.find((local) => {
-              const mesmoProfissional =
-                String(local?.idProfissional || "") ===
-                String(consulta.idProfissional || "");
-              const statusAtivo =
-                !local?.status ||
-                String(local.status).toUpperCase() === "ATIVO";
-              const mesmaData =
-                !local?.data ||
-                String(local.data).slice(0, 10) === dataReferencia;
-              const mesmoPeriodo =
-                !local?.periodo ||
-                String(local.periodo).toUpperCase() === periodoConsulta;
-
-              return (
-                mesmoProfissional && statusAtivo && mesmaData && mesmoPeriodo
-              );
-            }) ||
-            locaisDoDia.find(
-              (local) =>
-                String(local?.idProfissional || "") ===
-                String(consulta.idProfissional || ""),
-            );
-
-          const nomeLocal = String(localDoProfissional?.nomeLocal || "").trim();
-          const numeroLocal = String(localDoProfissional?.nrLocal || "").trim();
-          const localCompleto = [nomeLocal, numeroLocal]
-            .filter(Boolean)
-            .join(" - ");
-
-          if (!localCompleto) {
-            return consulta;
-          }
-
-          return {
-            ...consulta,
-            localidadePainel: localCompleto,
-          };
-        } catch (error) {
-          console.warn(
-            "Não foi possível carregar o local do profissional:",
-            error,
-          );
-          return consulta;
-        }
-      }),
-    );
-
-    return consultasComLocal;
-  };
-
-  const obterIdTipoAtendimentoPainel = async (
-    consulta: ConsultaAutoAtendimento,
-  ) => {
-    const tiposAtendimento =
-      await inteliteSenhaService.buscarTiposAtendimento();
-
-    if (!Array.isArray(tiposAtendimento) || tiposAtendimento.length === 0) {
-      throw new Error("Nenhum tipo de atendimento Intelite foi encontrado.");
-    }
-
-    const prioridadeDesejada = String(
-      consulta.prioridadePainel || consulta.categoria || "CONSULTA",
-    )
-      .trim()
-      .toUpperCase();
-
-    const tipoCompativel =
-      tiposAtendimento.find((tipo) => {
-        const nomeTipo = String(tipo.tipoAtendimento || "")
-          .trim()
-          .toUpperCase();
-        const prefixoTipo = String(tipo.prefixo || "")
-          .trim()
-          .toUpperCase();
-
-        return (
-          nomeTipo === prioridadeDesejada || prefixoTipo === prioridadeDesejada
-        );
-      }) ||
-      tiposAtendimento.find((tipo) =>
-        String(tipo.tipoAtendimento || "")
-          .trim()
-          .toUpperCase()
-          .includes("CONSULTA"),
-      ) ||
-      tiposAtendimento[0];
-
-    const idTipoAtendimento = String(tipoCompativel?.id || "").trim();
-
-    if (!idTipoAtendimento) {
-      throw new Error(
-        "Tipo de atendimento Intelite inválido para emissão.",
-      );
-    }
-
-    return idTipoAtendimento;
-  };
-
-  const emitirSenhaPainelAutomaticamente = async (
-    consulta: ConsultaAutoAtendimento,
-  ) => {
-    const idTipoAtendimento = await obterIdTipoAtendimentoPainel(consulta);
-    const resposta = await inteliteSenhaService.emitirSenha({
-      idTipoAtendimento,
-      nomePaciente: consulta.pacienteNome,
-      telefone: normalizarCpf(consulta.celularContato || ""),
-      codigo: String(consulta.idEvento),
-    });
-
-    const senhaGerada = String(resposta?.senhaEmitida || "")
-      .trim()
-      .toUpperCase();
-
-    if (!senhaGerada) {
-      throw new Error("A Intelite não retornou a senha emitida.");
-    }
-
-    return senhaGerada;
-  };
-
+  // Persiste a senha/localidade no backend, valida o retorno e continua o fluxo quando necessário.
   const vincularSenhaPainel = async (
     consulta: ConsultaAutoAtendimento,
     opcoes?: {
@@ -1553,7 +869,10 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       .toUpperCase();
     const senhaPainel = senhaPainelInformada || senhaPainelAtual;
     const localidadePainel =
-      (await buscarLocalidadePainelDoProfissional(consulta)) ||
+      (await buscarLocalidadePainelDoProfissional(
+        locaisProfissionaisPorDataCacheRef,
+        consulta,
+      )) ||
       "Não informado";
 
     if (!senhaPainel) {
@@ -1733,6 +1052,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
       );
     }
   };
+  // Mantém o caminho legado de validação externa de token para consultas já autorizadas.
   const abrirValidacaoTokenDireta = async (
     consulta: ConsultaAutoAtendimento,
   ) => {
@@ -1795,6 +1115,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     await buscarConsultas();
   };
 
+  // Busca apenas os atendimentos do dia para o CPF informado e prepara o fluxo das próximas etapas.
   const buscarConsultas = async (cpfInformado?: string) => {
     const cpfLimpo = normalizarCpf(cpfInformado ?? cpf);
 
@@ -1881,7 +1202,10 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
         );
 
       const consultasOrdenadas = ordenarPorHora(
-        await preencherLocaisDasConsultas(consultasMapeadas),
+        await preencherLocaisDasConsultas(
+          locaisProfissionaisPorDataCacheRef,
+          consultasMapeadas,
+        ),
       );
 
       if (consultasOrdenadas.length === 0) {
@@ -1920,6 +1244,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     }
   };
 
+  // Antes de abrir a autorização, garante que o evento esteja marcado como COMPARECEU.
   const abrirAutorizacaoComCompareceu = async (
     consulta: ConsultaAutoAtendimento,
     iniciarAutomaticamente = false,
@@ -1958,6 +1283,7 @@ const validarTokenInline = async (consulta: ConsultaAutoAtendimento) => {
     });
   };
 
+  // Sai da tela de boas-vindas, revela o campo de CPF e entrega foco ao usuário.
   const abrirEntradaCpf = () => {
     if (animandoSaidaTelaBoasVindasCpf) return;
 

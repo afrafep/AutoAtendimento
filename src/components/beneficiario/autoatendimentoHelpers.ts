@@ -57,6 +57,7 @@ export const obterTextoAguardarChamada = (sexo?: string | null) => {
 
 const cpfPossuiDigitosRepetidos = (cpf: string) => /^(\d)\1{10}$/.test(cpf);
 
+// Valida CPF completo usando os dígitos verificadores e bloqueia sequências repetidas.
 export const validarCpf = (valor?: string) => {
   const cpf = normalizarCpf(valor);
 
@@ -144,6 +145,7 @@ export const ordenarPorHora = (consultas: ConsultaAutoAtendimento[]) =>
     String(a.horaInicio || "").localeCompare(String(b.horaInicio || "")),
   );
 
+// Converte HH:mm em minutos para facilitar comparações e agrupamentos por intervalo.
 export const converterHoraParaMinutos = (hora?: string | null) => {
   const horaFormatada = String(hora || "").trim();
   if (!horaFormatada) return null;
@@ -190,6 +192,7 @@ export const obterFaixaHorariosConsultas = (
   return `${horarioInicial} até ${horarioFinal}`;
 };
 
+// Adapta a consulta do autoatendimento para o formato esperado pelo fluxo de autorização.
 export const criarEventoBaseDaConsulta = (
   consulta: ConsultaAutoAtendimento,
 ): AgendaEvento => ({
@@ -239,6 +242,7 @@ export const criarEventoBaseDaConsulta = (
     consulta.idProfissionalRealizaProcedimento || undefined,
 });
 
+// Recupera do sessionStorage a tela em que o beneficiário parou, já normalizando flags booleanas.
 export const lerEstadoTelaPersistido = (): EstadoTelaPersistido | null => {
   try {
     if (typeof window === "undefined") return null;
@@ -277,6 +281,7 @@ export const limparEstadoTelaPersistido = () => {
   } catch {}
 };
 
+// Extrai uma representação segura em texto mesmo quando a API devolve objetos heterogêneos.
 export const toSafeTokenString = (value: unknown) => {
   if (value == null) return "";
   if (typeof value === "object") {
@@ -294,6 +299,7 @@ export const toSafeTokenNumber = (value: unknown) => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
+// Resolve o número da guia priorizando o campo específico e usando a senha da guia como fallback.
 export const resolveNumeroGuiaOperadoraInline = (
   senhaGuia: unknown,
   numeroGuiaOperadora: unknown,
@@ -318,6 +324,7 @@ export const extrairRetornoApiToken = (data: any) => ({
   mensagem: toSafeTokenString(data?.mensagem || data?.message || data?.error),
 });
 
+// Traduz mensagens técnicas de erro em um texto curto e compreensível para o usuário.
 export const normalizarMensagemTokenInline = (mensagem?: string) => {
   const texto = toSafeTokenString(mensagem);
   const textoLower = texto.toLowerCase();
