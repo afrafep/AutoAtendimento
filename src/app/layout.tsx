@@ -3,6 +3,7 @@ import AtualizacaoDisponivelBanner from "@/components/AtualizacaoDisponivelBanne
 import { getAppVersion } from "@/lib/appVersion";
 import "@/styles/global.css";
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 export const metadata: Metadata = {
   title: "Sisclinic Autoatendimento",
@@ -20,6 +21,15 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body suppressHydrationWarning>
         {children}
+        <ToastContainer
+          newestOnTop
+          closeButton={false}
+          hideProgressBar
+          pauseOnHover={false}
+          theme="light"
+          toastClassName="!min-h-0 !p-0 !bg-transparent !shadow-none"
+          bodyClassName="!p-0"
+        />
         <AtualizacaoDisponivelBanner versaoInicial={versaoAtual} />
       </body>
     </html>
