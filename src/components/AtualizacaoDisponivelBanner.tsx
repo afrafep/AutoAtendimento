@@ -1,58 +1,110 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { toast } from "react-toastify";
+import { useEffect, useRef, useState } from "react";
 
 type AtualizacaoDisponivelBannerProps = {
   versaoInicial: string;
 };
 
 const INTERVALO_VERIFICACAO_MS = 40_000;
-const TOAST_ID_ATUALIZACAO = "sis-nova-versao";
 const CHAVE_ULTIMA_VERSAO_VISTA = "sis:autoatendimento:ultima-versao-vista";
+const CONTAGEM_ATUALIZACAO_SEGUNDOS = 5;
+
+type ModalAtualizacaoProps = {
+  segundosRestantes: number;
+  onAtualizarAgora: () => void;
+};
+
+function ModalAtualizacao({
+  segundosRestantes,
+  onAtualizarAgora,
+}: ModalAtualizacaoProps) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-6 backdrop-blur-sm">
+      <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-black px-8 py-8 text-white shadow-[0_32px_80px_rgba(0,0,0,0.55)]">
+        <div className="text-center">
+          <div className="text-[1.6rem] font-black leading-tight sm:text-[1.9rem]">
+            Nova versão do Autoatendimento online
+          </div>
+          <p className="mt-4 text-lg font-semibold leading-8 text-white/90 sm:text-xl">
+            Atualizando o sistema para a nova versão em{" "}
+            <span className="font-black text-white">{segundosRestantes}</span>{" "}
+            segundos...
+          </p>
+          <button
+            type="button"
+            onClick={onAtualizarAgora}
+            className="mt-6 inline-flex min-h-[3.6rem] items-center justify-center rounded-full bg-white px-8 text-base font-black text-black transition hover:bg-white/90"
+          >
+            Atualizar agora
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AtualizacaoDisponivelBanner({
   versaoInicial,
 }: AtualizacaoDisponivelBannerProps) {
   const jaNotificouRef = useRef(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [segundosRestantes, setSegundosRestantes] = useState(
+    CONTAGEM_ATUALIZACAO_SEGUNDOS,
+  );
+
+  const atualizarAgora = () => {
+    localStorage.setItem(CHAVE_ULTIMA_VERSAO_VISTA, versaoInicial);
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    if (!mostrarModal) {
+      return;
+    }
+
+    const intervalo = window.setInterval(() => {
+      setSegundosRestantes((atual) => {
+        if (atual <= 1) {
+          window.clearInterval(intervalo);
+          atualizarAgora();
+          return 0;
+        }
+
+        return atual - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(intervalo);
+  }, [mostrarModal]);
+
+  useEffect(() => {
+    if (!mostrarModal) {
+      return;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+    };
+  }, [mostrarModal]);
 
   useEffect(() => {
     let ativo = true;
 
     console.log("[SIS atualização] Versão inicial carregada:", versaoInicial);
 
-    const exibirToastAtualizacao = () => {
+    const exibirModalAtualizacao = () => {
       if (jaNotificouRef.current) {
         return;
       }
 
       jaNotificouRef.current = true;
-      console.log("[SIS atualização] Nova versão detectada. Exibindo toast.");
-
-      toast.info(
-        ({ closeToast }) => (
-          <button
-            type="button"
-            onClick={() => {
-              closeToast?.();
-              localStorage.setItem(CHAVE_ULTIMA_VERSAO_VISTA, versaoInicial);
-              window.location.reload();
-            }}
-            className="w-full cursor-pointer rounded-2xl px-5 py-4 text-left text-[1rem] leading-6"
-          >
-            Nova versão do Autoatendimento online. Aperte aqui para atualizar.
-          </button>
-        ),
-        {
-          toastId: TOAST_ID_ATUALIZACAO,
-          autoClose: false,
-          closeOnClick: false,
-          draggable: false,
-          position: "bottom-center",
-          className:
-            "!w-[min(92vw,40rem)] !rounded-2xl !border !border-sky-200 !bg-white !text-slate-900 !shadow-[0_18px_50px_rgba(15,23,42,0.18)]",
-        },
-      );
+      setSegundosRestantes(CONTAGEM_ATUALIZACAO_SEGUNDOS);
+      setMostrarModal(true);
+      console.log("[SIS atualização] Nova versão detectada. Exibindo modal.");
     };
 
     const ultimaVersaoVista = localStorage.getItem(CHAVE_ULTIMA_VERSAO_VISTA);
@@ -66,9 +118,9 @@ export default function AtualizacaoDisponivelBanner({
 
     if (ultimaVersaoVista && ultimaVersaoVista !== versaoInicial) {
       console.log(
-        "[SIS atualização] Página abriu em uma versão mais nova. Exibindo toast.",
+        "[SIS atualização] Página abriu em uma versão mais nova. Exibindo modal.",
       );
-      exibirToastAtualizacao();
+      exibirModalAtualizacao();
     }
 
     localStorage.setItem(CHAVE_ULTIMA_VERSAO_VISTA, versaoInicial);
@@ -93,7 +145,7 @@ export default function AtualizacaoDisponivelBanner({
         });
 
         if (ativo && versaoAtual && versaoAtual !== versaoInicial) {
-          exibirToastAtualizacao();
+          exibirModalAtualizacao();
         }
       } catch {
         console.log("[SIS atualização] Falha ao consultar /api/version.");
@@ -113,5 +165,14 @@ export default function AtualizacaoDisponivelBanner({
     };
   }, [versaoInicial]);
 
-  return null;
+  if (!mostrarModal) {
+    return null;
+  }
+
+  return (
+    <ModalAtualizacao
+      segundosRestantes={segundosRestantes}
+      onAtualizarAgora={atualizarAgora}
+    />
+  );
 }

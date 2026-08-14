@@ -1268,7 +1268,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
         );
         await Swal.fire(
           "Erro",
-          "Não foi possível atualizar o comparecimento antes da autorização...",
+          "Não foi possível atualizar o comparecimento antes da autorização..",
           "error",
         );
         return;
