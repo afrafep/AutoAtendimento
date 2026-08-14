@@ -46,7 +46,6 @@ export default function AtualizacaoDisponivelBanner({
           position: "bottom-center",
           className:
             "!w-[min(92vw,40rem)] !rounded-2xl !border !border-sky-200 !bg-white !text-slate-900 !shadow-[0_18px_50px_rgba(15,23,42,0.18)]",
-          bodyClassName: "!m-0 !p-0 !text-base !font-black !leading-6",
         },
       );
     };
