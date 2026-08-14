@@ -9,6 +9,7 @@ type AtualizacaoDisponivelBannerProps = {
 
 const INTERVALO_VERIFICACAO_MS = 40_000;
 const TOAST_ID_ATUALIZACAO = "sis-nova-versao";
+const CHAVE_ULTIMA_VERSAO_VISTA = "sis:autoatendimento:ultima-versao-vista";
 
 export default function AtualizacaoDisponivelBanner({
   versaoInicial,
@@ -34,11 +35,12 @@ export default function AtualizacaoDisponivelBanner({
             type="button"
             onClick={() => {
               closeToast?.();
+              localStorage.setItem(CHAVE_ULTIMA_VERSAO_VISTA, versaoInicial);
               window.location.reload();
             }}
             className="w-full cursor-pointer rounded-2xl px-5 py-4 text-left text-[1rem] leading-6"
           >
-            Existe uma nova atualização do SIS. Aperte aqui para atualizar para a nova versão.
+            Nova versão do Autoatendimento online. Aperte aqui para atualizar.
           </button>
         ),
         {
@@ -52,6 +54,24 @@ export default function AtualizacaoDisponivelBanner({
         },
       );
     };
+
+    const ultimaVersaoVista = localStorage.getItem(CHAVE_ULTIMA_VERSAO_VISTA);
+
+    console.log("[SIS atualização] Última versão vista no navegador:", {
+      ultimaVersaoVista,
+      versaoInicial,
+      mudouDesdeUltimaVisita:
+        Boolean(ultimaVersaoVista) && ultimaVersaoVista !== versaoInicial,
+    });
+
+    if (ultimaVersaoVista && ultimaVersaoVista !== versaoInicial) {
+      console.log(
+        "[SIS atualização] Página abriu em uma versão mais nova. Exibindo toast.",
+      );
+      exibirToastAtualizacao();
+    }
+
+    localStorage.setItem(CHAVE_ULTIMA_VERSAO_VISTA, versaoInicial);
 
     const verificarNovaVersao = async () => {
       try {
