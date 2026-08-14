@@ -1,4 +1,6 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
+import AtualizacaoDisponivelBanner from "@/components/AtualizacaoDisponivelBanner";
+import { getAppVersion } from "@/lib/appVersion";
 import "@/styles/global.css";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -12,11 +14,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const versaoAtual = getAppVersion();
+
   return (
     <html lang="pt-BR">
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <AtualizacaoDisponivelBanner versaoInicial={versaoAtual} />
+      </body>
     </html>
   );
 }
-
-
