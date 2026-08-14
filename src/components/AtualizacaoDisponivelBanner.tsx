@@ -7,7 +7,7 @@ type AtualizacaoDisponivelBannerProps = {
   versaoInicial: string;
 };
 
-const INTERVALO_VERIFICACAO_MS = 60_000;
+const INTERVALO_VERIFICACAO_MS = 40_000;
 const TOAST_ID_ATUALIZACAO = "sis-nova-versao";
 
 export default function AtualizacaoDisponivelBanner({
@@ -18,12 +18,15 @@ export default function AtualizacaoDisponivelBanner({
   useEffect(() => {
     let ativo = true;
 
+    console.log("[SIS atualização] Versão inicial carregada:", versaoInicial);
+
     const exibirToastAtualizacao = () => {
       if (jaNotificouRef.current) {
         return;
       }
 
       jaNotificouRef.current = true;
+      console.log("[SIS atualização] Nova versão detectada. Exibindo toast.");
 
       toast.info(
         ({ closeToast }) => (
@@ -63,11 +66,17 @@ export default function AtualizacaoDisponivelBanner({
         const data = (await response.json()) as { version?: string };
         const versaoAtual = String(data.version || "").trim();
 
+        console.log("[SIS atualização] Resultado da verificação:", {
+          versaoInicial,
+          versaoAtual,
+          mudou: versaoAtual && versaoAtual !== versaoInicial,
+        });
+
         if (ativo && versaoAtual && versaoAtual !== versaoInicial) {
           exibirToastAtualizacao();
         }
       } catch {
-        // Ignora falhas temporárias de rede e tenta novamente no próximo ciclo.
+        console.log("[SIS atualização] Falha ao consultar /api/version.");
       }
     };
 

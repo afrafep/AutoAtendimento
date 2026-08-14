@@ -1,8 +1,3 @@
-export const getAppVersion = () =>
-  (
-    process.env.VERCEL_GIT_COMMIT_SHA ||
-    process.env.VERCEL_DEPLOYMENT_ID ||
-    process.env.VERCEL_URL ||
-    process.env.npm_package_version ||
-    "dev"
-  ).trim();
+import { APP_VERSION } from "@/generated/appVersion";
+
+export const getAppVersion = () => APP_VERSION.trim();
