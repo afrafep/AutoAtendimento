@@ -28,7 +28,6 @@ export default function RootLayout({
           pauseOnHover={false}
           theme="light"
           toastClassName="!min-h-0 !p-0 !bg-transparent !shadow-none"
-          bodyClassName="!p-0"
         />
         <AtualizacaoDisponivelBanner versaoInicial={versaoAtual} />
       </body>
