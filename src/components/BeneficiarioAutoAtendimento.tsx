@@ -1283,7 +1283,7 @@ const BeneficiarioAutoAtendimento: React.FC = () => {
     });
   };
 
-  // Sai da tela de boas-vindas, revela o campo de CPF e entrega foco ao usuário.
+  // Sai da tela de boas-vindas, revela o campo de CPF e entrega foco ao usuário.   
   const abrirEntradaCpf = () => {
     if (animandoSaidaTelaBoasVindasCpf) return;
 
