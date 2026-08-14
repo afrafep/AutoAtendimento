@@ -33,7 +33,7 @@ export default function AtualizacaoDisponivelBanner({
               closeToast?.();
               window.location.reload();
             }}
-            className="w-full cursor-pointer text-left"
+            className="w-full cursor-pointer rounded-2xl px-5 py-4 text-left text-[1rem] leading-6"
           >
             Existe uma nova atualização do SIS. Aperte aqui para atualizar para a nova versão.
           </button>
@@ -45,8 +45,8 @@ export default function AtualizacaoDisponivelBanner({
           draggable: false,
           position: "bottom-center",
           className:
-            "!rounded-2xl !border !border-sky-200 !bg-white !text-slate-900 !shadow-[0_18px_50px_rgba(15,23,42,0.18)]",
-          bodyClassName: "!m-0 !p-0 !text-sm !font-black !leading-5",
+            "!w-[min(92vw,40rem)] !rounded-2xl !border !border-sky-200 !bg-white !text-slate-900 !shadow-[0_18px_50px_rgba(15,23,42,0.18)]",
+          bodyClassName: "!m-0 !p-0 !text-base !font-black !leading-6",
         },
       );
     };
